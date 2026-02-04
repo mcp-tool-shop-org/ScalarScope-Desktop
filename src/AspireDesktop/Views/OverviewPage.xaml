@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AspireDesktop.ViewModels"
+             x:Class="AspireDesktop.Views.OverviewPage"
+             x:DataType="vm:VortexSessionViewModel"
+             Title="Overview"
+             BackgroundColor="#0f0f1a">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="20">
+
+            <!-- Header -->
+            <Label Text="ASPIRE Vortex Visualizer"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="White"
+                   HorizontalOptions="Center"/>
+
+            <!-- Load Button -->
+            <Button Text="Load Geometry Run"
+                    Command="{Binding LoadRunCommand}"
+                    BackgroundColor="#00d9ff"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    WidthRequest="200"
+                    HeightRequest="50"
+                    HorizontalOptions="Center"/>
+
+            <!-- Run Summary Card -->
+            <Frame BackgroundColor="#1a1a2e"
+                   BorderColor="#2a2a4e"
+                   CornerRadius="10"
+                   Padding="20"
+                   IsVisible="{Binding HasRun}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Run Summary"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#00d9ff"/>
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="15" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Run:" TextColor="#888"/>
+                        <Label Grid.Row="0" Grid.Column="1" Text="{Binding RunName}" TextColor="White"/>
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="Condition:" TextColor="#888"/>
+                        <Label Grid.Row="1" Grid.Column="1" Text="{Binding Condition}" TextColor="White"/>
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Conscience Tier:" TextColor="#888"/>
+                        <Label Grid.Row="2" Grid.Column="1" Text="{Binding ConscienceTier}" TextColor="#00ff88"/>
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="Failures:" TextColor="#888"/>
+                        <Label Grid.Row="3" Grid.Column="1" Text="{Binding FailureCount}" TextColor="#ff6b6b"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Interpretation Card -->
+            <Frame BackgroundColor="#1a1a2e"
+                   BorderColor="#2a2a4e"
+                   CornerRadius="10"
+                   Padding="20"
+                   IsVisible="{Binding HasRun}">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Key Findings"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#ffd93d"/>
+
+                    <Label Text="Use the tabs to explore:"
+                           TextColor="#888"/>
+
+                    <VerticalStackLayout Spacing="5" Padding="10,0">
+                        <Label Text="• Trajectory - Flow field and convergence dynamics" TextColor="White"/>
+                        <Label Text="• Scalars - Token dimensions as rotating rings" TextColor="White"/>
+                        <Label Text="• Geometry - Eigenvalue spectrum and effective dimension" TextColor="White"/>
+                        <Label Text="• Failures - Detected issues and phase transitions" TextColor="White"/>
+                    </VerticalStackLayout>
+
+                    <Label Text="Path A vs Path B:"
+                           TextColor="#c56cf0"
+                           FontAttributes="Bold"
+                           Margin="0,10,0,0"/>
+
+                    <Label TextColor="#888"
+                           Text="If eigenvalues collapse to one dominant value, evaluators share structure (Path B). If multiple eigenvalues remain stable, evaluators are orthogonal (Path A)."/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- No Data Message -->
+            <Frame BackgroundColor="#1a1a2e"
+                   BorderColor="#2a2a4e"
+                   CornerRadius="10"
+                   Padding="30"
+                   IsVisible="{Binding HasRun, Converter={StaticResource InverseBoolConverter}}">
+                <VerticalStackLayout Spacing="15" HorizontalOptions="Center">
+                    <Label Text="No Run Loaded"
+                           FontSize="18"
+                           TextColor="#888"
+                           HorizontalOptions="Center"/>
+                    <Label Text="Load an ASPIRE geometry export (.json) to begin visualization."
+                           TextColor="#666"
+                           HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AspireDesktop.Views.Controls"
+             xmlns:vm="clr-namespace:AspireDesktop.ViewModels"
+             x:Class="AspireDesktop.Views.GeometryPage"
+             x:DataType="vm:VortexSessionViewModel"
+             Title="Geometry"
+             BackgroundColor="#0f0f1a">
+
+    <Grid RowDefinitions="*,Auto">
+        <!-- Eigen Spectrum View -->
+        <controls:EigenSpectrumView Grid.Row="0"
+                                    Session="{Binding .}"/>
+
+        <!-- Playback Control -->
+        <controls:PlaybackControl Grid.Row="1"
+                                  BindingContext="{Binding Player}"/>
+    </Grid>
+</ContentPage>

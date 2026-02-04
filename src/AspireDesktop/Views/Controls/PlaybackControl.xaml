@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:AspireDesktop.ViewModels"
+             x:Class="AspireDesktop.Views.Controls.PlaybackControl"
+             x:DataType="vm:TrajectoryPlayerViewModel">
+
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
+          ColumnSpacing="10"
+          Padding="15,10"
+          BackgroundColor="#16213e">
+
+        <!-- Play/Pause Button -->
+        <Button Grid.Column="0"
+                Text="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseConverter}}"
+                Command="{Binding PlayPauseCommand}"
+                WidthRequest="50"
+                HeightRequest="40"
+                BackgroundColor="#00d9ff"
+                TextColor="White"
+                FontAttributes="Bold"/>
+
+        <!-- Time Slider -->
+        <Slider Grid.Column="1"
+                Minimum="0"
+                Maximum="1"
+                Value="{Binding Time}"
+                ThumbColor="#00d9ff"
+                MinimumTrackColor="#00d9ff"
+                MaximumTrackColor="#2a2a4e"/>
+
+        <!-- Time Display -->
+        <Label Grid.Column="2"
+               Text="{Binding TimeDisplay}"
+               VerticalOptions="Center"
+               TextColor="White"
+               FontSize="12"
+               WidthRequest="50"/>
+
+        <!-- Speed Control -->
+        <HorizontalStackLayout Grid.Column="3" Spacing="5">
+            <Label Text="Speed:" TextColor="#888" VerticalOptions="Center" FontSize="11"/>
+            <Picker SelectedIndex="{Binding SpeedIndex}"
+                    WidthRequest="60"
+                    TextColor="White"
+                    BackgroundColor="#2a2a4e">
+                <Picker.ItemsSource>
+                    <x:Array Type="{x:Type x:String}">
+                        <x:String>0.25x</x:String>
+                        <x:String>0.5x</x:String>
+                        <x:String>1x</x:String>
+                        <x:String>2x</x:String>
+                        <x:String>4x</x:String>
+                    </x:Array>
+                </Picker.ItemsSource>
+            </Picker>
+        </HorizontalStackLayout>
+
+        <!-- Step Controls -->
+        <Button Grid.Column="4"
+                Text="◀"
+                Command="{Binding StepBackwardCommand}"
+                WidthRequest="35"
+                HeightRequest="35"
+                BackgroundColor="#2a2a4e"
+                TextColor="White"/>
+
+        <Button Grid.Column="5"
+                Text="▶"
+                Command="{Binding StepForwardCommand}"
+                WidthRequest="35"
+                HeightRequest="35"
+                BackgroundColor="#2a2a4e"
+                TextColor="White"/>
+    </Grid>
+</ContentView>

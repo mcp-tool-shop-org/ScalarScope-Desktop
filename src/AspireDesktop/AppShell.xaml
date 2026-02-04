@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="AspireDesktop.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:views="clr-namespace:AspireDesktop.Views"
+    Title="ASPIRE Vortex"
+    Shell.FlyoutBehavior="Disabled"
+    BackgroundColor="#0f0f1a">
+
+    <Shell.Resources>
+        <Style TargetType="TabBar">
+            <Setter Property="Shell.TabBarBackgroundColor" Value="#1a1a2e"/>
+            <Setter Property="Shell.TabBarForegroundColor" Value="White"/>
+            <Setter Property="Shell.TabBarUnselectedColor" Value="#666"/>
+            <Setter Property="Shell.TabBarTitleColor" Value="#00d9ff"/>
+        </Style>
+    </Shell.Resources>
+
+    <TabBar>
+        <Tab Title="Overview" Icon="home.png">
+            <ShellContent ContentTemplate="{DataTemplate views:OverviewPage}" Route="overview"/>
+        </Tab>
+        <Tab Title="Trajectory" Icon="trajectory.png">
+            <ShellContent ContentTemplate="{DataTemplate views:TrajectoryPage}" Route="trajectory"/>
+        </Tab>
+        <Tab Title="Scalars" Icon="scalars.png">
+            <ShellContent ContentTemplate="{DataTemplate views:ScalarsPage}" Route="scalars"/>
+        </Tab>
+        <Tab Title="Geometry" Icon="geometry.png">
+            <ShellContent ContentTemplate="{DataTemplate views:GeometryPage}" Route="geometry"/>
+        </Tab>
+    </TabBar>
+
+</Shell>

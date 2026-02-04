@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AspireDesktop.Views.Controls"
+             xmlns:vm="clr-namespace:AspireDesktop.ViewModels"
+             x:Class="AspireDesktop.Views.TrajectoryPage"
+             x:DataType="vm:VortexSessionViewModel"
+             Title="Trajectory"
+             BackgroundColor="#0f0f1a">
+
+    <Grid RowDefinitions="*,Auto,Auto">
+        <!-- Main Canvas -->
+        <controls:TrajectoryCanvas Grid.Row="0"
+                                   Session="{Binding .}"
+                                   ShowVelocity="{Binding ShowVelocity, Source={x:Reference velocitySwitch}}"
+                                   ShowCurvature="{Binding ShowCurvature, Source={x:Reference curvatureSwitch}}"
+                                   ShowProfessors="{Binding ShowProfessors, Source={x:Reference professorsSwitch}}"/>
+
+        <!-- Toggle Panel -->
+        <HorizontalStackLayout Grid.Row="1"
+                               Spacing="20"
+                               Padding="15,10"
+                               BackgroundColor="#1a1a2e">
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="Velocity" TextColor="#888" VerticalOptions="Center"/>
+                <Switch x:Name="velocitySwitch" IsToggled="True" OnColor="#4ecdc4"/>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="Curvature" TextColor="#888" VerticalOptions="Center"/>
+                <Switch x:Name="curvatureSwitch" IsToggled="True" OnColor="#ff9f43"/>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="Professors" TextColor="#888" VerticalOptions="Center"/>
+                <Switch x:Name="professorsSwitch" IsToggled="True" OnColor="#a29bfe"/>
+            </HorizontalStackLayout>
+        </HorizontalStackLayout>
+
+        <!-- Playback Control -->
+        <controls:PlaybackControl Grid.Row="2"
+                                  BindingContext="{Binding Player}"/>
+    </Grid>
+</ContentPage>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:AspireDesktop.Views.Controls"
+             xmlns:vm="clr-namespace:AspireDesktop.ViewModels"
+             x:Class="AspireDesktop.Views.ScalarsPage"
+             x:DataType="vm:VortexSessionViewModel"
+             Title="Scalars"
+             BackgroundColor="#0f0f1a">
+
+    <Grid RowDefinitions="*,Auto">
+        <!-- Scalar Ring Stack -->
+        <controls:ScalarRingStack Grid.Row="0"
+                                  Session="{Binding .}"/>
+
+        <!-- Playback Control -->
+        <controls:PlaybackControl Grid.Row="1"
+                                  BindingContext="{Binding Player}"/>
+    </Grid>
+</ContentPage>
