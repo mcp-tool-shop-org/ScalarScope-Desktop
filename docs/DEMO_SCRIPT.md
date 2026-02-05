@@ -221,4 +221,54 @@ If time permits, offer to show:
 
 ---
 
-*Last updated: Session implementing comparison and analytics features*
+---
+
+## Phase 3 Feature Highlights (Optional Talking Points)
+
+### First-Run Guidance
+- Inline hints appear automatically for new users
+- Hints explain playback controls and toggle options
+- Dismiss with the × button - they won't reappear
+
+### Error Handling Demo
+If you want to show robustness:
+1. Try loading a non-JSON file → Shows "Wrong File Type" with suggestions
+2. Try loading a truncated file → Shows "Truncated File" with recovery steps
+3. All errors include "What you can try" actions
+
+### Large File Handling
+If demonstrating with 10,000+ timestep files:
+- Performance mode auto-enables (lightning bolt icon in legend)
+- Frame skipping keeps playback smooth
+- "Large file" warning appears in Notes panel
+
+### Export Reliability
+- All exports validate data before starting
+- Frame sequences show progress
+- Cancellation cleans up partial files
+
+---
+
+---
+
+## Phase 4 Feature Highlights (Instrument Trust)
+
+### Invariant Guards
+If demonstrating reliability:
+- Time values are automatically clamped to [0, 1] - no crashes from out-of-range values
+- Empty trajectory shows "no data" message, not crash
+- Eigenvalue calculations are consistent across all views
+
+### Cross-View Consistency
+- First factor variance is identical in EigenSpectrum and Comparison Analytics
+- Interpretation categories match everywhere: "Strong Unification", "Partial", "Orthogonal"
+- Effective dimensionality calculation uses single centralized source
+
+### Diagnostics (Help Tab)
+- "Run Diagnostics" button shows invariant violation count
+- Support bundle captures system state for debugging
+- Golden snapshot validation for regression testing
+
+---
+
+*Last updated: Phase 4 Instrument Readiness & Trust*

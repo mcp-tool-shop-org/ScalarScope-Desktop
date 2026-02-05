@@ -29,64 +29,87 @@ public class KeyboardService
         if (key == "Space")
         {
             _session.Player.PlayPauseCommand.Execute(null);
-            ShortcutTriggered?.Invoke("Play/Pause");
+            var state = _session.Player.IsPlaying ? "Playing" : "Paused";
+            ShortcutTriggered?.Invoke(state);
             return true;
         }
 
         if (key == "Left")
         {
-            _session.Player.StepBackwardCommand.Execute(null);
-            ShortcutTriggered?.Invoke("Step Back");
+            // Shift+Left for fine step (0.1%), regular Left for normal step (1%)
+            var stepSize = shift ? 0.001 : 0.01;
+            _session.Player.JumpToTimeCommand.Execute(Math.Max(0.0, _session.Player.Time - stepSize));
+            var frame = _session.Player.CurrentFrame;
+            ShortcutTriggered?.Invoke($"Frame {frame}");
             return true;
         }
 
         if (key == "Right")
         {
-            _session.Player.StepForwardCommand.Execute(null);
-            ShortcutTriggered?.Invoke("Step Forward");
+            // Shift+Right for fine step (0.1%), regular Right for normal step (1%)
+            var stepSize = shift ? 0.001 : 0.01;
+            _session.Player.JumpToTimeCommand.Execute(Math.Min(1.0, _session.Player.Time + stepSize));
+            var frame = _session.Player.CurrentFrame;
+            ShortcutTriggered?.Invoke($"Frame {frame}");
             return true;
         }
 
         if (key == "Home")
         {
             _session.Player.JumpToTimeCommand.Execute(0.0);
-            ShortcutTriggered?.Invoke("Jump to Start");
+            ShortcutTriggered?.Invoke("Start");
             return true;
         }
 
         if (key == "End")
         {
             _session.Player.JumpToTimeCommand.Execute(1.0);
-            ShortcutTriggered?.Invoke("Jump to End");
+            ShortcutTriggered?.Invoke("End");
             return true;
         }
 
-        // Speed controls
-        if (key == "OemPlus" || key == "Add")
+        // Speed controls with visual feedback (Up/Down arrows or +/-)
+        if (key == "OemPlus" || key == "Add" || key == "Up")
         {
             _session.Player.IncreaseSpeed();
-            ShortcutTriggered?.Invoke($"Speed: {GetSpeedLabel(_session.Player.SpeedIndex)}");
+            ShortcutTriggered?.Invoke(_session.Player.SpeedDisplay);
             return true;
         }
 
-        if (key == "OemMinus" || key == "Subtract")
+        if (key == "OemMinus" || key == "Subtract" || key == "Down")
         {
             _session.Player.DecreaseSpeed();
-            ShortcutTriggered?.Invoke($"Speed: {GetSpeedLabel(_session.Player.SpeedIndex)}");
+            ShortcutTriggered?.Invoke(_session.Player.SpeedDisplay);
+            return true;
+        }
+
+        // Help shortcut (?)
+        if (key == "OemQuestion")
+        {
+            Shell.Current.GoToAsync("//help");
+            ShortcutTriggered?.Invoke("Help");
+            return true;
+        }
+
+        // Reset speed to 1x
+        if (key == "D0" && !ctrl)
+        {
+            _session.Player.SetSpeed(1.0);
+            ShortcutTriggered?.Invoke("Speed: 1×");
             return true;
         }
 
         // Export shortcut
         if (key == "S" && !ctrl)
         {
-            _ = QuickExportAsync();
+            _ = SafeQuickExportAsync();
             return true;
         }
 
         // Ctrl+S for save/export dialog
         if (key == "S" && ctrl)
         {
-            _ = QuickExportAsync();
+            _ = SafeQuickExportAsync();
             ShortcutTriggered?.Invoke("Screenshot saved");
             return true;
         }
@@ -102,27 +125,32 @@ public class KeyboardService
         return false;
     }
 
-    private async Task QuickExportAsync()
+    private async Task SafeQuickExportAsync()
     {
-        if (_session.Run == null) return;
-
         try
         {
-            var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            var aspireExports = Path.Combine(documentsPath, "ASPIRE Exports");
-            Directory.CreateDirectory(aspireExports);
-
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var outputPath = Path.Combine(aspireExports, $"aspire_quick_{timestamp}.png");
-
-            await _exportService.ExportStillAsync(_session.Run, _session.Player.Time, outputPath);
-
-            ShortcutTriggered?.Invoke($"Saved: {Path.GetFileName(outputPath)}");
+            await QuickExportAsync();
         }
         catch (Exception ex)
         {
             ShortcutTriggered?.Invoke($"Export failed: {ex.Message}");
         }
+    }
+
+    private async Task QuickExportAsync()
+    {
+        if (_session.Run == null) return;
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_quick_{timestamp}.png");
+
+        await _exportService.ExportStillAsync(_session.Run, _session.Player.Time, outputPath);
+
+        ShortcutTriggered?.Invoke($"Saved: {Path.GetFileName(outputPath)}");
     }
 
     private static void NavigateToTab(int index)

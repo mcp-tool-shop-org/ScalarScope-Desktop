@@ -86,9 +86,57 @@ public partial class OverviewPage : ContentPage
     {
         try
         {
-            using var stream = await FileSystem.OpenAppPackageFileAsync($"Samples/{sampleFileName}");
-            using var reader = new StreamReader(stream);
-            var json = await reader.ReadToEndAsync();
+            string? json = null;
+
+            // Try multiple paths for MAUI asset loading (same approach as DemoService)
+            var pathsToTry = new[]
+            {
+                $"Samples/{sampleFileName}",
+                $"Samples\\{sampleFileName}",
+                sampleFileName,
+            };
+
+            foreach (var path in pathsToTry)
+            {
+                try
+                {
+                    using var stream = await FileSystem.OpenAppPackageFileAsync(path);
+                    using var reader = new StreamReader(stream);
+                    json = await reader.ReadToEndAsync();
+                    break;
+                }
+                catch
+                {
+                    // Try next path
+                }
+            }
+
+            // Fallback: try loading from source directory (for development)
+            if (json == null)
+            {
+                var sourceDir = AppContext.BaseDirectory;
+                var devPaths = new[]
+                {
+                    Path.Combine(sourceDir, "Resources", "Raw", "Samples", sampleFileName),
+                    Path.Combine(sourceDir, "..", "..", "..", "..", "Resources", "Raw", "Samples", sampleFileName),
+                    Path.Combine(sourceDir, "..", "..", "..", "..", "..", "Resources", "Raw", "Samples", sampleFileName),
+                };
+
+                foreach (var devPath in devPaths)
+                {
+                    if (File.Exists(devPath))
+                    {
+                        json = await File.ReadAllTextAsync(devPath);
+                        break;
+                    }
+                }
+            }
+
+            if (json == null)
+            {
+                await DisplayAlert("Error", $"Could not find sample file: {sampleFileName}", "OK");
+                return;
+            }
 
             // Write to temp file and load (VortexSessionViewModel expects a file path)
             var tempPath = Path.Combine(FileSystem.CacheDirectory, sampleFileName);

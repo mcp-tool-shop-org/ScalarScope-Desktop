@@ -41,10 +41,10 @@ ScalarScope is self-contained and includes all required runtimes:
 # Clone and build
 git clone https://github.com/mcp-tool-shop-org/scalarscope-desktop.git
 cd scalarscope-desktop
-dotnet build src/ScalarScope/ScalarScope.csproj -c Release -f net10.0-windows10.0.19041.0
+dotnet build src/ScalarScope/ScalarScope.csproj -c Release -f net9.0-windows10.0.19041.0
 
 # Run
-dotnet run --project src/ScalarScope/ScalarScope.csproj -f net10.0-windows10.0.19041.0
+dotnet run --project src/ScalarScope/ScalarScope.csproj -f net9.0-windows10.0.19041.0
 ```
 
 ## First Run Verification

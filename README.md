@@ -73,7 +73,7 @@ Key sections:
 
 ```bash
 # Prerequisites
-# - .NET 8.0 SDK
+# - .NET 9.0 SDK
 # - Visual Studio 2022 or VS Code with MAUI workload
 
 # Restore and build
@@ -82,7 +82,7 @@ dotnet restore
 dotnet build
 
 # Run (Windows)
-dotnet run -f net8.0-windows10.0.19041.0
+dotnet run -f net9.0-windows10.0.19041.0
 ```
 
 ## Usage

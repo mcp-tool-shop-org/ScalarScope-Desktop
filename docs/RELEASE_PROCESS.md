@@ -16,7 +16,7 @@ MAJOR.MINOR.PATCH[-PRERELEASE]
 - `alpha.N` - Alpha release (e.g., `1.0.0-alpha.1`)
 
 ### Current Version
-- **1.0.0-rc.1** - First release candidate
+- **1.0.1.1** - Release for Microsoft Store
 
 ## Release Checklist
 

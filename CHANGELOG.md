@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1.1] - 2026-02-04
+
+### Added
+- **Phase 4: Instrument Readiness & Trust**
+  - InvariantGuard service for runtime assertions (soft-fail in release, hard-fail in debug)
+  - ConsistencyCheckService for centralized metric calculations
+  - GoldenRunService for regression testing via golden snapshots
+  - Cross-view consistency verification (eigenvalue interpretations match everywhere)
+
+### Changed
+- DemoService now uses multi-path fallback for bundled file loading (better MAUI deployment compatibility)
+- Version bump to 1.0.1.1 for Microsoft Store resubmission (cannot reuse version numbers)
+
+### Fixed
+- Bundled demo files now load correctly across all MAUI deployment scenarios
+
 ## [1.0.0-rc.1] - 2025-02-04
 
 ### Added
