@@ -79,7 +79,7 @@ public partial class HelpPage : ContentPage
         var info = $"""
             ScalarScope System Information
             ==================================
-            Version: 1.0.1.1
+            Version: 1.0.2.0
             OS: {Environment.OSVersion}
             .NET: {Environment.Version}
             64-bit: {Environment.Is64BitProcess}
