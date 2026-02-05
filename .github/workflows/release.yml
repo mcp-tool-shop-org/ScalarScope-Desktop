@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui-windows
+
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $env:GITHUB_OUTPUT
+
+    - name: Build Release
+      run: |
+        dotnet publish src/AspireDesktop/AspireDesktop.csproj `
+          --configuration Release `
+          -f net10.0-windows10.0.19041.0 `
+          -p:RuntimeIdentifier=win-x64 `
+          -p:PublishSingleFile=true `
+          -p:SelfContained=true `
+          --output ./publish
+
+    - name: Generate checksums
+      run: |
+        cd publish
+        Get-ChildItem -Recurse -File | ForEach-Object {
+          $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash
+          "$hash  $($_.Name)" | Out-File -Append -FilePath checksums.txt
+        }
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          publish/*
+          publish/checksums.txt
+        body_path: CHANGELOG.md
+        draft: true
+        prerelease: ${{ contains(github.ref, 'rc') || contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-vortexkit-release:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui-windows
+
+    - name: Pack VortexKit
+      run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release
+
+    - name: Push to NuGet (if not prerelease)
+      if: ${{ !contains(github.ref, 'rc') && !contains(github.ref, 'beta') && !contains(github.ref, 'alpha') }}
+      run: |
+        dotnet nuget push src/VortexKit/bin/Release/*.nupkg `
+          --api-key ${{ secrets.NUGET_API_KEY }} `
+          --source https://api.nuget.org/v3/index.json
+      continue-on-error: true

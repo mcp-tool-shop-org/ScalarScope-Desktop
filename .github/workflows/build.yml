@@ -1,0 +1,62 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui-windows
+
+    - name: Restore dependencies
+      run: dotnet restore src/AspireDesktop/AspireDesktop.csproj
+
+    - name: Build
+      run: dotnet build src/AspireDesktop/AspireDesktop.csproj --configuration Release --no-restore -f net10.0-windows10.0.19041.0
+
+    - name: Build VortexKit
+      run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: aspire-desktop-windows
+        path: src/AspireDesktop/bin/Release/
+        retention-days: 7
+
+  build-vortexkit:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Install MAUI workload
+      run: dotnet workload install maui-windows
+
+    - name: Pack VortexKit
+      run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release
+
+    - name: Upload NuGet package
+      uses: actions/upload-artifact@v4
+      with:
+        name: vortexkit-nuget
+        path: src/VortexKit/bin/Release/*.nupkg
+        retention-days: 7
