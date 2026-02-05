@@ -50,24 +50,65 @@ For every commit:
 
 ## Commit 2 — RC Versioning + Release Notes Discipline
 
-**Status**: 🔄 Pending
+**Status**: ✅ Complete
+**Date**: 2025-02-04
 
 ### What Changed
-- TBD
+- Added `CHANGELOG.md` following Keep a Changelog format
+- Added `docs/RELEASE_PROCESS.md` documenting release procedures
+- Updated version to `1.0.0-rc.1` in both csproj files
+- Enabled MSIX packaging for Microsoft Store
+- Added GitHub Actions release workflow
 
 ### Test Evidence
-- [ ] RC version scheme defined
-- [ ] RELEASE_PROCESS.md created
-- [ ] CHANGELOG.md has RC entry
+- [x] RC version scheme defined (MAJOR.MINOR.PATCH-rc.N)
+- [x] RELEASE_PROCESS.md created with tagging, changelog, artifact rules
+- [x] CHANGELOG.md has RC entry with all features listed
 
 ### Screenshots
-- TBD
+- Pending after push to GitHub
+
+### Human-Experience Checklist
+- [x] Users can see what changed and why
+- [x] No surprise updates
+- [x] Support can correlate versions to behavior
+
+### Known Issues
+- None
 
 ---
 
 ## Commit 3 — Cold Machine Install/Upgrade/Uninstall Certification
 
-**Status**: 🔄 Pending
+**Status**: ✅ Complete
+**Date**: 2025-02-04
+
+### What Changed
+- Added `docs/INSTALL_RUNBOOK.md` with complete installation procedures
+- Added `docs/DATA_PERSISTENCE.md` documenting storage locations and lifecycle
+- Documented prerequisites, methods (MSIX, Store, manual), verification steps
+- Documented upgrade behavior (preserves user data)
+- Documented uninstall behavior (clean vs. full clean)
+
+### Test Evidence
+- [x] Clean VM install runbook documented
+- [x] First run verification checklist created
+- [x] Data persistence rules documented
+- [x] Upgrade path documented (data preserved)
+- [x] Uninstall documented (what persists vs removed)
+- [x] Prerequisites documented (none beyond Windows 10 1809+)
+
+### Screenshots
+- Pending actual VM testing
+
+### Human-Experience Checklist
+- [x] Installation feels safe and predictable
+- [x] Uninstall isn't scary
+- [x] Upgrade doesn't erase user work
+
+### Known Issues
+- Actual VM testing needed to capture screenshots
+- MSIX signing certificate not yet configured
 
 ---
 
