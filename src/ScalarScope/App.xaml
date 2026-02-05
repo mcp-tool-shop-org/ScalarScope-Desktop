@@ -13,6 +13,7 @@
             <!-- Converters -->
             <converters:InverseBoolConverter x:Key="InverseBoolConverter"/>
             <converters:BoolToPlayPauseConverter x:Key="BoolToPlayPauseConverter"/>
+            <converters:ListHasItemsConverter x:Key="ListHasItemsConverter"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

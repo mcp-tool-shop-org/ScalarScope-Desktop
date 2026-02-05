@@ -8,7 +8,7 @@
              Title="Trajectory"
              BackgroundColor="#0f0f1a">
 
-    <Grid RowDefinitions="*,Auto,Auto" ColumnDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
         <!-- Main Canvas with Annotation Overlay -->
         <Grid Grid.Row="0" Grid.Column="0">
             <controls:TrajectoryCanvas x:Name="trajectoryCanvas"
@@ -26,6 +26,16 @@
                                         ShowEigenInsights="{Binding ShowEigenInsights, Source={x:Reference annotationPanel}}"
                                         ShowFailureMarkers="{Binding ShowFailureMarkers, Source={x:Reference annotationPanel}}"
                                         IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
+
+            <!-- First-Run Hint (centered, dismissible) -->
+            <controls:InlineHint x:Name="playbackHint"
+                                 HintId="trajectory_playback"
+                                 HintText="Press Space to play, or drag the timeline to scrub through training"
+                                 AccentColor="#00d9ff"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="End"
+                                 Margin="0,0,0,20"
+                                 IsVisible="{Binding HasRun}"/>
         </Grid>
 
         <!-- Annotation Panel (collapsible sidebar) -->
@@ -37,33 +47,61 @@
                                   VerticalOptions="Start"
                                   IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
 
-        <!-- Toggle Panel -->
+        <!-- Toggle Panel with Insight Tooltips -->
         <HorizontalStackLayout Grid.Row="1"
                                Grid.ColumnSpan="2"
-                               Spacing="20"
-                               Padding="15,10"
+                               Spacing="25"
+                               Padding="15,8"
                                BackgroundColor="#1a1a2e">
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Velocity" TextColor="#888" VerticalOptions="Center"/>
-                <Switch x:Name="velocitySwitch" IsToggled="True" OnColor="#4ecdc4"/>
-            </HorizontalStackLayout>
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Curvature" TextColor="#888" VerticalOptions="Center"/>
-                <Switch x:Name="curvatureSwitch" IsToggled="True" OnColor="#ff9f43"/>
-            </HorizontalStackLayout>
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Professors" TextColor="#888" VerticalOptions="Center"/>
-                <Switch x:Name="professorsSwitch" IsToggled="True" OnColor="#a29bfe"/>
-            </HorizontalStackLayout>
-            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="10,0"/>
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Annotations" TextColor="#888" VerticalOptions="Center" FontAttributes="Bold"/>
-                <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#ffd93d"/>
-            </HorizontalStackLayout>
+            <!-- Velocity Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Velocity" TextColor="#4ecdc4" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="velocitySwitch" IsToggled="True" OnColor="#4ecdc4"/>
+                </HorizontalStackLayout>
+                <Label Text="Rate of internal state change" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <!-- Curvature Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Curvature" TextColor="#ff9f43" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="curvatureSwitch" IsToggled="True" OnColor="#ff9f43"/>
+                </HorizontalStackLayout>
+                <Label Text="Phase transitions &amp; revisions" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <!-- Professors Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Professors" TextColor="#a29bfe" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="professorsSwitch" IsToggled="True" OnColor="#a29bfe"/>
+                </HorizontalStackLayout>
+                <Label Text="Evaluator alignment vectors" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
+
+            <!-- Annotations Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Annotations" TextColor="#ffd93d" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#ffd93d"/>
+                </HorizontalStackLayout>
+                <Label Text="Interpretive overlays" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
         </HorizontalStackLayout>
 
+        <!-- Toggle Hint -->
+        <controls:InlineHint Grid.Row="2"
+                             Grid.ColumnSpan="2"
+                             HintId="trajectory_toggles"
+                             HintText="Toggle Curvature to see phase transitions, or enable Annotations for deeper insights"
+                             AccentColor="#ff9f43"
+                             Margin="15,5"/>
+
         <!-- Playback Control -->
-        <controls:PlaybackControl Grid.Row="2"
+        <controls:PlaybackControl Grid.Row="3"
                                   Grid.ColumnSpan="2"
                                   BindingContext="{Binding Player}"/>
     </Grid>

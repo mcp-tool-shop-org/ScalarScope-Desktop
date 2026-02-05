@@ -11,78 +11,227 @@ public class ExportService
 {
     private const int DefaultWidth = 1920;
     private const int DefaultHeight = 1080;
+    private const int MaxWidth = 7680;  // 8K limit
+    private const int MaxHeight = 4320;
+    private const int MaxFrames = 3600; // 60fps * 60s max
+
+    /// <summary>
+    /// Validates that a run can be exported.
+    /// </summary>
+    public ExportValidationResult ValidateForExport(GeometryRun? run)
+    {
+        if (run == null)
+            return ExportValidationResult.Error("No training run loaded. Load a run before exporting.");
+
+        if (run.Trajectory?.Timesteps == null || run.Trajectory.Timesteps.Count == 0)
+            return ExportValidationResult.Error("Run has no trajectory data to export.");
+
+        if (run.Trajectory.Timesteps[0].State2D == null || run.Trajectory.Timesteps[0].State2D.Count < 2)
+            return ExportValidationResult.Error("Trajectory data is missing 2D coordinates.");
+
+        return ExportValidationResult.Success();
+    }
+
+    /// <summary>
+    /// Validates export options and returns sanitized options.
+    /// </summary>
+    public (ExportOptions options, string? warning) ValidateExportOptions(ExportOptions? options)
+    {
+        options ??= new ExportOptions();
+        string? warning = null;
+
+        var width = Math.Clamp(options.Width ?? DefaultWidth, 320, MaxWidth);
+        var height = Math.Clamp(options.Height ?? DefaultHeight, 240, MaxHeight);
+        var fps = Math.Clamp(options.Fps ?? 30, 1, 120);
+        var duration = Math.Clamp(options.Duration ?? 5.0, 0.1, 120.0);
+
+        var totalFrames = (int)(fps * duration);
+        if (totalFrames > MaxFrames)
+        {
+            duration = MaxFrames / (double)fps;
+            warning = $"Duration capped to {duration:F1}s to stay within frame limit";
+        }
+
+        return (options with
+        {
+            Width = width,
+            Height = height,
+            Fps = fps,
+            Duration = duration
+        }, warning);
+    }
 
     /// <summary>
     /// Export current trajectory view as a PNG image.
     /// </summary>
+    public async Task<ExportResult> ExportStillAsync(
+        GeometryRun run,
+        double time,
+        string outputPath,
+        ExportOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        try
+        {
+            var width = validOptions.Width ?? DefaultWidth;
+            var height = validOptions.Height ?? DefaultHeight;
+
+            using var surface = SKSurface.Create(new SKImageInfo(width, height));
+            if (surface == null)
+                return ExportResult.Failure("Failed to create rendering surface. Try a smaller resolution.");
+
+            var canvas = surface.Canvas;
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Render the visualization
+            RenderTrajectoryFrame(canvas, run, time, width, height, validOptions);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Ensure output directory exists
+            var dir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+
+            // Save to file
+            using var image = surface.Snapshot();
+            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            await using var stream = File.Create(outputPath);
+            data.SaveTo(stream);
+
+            return ExportResult.Succeeded(outputPath, warning);
+        }
+        catch (OperationCanceledException)
+        {
+            // Clean up partial file
+            TryDeleteFile(outputPath);
+            return ExportResult.Cancelled();
+        }
+        catch (IOException ex)
+        {
+            return ExportResult.Failure($"File write failed: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            return ExportResult.Failure($"Export failed: {ex.Message}");
+        }
+    }
+
+    // Original method signature for backwards compatibility
     public async Task<string> ExportStillAsync(
         GeometryRun run,
         double time,
         string outputPath,
-        ExportOptions? options = null)
+        ExportOptions? options)
     {
-        options ??= new ExportOptions();
-
-        var width = options.Width ?? DefaultWidth;
-        var height = options.Height ?? DefaultHeight;
-
-        using var surface = SKSurface.Create(new SKImageInfo(width, height));
-        var canvas = surface.Canvas;
-
-        // Render the visualization
-        RenderTrajectoryFrame(canvas, run, time, width, height, options);
-
-        // Save to file
-        using var image = surface.Snapshot();
-        using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-        await using var stream = File.OpenWrite(outputPath);
-        data.SaveTo(stream);
-
-        return outputPath;
+        var result = await ExportStillAsync(run, time, outputPath, options, CancellationToken.None);
+        if (!result.IsSuccess)
+            throw new InvalidOperationException(result.ErrorMessage);
+        return result.OutputPath!;
     }
 
     /// <summary>
     /// Export trajectory animation as a sequence of frames.
     /// Can be combined into GIF or video externally.
     /// </summary>
+    public async Task<ExportSequenceResult> ExportFrameSequenceAsync(
+        GeometryRun run,
+        string outputDir,
+        ExportOptions? options = null,
+        IProgress<ExportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return new ExportSequenceResult { IsSuccess = false, ErrorMessage = validation.ErrorMessage };
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        try
+        {
+            Directory.CreateDirectory(outputDir);
+
+            var width = validOptions.Width ?? DefaultWidth;
+            var height = validOptions.Height ?? DefaultHeight;
+            var fps = validOptions.Fps ?? 30;
+            var duration = validOptions.Duration ?? 5.0;
+            var totalFrames = (int)(fps * duration);
+
+            var paths = new List<string>();
+
+            using var surface = SKSurface.Create(new SKImageInfo(width, height));
+            if (surface == null)
+                return new ExportSequenceResult { IsSuccess = false, ErrorMessage = "Failed to create rendering surface" };
+
+            var canvas = surface.Canvas;
+
+            for (int frame = 0; frame < totalFrames; frame++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var t = totalFrames > 1 ? (double)frame / (totalFrames - 1) : 0;
+
+                canvas.Clear();
+                RenderTrajectoryFrame(canvas, run, t, width, height, validOptions);
+
+                using var image = surface.Snapshot();
+                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+                var framePath = Path.Combine(outputDir, $"frame_{frame:D5}.png");
+                await using var stream = File.Create(framePath);
+                data.SaveTo(stream);
+
+                paths.Add(framePath);
+
+                progress?.Report(new ExportProgress
+                {
+                    CurrentFrame = frame + 1,
+                    TotalFrames = totalFrames,
+                    PercentComplete = (frame + 1) * 100 / totalFrames,
+                    CurrentFile = Path.GetFileName(framePath)
+                });
+            }
+
+            return new ExportSequenceResult
+            {
+                IsSuccess = true,
+                Paths = paths.ToArray(),
+                Warning = warning
+            };
+        }
+        catch (OperationCanceledException)
+        {
+            // Clean up partial output
+            TryDeleteDirectory(outputDir);
+            return new ExportSequenceResult { IsSuccess = false, IsCancelled = true };
+        }
+        catch (IOException ex)
+        {
+            return new ExportSequenceResult { IsSuccess = false, ErrorMessage = $"File write failed: {ex.Message}" };
+        }
+        catch (Exception ex)
+        {
+            return new ExportSequenceResult { IsSuccess = false, ErrorMessage = $"Export failed: {ex.Message}" };
+        }
+    }
+
+    // Original method signature for backwards compatibility
     public async Task<string[]> ExportFrameSequenceAsync(
         GeometryRun run,
         string outputDir,
-        ExportOptions? options = null)
+        ExportOptions? options)
     {
-        options ??= new ExportOptions();
-
-        Directory.CreateDirectory(outputDir);
-
-        var width = options.Width ?? DefaultWidth;
-        var height = options.Height ?? DefaultHeight;
-        var fps = options.Fps ?? 30;
-        var duration = options.Duration ?? 5.0; // seconds
-        var totalFrames = (int)(fps * duration);
-
-        var paths = new List<string>();
-
-        using var surface = SKSurface.Create(new SKImageInfo(width, height));
-        var canvas = surface.Canvas;
-
-        for (int frame = 0; frame < totalFrames; frame++)
-        {
-            var t = (double)frame / (totalFrames - 1);
-
-            canvas.Clear();
-            RenderTrajectoryFrame(canvas, run, t, width, height, options);
-
-            using var image = surface.Snapshot();
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-
-            var framePath = Path.Combine(outputDir, $"frame_{frame:D5}.png");
-            await using var stream = File.OpenWrite(framePath);
-            data.SaveTo(stream);
-
-            paths.Add(framePath);
-        }
-
-        return paths.ToArray();
+        var result = await ExportFrameSequenceAsync(run, outputDir, options, null, CancellationToken.None);
+        if (!result.IsSuccess)
+            throw new InvalidOperationException(result.ErrorMessage ?? "Export failed");
+        return result.Paths!;
     }
 
     /// <summary>
@@ -225,8 +374,8 @@ public class ExportService
 
     private void DrawProfessorVectors(SKCanvas canvas, GeometryRun run, SKPoint center, float scale)
     {
-        var professors = run.Evaluators.Professors;
-        if (professors.Count == 0) return;
+        var professors = run.Evaluators?.Professors;
+        if (professors == null || professors.Count == 0) return;
 
         using var paint = new SKPaint
         {
@@ -254,8 +403,8 @@ public class ExportService
 
     private void DrawTrajectory(SKCanvas canvas, GeometryRun run, double time, SKPoint center, float scale, SKColor accentColor)
     {
-        var steps = run.Trajectory.Timesteps;
-        if (steps.Count < 2) return;
+        var steps = run.Trajectory?.Timesteps;
+        if (steps == null || steps.Count < 2) return;
 
         var maxIdx = (int)(time * (steps.Count - 1));
 
@@ -280,8 +429,8 @@ public class ExportService
 
     private void DrawCurrentPosition(SKCanvas canvas, GeometryRun run, double time, SKPoint center, float scale, SKColor accentColor)
     {
-        var steps = run.Trajectory.Timesteps;
-        if (steps.Count == 0) return;
+        var steps = run.Trajectory?.Timesteps;
+        if (steps == null || steps.Count == 0) return;
 
         var idx = (int)(time * (steps.Count - 1));
         idx = Math.Clamp(idx, 0, steps.Count - 1);
@@ -311,8 +460,8 @@ public class ExportService
 
     private void DrawMetrics(SKCanvas canvas, GeometryRun run, double time, int width, int height)
     {
-        var steps = run.Trajectory.Timesteps;
-        if (steps.Count == 0) return;
+        var steps = run.Trajectory?.Timesteps;
+        if (steps == null || steps.Count == 0) return;
 
         var idx = (int)(time * (steps.Count - 1));
         idx = Math.Clamp(idx, 0, steps.Count - 1);
@@ -337,8 +486,8 @@ public class ExportService
 
     private void DrawEigenSpectrum(SKCanvas canvas, GeometryRun run, double time, int width, int height)
     {
-        var eigenvalues = run.Geometry.Eigenvalues;
-        if (eigenvalues.Count == 0) return;
+        var eigenvalues = run.Geometry?.Eigenvalues;
+        if (eigenvalues == null || eigenvalues.Count == 0) return;
 
         var eigenIdx = (int)(time * (eigenvalues.Count - 1));
         eigenIdx = Math.Clamp(eigenIdx, 0, eigenvalues.Count - 1);
@@ -408,7 +557,7 @@ public class ExportService
             TextAlign = SKTextAlign.Center
         };
 
-        canvas.DrawText("ASPIRE Conscience Formation Comparison", width / 2f, 35, titlePaint);
+        canvas.DrawText("ScalarScope Training Dynamics Comparison", width / 2f, 35, titlePaint);
 
         using var subtitlePaint = new SKPaint
         {
@@ -448,6 +597,18 @@ public class ExportService
             center.X + (float)state[0] * scale,
             center.Y - (float)state[1] * scale);
     }
+
+    private static void TryDeleteFile(string path)
+    {
+        try { if (File.Exists(path)) File.Delete(path); }
+        catch { /* ignore cleanup errors */ }
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        try { if (Directory.Exists(path)) Directory.Delete(path, true); }
+        catch { /* ignore cleanup errors */ }
+    }
 }
 
 public record ExportOptions
@@ -462,4 +623,60 @@ public record ExportOptions
     public bool ShowMetrics { get; init; } = true;
     public bool ShowEigenvalues { get; init; } = true;
     public bool ShowAnnotations { get; init; } = false;
+}
+
+/// <summary>
+/// Result of export validation.
+/// </summary>
+public record ExportValidationResult
+{
+    public bool IsValid { get; init; }
+    public string? ErrorMessage { get; init; }
+
+    public static ExportValidationResult Success() => new() { IsValid = true };
+    public static ExportValidationResult Error(string message) => new() { IsValid = false, ErrorMessage = message };
+}
+
+/// <summary>
+/// Result of a single-file export operation.
+/// </summary>
+public record ExportResult
+{
+    public bool IsSuccess { get; init; }
+    public bool IsCancelled { get; init; }
+    public string? OutputPath { get; init; }
+    public string? ErrorMessage { get; init; }
+    public string? Warning { get; init; }
+
+    public static ExportResult Succeeded(string path, string? warning = null) =>
+        new() { IsSuccess = true, OutputPath = path, Warning = warning };
+
+    public static ExportResult Failure(string error) =>
+        new() { IsSuccess = false, ErrorMessage = error };
+
+    public static ExportResult Cancelled() =>
+        new() { IsSuccess = false, IsCancelled = true };
+}
+
+/// <summary>
+/// Result of a frame sequence export operation.
+/// </summary>
+public record ExportSequenceResult
+{
+    public bool IsSuccess { get; init; }
+    public bool IsCancelled { get; init; }
+    public string[]? Paths { get; init; }
+    public string? ErrorMessage { get; init; }
+    public string? Warning { get; init; }
+}
+
+/// <summary>
+/// Progress information during export.
+/// </summary>
+public record ExportProgress
+{
+    public int CurrentFrame { get; init; }
+    public int TotalFrames { get; init; }
+    public int PercentComplete { get; init; }
+    public string? CurrentFile { get; init; }
 }

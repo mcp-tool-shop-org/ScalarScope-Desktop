@@ -207,10 +207,10 @@ await exporter.ExportComparisonAsync(comparison, player.Time, new ExportOptions
 
 VortexKit patterns apply to any training dynamics visualization:
 
-| ASPIRE Domain | General Pattern | Your Domain |
-|---------------|-----------------|-------------|
-| Conscience state | Latent representation | Model embeddings |
-| Professor feedback | External signals | Reward/loss components |
+| ScalarScope Domain | General Pattern | Your Domain |
+|-------------------|-----------------|-------------|
+| Training state | Latent representation | Model embeddings |
+| Evaluator feedback | External signals | Reward/loss components |
 | Eigenvalue spectrum | Covariance structure | Gradient statistics |
 | Phase transitions | Regime changes | Learning rate schedules |
 | Failure events | Anomalies | Divergence/instability |

@@ -281,6 +281,7 @@ public class ScalarRingStack : SKCanvasView
 
     private static double CalculateVariance(double[] values)
     {
+        if (values.Length == 0) return 0;
         var mean = values.Average();
         return values.Select(v => (v - mean) * (v - mean)).Average();
     }

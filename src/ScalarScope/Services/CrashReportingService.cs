@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 
@@ -16,6 +17,11 @@ public class CrashReportingService
     private static readonly string CrashLogPath = Path.Combine(AppDataPath, "crash.json");
     private static readonly string SessionStatePath = Path.Combine(AppDataPath, "session_state.json");
     private static readonly string LogsPath = Path.Combine(AppDataPath, "logs");
+
+    private static string AppVersion => Assembly.GetExecutingAssembly()
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? Assembly.GetExecutingAssembly().GetName().Version?.ToString()
+        ?? "1.0.0";
 
     /// <summary>
     /// Initialize crash reporting on app startup.
@@ -50,8 +56,9 @@ public class CrashReportingService
             var json = File.ReadAllText(CrashLogPath);
             return JsonSerializer.Deserialize<CrashInfo>(json);
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"Failed to read crash info: {ex.Message}");
             return null;
         }
     }
@@ -97,8 +104,9 @@ public class CrashReportingService
             var json = File.ReadAllText(SessionStatePath);
             return JsonSerializer.Deserialize<SessionState>(json);
         }
-        catch
+        catch (Exception ex)
         {
+            Debug.WriteLine($"Failed to read session state: {ex.Message}");
             return null;
         }
     }
@@ -155,7 +163,7 @@ public class CrashReportingService
 
         // App info
         sb.AppendLine("## Application Information");
-        sb.AppendLine($"  Version:       1.0.0-rc.1"); // TODO: Get from assembly
+        sb.AppendLine($"  Version:       {AppVersion}");
         sb.AppendLine($"  Working Dir:   {Environment.CurrentDirectory}");
         sb.AppendLine($"  App Data:      {AppDataPath}");
         sb.AppendLine();
@@ -244,7 +252,7 @@ public class CrashReportingService
             var crashInfo = new CrashInfo
             {
                 Timestamp = DateTime.UtcNow,
-                Version = "1.0.0-rc.1", // TODO: Get from assembly
+                Version = AppVersion,
                 Source = source,
                 ExceptionType = ex?.GetType().FullName ?? "Unknown",
                 Message = ex?.Message ?? "No message",

@@ -67,15 +67,15 @@ public partial class ExportViewModel : ObservableObject
 
         // FilePicker doesn't support save dialogs well in MAUI, so use a default path
         var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        var aspireExports = Path.Combine(documentsPath, "ASPIRE Exports");
-        Directory.CreateDirectory(aspireExports);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
 
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
         var filename = IsComparison
-            ? $"aspire_comparison_{timestamp}.png"
-            : $"aspire_trajectory_{timestamp}.png";
+            ? $"scalarscope_comparison_{timestamp}.png"
+            : $"scalarscope_trajectory_{timestamp}.png";
 
-        var outputPath = Path.Combine(aspireExports, filename);
+        var outputPath = Path.Combine(scalarScopeExports, filename);
 
         try
         {
@@ -111,9 +111,9 @@ public partial class ExportViewModel : ObservableObject
         if (Run == null) return;
 
         var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        var aspireExports = Path.Combine(documentsPath, "ASPIRE Exports");
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var outputDir = Path.Combine(aspireExports, $"sequence_{timestamp}");
+        var outputDir = Path.Combine(scalarScopeExports, $"sequence_{timestamp}");
 
         try
         {
@@ -128,7 +128,7 @@ public partial class ExportViewModel : ObservableObject
             // Create a simple info file
             var infoPath = Path.Combine(outputDir, "info.txt");
             await File.WriteAllTextAsync(infoPath,
-                $"ASPIRE Frame Sequence Export\n" +
+                $"ScalarScope Frame Sequence Export\n" +
                 $"Run: {Run.Metadata.RunId}\n" +
                 $"Condition: {Run.Metadata.Condition}\n" +
                 $"Frames: {paths.Length}\n" +
@@ -159,11 +159,11 @@ public partial class ExportViewModel : ObservableObject
         if (Run == null) return;
 
         var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        var aspireExports = Path.Combine(documentsPath, "ASPIRE Exports");
-        Directory.CreateDirectory(aspireExports);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
 
         var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-        var outputPath = Path.Combine(aspireExports, $"aspire_quick_{timestamp}.png");
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_quick_{timestamp}.png");
 
         try
         {

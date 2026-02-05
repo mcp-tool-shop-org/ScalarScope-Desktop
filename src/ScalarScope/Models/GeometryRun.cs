@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace ScalarScope.Models;
 
 /// <summary>
-/// Root model for a geometry export from ASPIRE.
+/// Root model for a geometry export.
 /// One file = one run.
 /// </summary>
 public record GeometryRun

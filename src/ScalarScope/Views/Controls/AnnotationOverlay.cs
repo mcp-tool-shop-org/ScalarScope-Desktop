@@ -1,4 +1,5 @@
 using ScalarScope.Models;
+using ScalarScope.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,6 +9,7 @@ namespace ScalarScope.Views.Controls;
 /// <summary>
 /// Overlay component for rendering interpretive annotations on trajectories.
 /// Provides phase labels, curvature warnings, eigenvalue insights, and failure markers.
+/// Supports density levels: Minimal, Standard, Full.
 /// </summary>
 public class AnnotationOverlay : SKCanvasView
 {
@@ -40,6 +42,10 @@ public class AnnotationOverlay : SKCanvasView
 
     public static readonly BindableProperty CenterProperty =
         BindableProperty.Create(nameof(Center), typeof(SKPoint), typeof(AnnotationOverlay));
+
+    public static readonly BindableProperty DensityProperty =
+        BindableProperty.Create(nameof(Density), typeof(AnnotationDensity), typeof(AnnotationOverlay),
+            AnnotationDensity.Standard, propertyChanged: OnPropertyChangedInvalidate);
 
     public GeometryRun? Run
     {
@@ -88,6 +94,31 @@ public class AnnotationOverlay : SKCanvasView
         get => (SKPoint)GetValue(CenterProperty);
         set => SetValue(CenterProperty, value);
     }
+
+    public AnnotationDensity Density
+    {
+        get => (AnnotationDensity)GetValue(DensityProperty);
+        set => SetValue(DensityProperty, value);
+    }
+
+    // Density-based limits
+    private int MaxPhaseAnnotations => Density switch
+    {
+        AnnotationDensity.Minimal => 2,
+        AnnotationDensity.Standard => 5,
+        AnnotationDensity.Full => 10,
+        _ => 5
+    };
+
+    private float CurvatureThreshold => Density switch
+    {
+        AnnotationDensity.Minimal => 0.3f,
+        AnnotationDensity.Standard => 0.15f,
+        AnnotationDensity.Full => 0.1f,
+        _ => 0.15f
+    };
+
+    private bool ShowDetailedCurvatureLabels => Density != AnnotationDensity.Minimal;
 
     // Annotation colors
     private static readonly SKColor PhaseColor = SKColor.Parse("#a29bfe");
@@ -204,19 +235,36 @@ public class AnnotationOverlay : SKCanvasView
         };
 
         // Find high-curvature points up to current time
+        // Use density-aware threshold and avoid center overlap
+        var drawnPositions = new List<SKPoint>();
+        var centerZone = new SKRect(center.X - scale * 0.3f, center.Y - scale * 0.3f,
+                                     center.X + scale * 0.3f, center.Y + scale * 0.3f);
+
         for (int i = 0; i <= currentIdx && i < steps.Count; i++)
         {
             var step = steps[i];
-            if (step.Curvature > 0.15 && step.State2D.Count >= 2)
+            if (step.Curvature > CurvatureThreshold && step.State2D.Count >= 2)
             {
                 var pos = ToScreen(step.State2D, center, scale);
 
-                // Draw warning circle
+                // Skip if too close to center (protect trajectory visibility)
+                if (Density == AnnotationDensity.Minimal && centerZone.Contains(pos))
+                    continue;
+
+                // Skip if too close to existing annotation
+                if (drawnPositions.Any(p => Math.Abs(p.X - pos.X) < 30 && Math.Abs(p.Y - pos.Y) < 30))
+                    continue;
+
+                drawnPositions.Add(pos);
+
+                // Draw warning circle with edge fade for minimal density
                 var radius = Math.Min(20, (float)(step.Curvature * 50));
+                var alpha = Density == AnnotationDensity.Minimal ? (byte)60 : (byte)100;
+                circlePaint.Color = CurvatureWarningColor.WithAlpha(alpha);
                 canvas.DrawCircle(pos, radius, circlePaint);
 
-                // Draw curvature icon and value
-                if (step.Curvature > 0.25)
+                // Draw curvature icon and value (only in Standard/Full)
+                if (ShowDetailedCurvatureLabels && step.Curvature > 0.25)
                 {
                     canvas.DrawText($"⚠ {step.Curvature:F2}", pos.X + radius + 5, pos.Y + 4, paint);
                 }
@@ -405,10 +453,11 @@ public class AnnotationOverlay : SKCanvasView
         }
 
         // Remove duplicates (keep most significant within 10-step windows)
+        // Limit based on density setting
         return phases
             .GroupBy(p => p.StepIndex / 10)
             .Select(g => g.First())
-            .Take(5) // Limit to 5 annotations to avoid clutter
+            .Take(MaxPhaseAnnotations)
             .ToList();
     }
 

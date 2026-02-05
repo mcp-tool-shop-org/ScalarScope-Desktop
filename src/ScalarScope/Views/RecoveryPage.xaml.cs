@@ -4,8 +4,6 @@ namespace ScalarScope.Views;
 
 public partial class RecoveryPage : ContentPage
 {
-    private readonly SessionState? _sessionState;
-
     public RecoveryPage()
     {
         InitializeComponent();
