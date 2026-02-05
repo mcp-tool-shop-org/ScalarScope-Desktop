@@ -1,4 +1,5 @@
 using ScalarScope.Models;
+using ScalarScope.Services;
 using ScalarScope.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -28,6 +29,10 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     public static readonly BindableProperty ShowAnnotationsProperty =
         BindableProperty.Create(nameof(ShowAnnotations), typeof(bool), typeof(ComparisonTrajectoryCanvas), false);
+
+    public static readonly BindableProperty IsDominantProperty =
+        BindableProperty.Create(nameof(IsDominant), typeof(bool?), typeof(ComparisonTrajectoryCanvas), null,
+            propertyChanged: OnDominantChanged);
 
     public GeometryRun? Run
     {
@@ -59,6 +64,15 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         set => SetValue(ShowAnnotationsProperty, value);
     }
 
+    /// <summary>
+    /// null = equal/unknown, true = this run is dominant, false = this run is weaker
+    /// </summary>
+    public bool? IsDominant
+    {
+        get => (bool?)GetValue(IsDominantProperty);
+        set => SetValue(IsDominantProperty, value);
+    }
+
     private static readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor GridColor = SKColor.Parse("#2a2a4e");
 
@@ -82,6 +96,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
             canvas.InvalidateSurface();
     }
 
+    private static void OnDominantChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is ComparisonTrajectoryCanvas canvas)
+            canvas.InvalidateSurface();
+    }
+
     private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
     {
         var canvas = e.Surface.Canvas;
@@ -92,6 +112,17 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         _center = new SKPoint(info.Width / 2f, info.Height / 2f);
         _scale = Math.Min(info.Width, info.Height) / 4f;
 
+        // Apply dimming overlay if this run is weaker
+        if (IsDominant == false)
+        {
+            using var dimPaint = new SKPaint
+            {
+                Color = SKColors.Black.WithAlpha(60),
+                Style = SKPaintStyle.Fill
+            };
+            canvas.DrawRect(0, 0, info.Width, info.Height, dimPaint);
+        }
+
         DrawGrid(canvas, info);
         DrawLabel(canvas, info);
 
@@ -99,6 +130,21 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         {
             DrawNoDataMessage(canvas, info);
             return;
+        }
+
+        // Invariant check: trajectory must be non-empty before rendering
+        if (!InvariantGuard.AssertTrajectoryNonEmpty(Run, $"ComparisonTrajectoryCanvas.{Label}"))
+        {
+            DrawNoDataMessage(canvas, info);
+            return;
+        }
+
+        // Invariant check: time must be valid
+        var clampedTime = InvariantGuard.ClampTime(CurrentTime, $"ComparisonTrajectoryCanvas.{Label}");
+        if (Math.Abs(clampedTime - CurrentTime) > 0.001)
+        {
+            // Time was out of bounds - use clamped value
+            CurrentTime = clampedTime;
         }
 
         DrawProfessorVectors(canvas);
@@ -111,6 +157,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         }
 
         DrawMetrics(canvas, info);
+        DrawDominanceIndicator(canvas, info);
     }
 
     private void DrawGrid(SKCanvas canvas, SKImageInfo info)
@@ -173,7 +220,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
             IsAntialias = true,
             TextAlign = SKTextAlign.Center
         };
-        canvas.DrawText("Click to load run", _center.X, _center.Y, paint);
+        canvas.DrawText("Load a training run", _center.X, _center.Y, paint);
     }
 
     private void DrawTrajectory(SKCanvas canvas)
@@ -382,5 +429,65 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
             _center.X + (float)state[0] * _scale,
             _center.Y - (float)state[1] * _scale
         );
+    }
+
+    private void DrawDominanceIndicator(SKCanvas canvas, SKImageInfo info)
+    {
+        if (IsDominant == null) return;
+
+        using var paint = new SKPaint
+        {
+            TextSize = 10,
+            IsAntialias = true,
+            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+        };
+
+        var x = info.Width - 90;
+        var y = 25f;
+
+        if (IsDominant == true)
+        {
+            paint.Color = SKColor.Parse("#4ecdc4");
+            canvas.DrawText("★ STRONGER", x, y, paint);
+        }
+        else
+        {
+            paint.Color = SKColor.Parse("#888888");
+            canvas.DrawText("○ WEAKER", x, y, paint);
+        }
+
+        // Draw evaluator alignment indicator
+        var eigenvalues = Run?.Geometry.Eigenvalues;
+        if (eigenvalues != null && eigenvalues.Count > 0)
+        {
+            var eigenIdx = (int)(CurrentTime * (eigenvalues.Count - 1));
+            eigenIdx = Math.Clamp(eigenIdx, 0, eigenvalues.Count - 1);
+            var eigen = eigenvalues[eigenIdx];
+
+            if (eigen.Values.Count > 0)
+            {
+                var total = eigen.Values.Sum();
+                var firstFactor = total > 0 ? eigen.Values[0] / total : 0;
+
+                y += 15;
+                paint.TextSize = 9;
+
+                if (firstFactor > 0.6)
+                {
+                    paint.Color = SKColor.Parse("#4ecdc4");
+                    canvas.DrawText("Aligned evaluators", x, y, paint);
+                }
+                else if (firstFactor > 0.35)
+                {
+                    paint.Color = SKColor.Parse("#ffd93d");
+                    canvas.DrawText("Partial alignment", x, y, paint);
+                }
+                else
+                {
+                    paint.Color = SKColor.Parse("#ff6b6b");
+                    canvas.DrawText("Orthogonal evaluators", x, y, paint);
+                }
+            }
+        }
     }
 }

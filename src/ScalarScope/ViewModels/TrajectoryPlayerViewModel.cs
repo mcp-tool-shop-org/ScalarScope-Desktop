@@ -153,7 +153,7 @@ public partial class TrajectoryPlayerViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void JumpToTime(double t)
     {
-        Time = Math.Clamp(t, 0.0, 1.0);
+        Time = InvariantGuard.ClampTime(t, "JumpToTime");
         TimeChanged?.Invoke();
     }
 

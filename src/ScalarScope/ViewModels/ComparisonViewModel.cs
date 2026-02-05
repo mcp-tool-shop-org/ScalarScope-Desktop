@@ -82,6 +82,14 @@ public partial class ComparisonViewModel : ObservableObject
 
     private void OnTimeChanged()
     {
+        // Invariant check: time must always be valid
+        var clampedTime = InvariantGuard.ClampTime(Player.Time, "ComparisonViewModel.OnTimeChanged");
+        if (Math.Abs(clampedTime - Player.Time) > 0.001)
+        {
+            // Time was out of bounds - this should never happen but we handle it
+            Player.JumpToTimeCommand.Execute(clampedTime);
+        }
+
         NotifyComputedPropertiesChanged();
     }
 
@@ -283,6 +291,17 @@ public partial class ComparisonViewModel : ObservableObject
 
             if (run != null)
             {
+                // Invariant check: trajectory must have data
+                if (!InvariantGuard.AssertTrajectoryNonEmpty(run, $"LoadLeftFromFileAsync({Path.GetFileName(path)})"))
+                {
+                    LeftRunName = "Error: No trajectory data";
+                    HasLeftRun = false;
+                    return;
+                }
+
+                // Invariant check: data consistency
+                InvariantGuard.AssertDataConsistentLengths(run, $"LoadLeftFromFileAsync({Path.GetFileName(path)})");
+
                 LeftRun = run;
                 LeftRunName = Path.GetFileNameWithoutExtension(path);
                 HasLeftRun = true;
@@ -308,6 +327,17 @@ public partial class ComparisonViewModel : ObservableObject
 
             if (run != null)
             {
+                // Invariant check: trajectory must have data
+                if (!InvariantGuard.AssertTrajectoryNonEmpty(run, $"LoadRightFromFileAsync({Path.GetFileName(path)})"))
+                {
+                    RightRunName = "Error: No trajectory data";
+                    HasRightRun = false;
+                    return;
+                }
+
+                // Invariant check: data consistency
+                InvariantGuard.AssertDataConsistentLengths(run, $"LoadRightFromFileAsync({Path.GetFileName(path)})");
+
                 RightRun = run;
                 RightRunName = Path.GetFileNameWithoutExtension(path);
                 HasRightRun = true;
@@ -335,6 +365,18 @@ public partial class ComparisonViewModel : ObservableObject
     private void GenerateComparisonSummary()
     {
         if (LeftRun == null || RightRun == null) return;
+
+        // Invariant check: both runs must be valid for comparison
+        if (!InvariantGuard.AssertCompareRunsValid(LeftRun, RightRun, "ComparisonViewModel.GenerateComparisonSummary"))
+        {
+            ComparisonSummary = "Error: One or both runs have invalid data.";
+            InterpretationVerdict = "Cannot compare runs with missing trajectory data.";
+            return;
+        }
+
+        // Invariant check: data consistency
+        InvariantGuard.AssertDataConsistentLengths(LeftRun, "ComparisonViewModel.LeftRun");
+        InvariantGuard.AssertDataConsistentLengths(RightRun, "ComparisonViewModel.RightRun");
 
         var leftCondition = LeftRun.Metadata?.Condition ?? "Unknown";
         var rightCondition = RightRun.Metadata?.Condition ?? "Unknown";

@@ -84,6 +84,14 @@ public partial class VortexSessionViewModel : ObservableObject
 
     private void OnTimeChanged()
     {
+        // Invariant check: time must always be valid
+        var clampedTime = InvariantGuard.ClampTime(Player.Time, "VortexSessionViewModel.OnTimeChanged");
+        if (Math.Abs(clampedTime - Player.Time) > 0.001)
+        {
+            // Time was out of bounds - this should never happen but we handle it
+            Player.JumpToTimeCommand.Execute(clampedTime);
+        }
+
         OnPropertyChanged(nameof(CurrentTrajectoryState));
         OnPropertyChanged(nameof(CurrentScalars));
         OnPropertyChanged(nameof(CurrentEigenvalues));
@@ -125,6 +133,11 @@ public partial class VortexSessionViewModel : ObservableObject
         }
 
         var run = result.Run!;
+
+        // Post-load invariant checks
+        InvariantGuard.AssertTrajectoryMonotonic(run.Trajectory?.Timesteps, $"LoadFromFileAsync({Path.GetFileName(path)})");
+        InvariantGuard.AssertDataConsistentLengths(run, $"LoadFromFileAsync({Path.GetFileName(path)})");
+
         Run = run;
         RunName = Path.GetFileNameWithoutExtension(path);
         HasRun = true;

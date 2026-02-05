@@ -1,3 +1,4 @@
+using ScalarScope.Services;
 using ScalarScope.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -72,6 +73,11 @@ public class EigenSpectrumView : SKCanvasView
             return;
         }
 
+        // Invariant checks for eigenvalues
+        var eigenvalues = Session.CurrentEigenvalues.Values;
+        InvariantGuard.AssertEigenvaluesSorted(eigenvalues, "EigenSpectrumView");
+        InvariantGuard.AssertEigenvaluesNonNegative(eigenvalues, "EigenSpectrumView");
+
         DrawEigenBars(canvas, info);
         DrawEffectiveDimensionality(canvas, info);
         DrawInterpretation(canvas, info);
@@ -86,7 +92,7 @@ public class EigenSpectrumView : SKCanvasView
             IsAntialias = true,
             TextAlign = SKTextAlign.Center
         };
-        canvas.DrawText("Load a geometry run to visualize", info.Width / 2f, info.Height / 2f, paint);
+        canvas.DrawText("Load a training run to see eigenvalues", info.Width / 2f, info.Height / 2f, paint);
     }
 
     private void DrawEigenBars(SKCanvas canvas, SKImageInfo info)

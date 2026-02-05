@@ -1,4 +1,5 @@
 using ScalarScope.Models;
+using ScalarScope.Services;
 using ScalarScope.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -59,9 +60,13 @@ public class TrajectoryCanvas : SKCanvasView
     private static readonly SKColor ProfessorColor = SKColor.Parse("#a29bfe");
     private static readonly SKColor HoldoutColor = SKColor.Parse("#fd79a8");
 
-    private float _padding = 40f;
     private float _scale = 100f;
     private SKPoint _center;
+
+    // Throttled rendering for large runs
+    private DateTime _lastRenderTime = DateTime.MinValue;
+    private bool _renderPending;
+    private const double ThrottleIntervalMs = 33.33; // ~30fps during scrubbing
 
     public TrajectoryCanvas()
     {
@@ -86,7 +91,34 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void OnTimeChanged()
     {
-        MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        // Throttle rendering for large runs
+        if (Session?.Player.IsLargeRun == true)
+        {
+            var now = DateTime.Now;
+            var elapsed = (now - _lastRenderTime).TotalMilliseconds;
+
+            if (elapsed >= ThrottleIntervalMs)
+            {
+                _lastRenderTime = now;
+                MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+            }
+            else if (!_renderPending)
+            {
+                // Schedule a render for when throttle period ends
+                _renderPending = true;
+                var delay = (int)(ThrottleIntervalMs - elapsed);
+                _ = Task.Delay(delay).ContinueWith(_ =>
+                {
+                    _renderPending = false;
+                    _lastRenderTime = DateTime.Now;
+                    MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+                });
+            }
+        }
+        else
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
@@ -102,6 +134,13 @@ public class TrajectoryCanvas : SKCanvasView
         DrawGrid(canvas, info);
 
         if (Session?.Run is null)
+        {
+            DrawNoDataMessage(canvas, info);
+            return;
+        }
+
+        // Invariant check: trajectory must be non-empty before rendering
+        if (!InvariantGuard.AssertTrajectoryNonEmpty(Session.Run, "TrajectoryCanvas.OnPaintSurface"))
         {
             DrawNoDataMessage(canvas, info);
             return;
@@ -325,8 +364,17 @@ public class TrajectoryCanvas : SKCanvasView
         };
 
         var x = 10f;
-        var y = info.Height - 60f;
+        var y = info.Height - 75f;
         var spacing = 15f;
+
+        // Performance mode indicator
+        if (Session?.Player.IsLargeRun == true)
+        {
+            paint.Color = SKColor.Parse("#ffd93d").WithAlpha(200);
+            canvas.DrawText($"⚡ {Session.Player.FrameSkipDisplay}", x, y, paint);
+            y += spacing;
+            paint.Color = SKColors.White.WithAlpha(180);
+        }
 
         // Time indicator
         var time = Session?.Player.Time ?? 0;
