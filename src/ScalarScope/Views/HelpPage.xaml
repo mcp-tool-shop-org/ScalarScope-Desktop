@@ -2,17 +2,169 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ScalarScope.Views.HelpPage"
-             Title="Help &amp; Troubleshooting"
+             Title="Help"
              BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#0f0f1a}">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="24">
 
             <!-- Header -->
-            <Label Text="Help Center"
+            <Label Text="How to Read ScalarScope"
                    FontSize="28"
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+            <!-- What You Just Saw (shows after demo completion) -->
+            <Frame x:Name="demoRecapFrame"
+                   BackgroundColor="{AppThemeBinding Light=#E8F5E9, Dark=#1a2e1a}"
+                   BorderColor="#4ecdc4"
+                   CornerRadius="12"
+                   Padding="20"
+                   IsVisible="False">
+                <VerticalStackLayout Spacing="12">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label Text="✓"
+                               FontSize="20"
+                               TextColor="#4ecdc4"
+                               VerticalOptions="Center"/>
+                        <Label Text="What You Just Saw"
+                               FontSize="18"
+                               FontAttributes="Bold"
+                               TextColor="#4ecdc4"
+                               VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+
+                    <Label Text="The demo compared two training runs with identical settings except for evaluator geometry:"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="15" Margin="0,5">
+                        <VerticalStackLayout Grid.Column="0" Spacing="5">
+                            <Label Text="Path A: Orthogonal"
+                                   FontAttributes="Bold"
+                                   TextColor="#ff6b6b"/>
+                            <Label Text="Professors with independent criteria (r ≈ 0). Eigenvalues stayed distributed. No unified axis emerged."
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                   FontSize="12"
+                                   LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="5">
+                            <Label Text="Path B: Correlated"
+                                   FontAttributes="Bold"
+                                   TextColor="#4ecdc4"/>
+                            <Label Text="Professors sharing latent quality (r ≈ 0.87). λ₁ dominated the spectrum. Model converged to shared axis."
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                   FontSize="12"
+                                   LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <Label Text="Key insight: Evaluative internalization is possible if and only if evaluators share a latent evaluative manifold."
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                           FontAttributes="Italic"
+                           Margin="0,5,0,0"/>
+
+                    <Button Text="Watch Demo Again"
+                            x:Name="replayDemoButton"
+                            Clicked="OnReplayDemoClicked"
+                            BackgroundColor="#4ecdc4"
+                            TextColor="#0f0f1a"
+                            FontSize="12"
+                            Padding="12,6"
+                            HeightRequest="32"
+                            CornerRadius="6"
+                            HorizontalOptions="Start"
+                            Margin="0,5,0,0"/>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Interpretation Guide (NEW - Primary Section) -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   BorderColor="#00d9ff"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Understanding the Visualizations"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#00d9ff" />
+
+                    <!-- Trajectory Shapes -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Trajectory Shapes"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#4ecdc4}" />
+                            <Label Text="• Smooth convergence → Learning is stable, evaluators agree"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Spiraling path → Oscillation between competing objectives"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Sharp turns → Phase transitions or revision events"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Stagnation → Learning plateau, possible local minimum"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Eigenvalue Dominance -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Eigenvalue Dominance"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#ff9f43}" />
+                            <Label Text="• Single dominant λ₁ (>70%) → Evaluators share latent structure"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Distributed eigenvalues → Orthogonal evaluator criteria"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Collapsing spectrum → Convergent learning (Path B)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Stable spectrum → Pluralistic learning (Path A)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Scalar Rings -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Scalar Rings (Vortex View)"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#c56cf0}" />
+                            <Label Text="• Phase-locked rings → All dimensions improving together"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Drifting phases → Tradeoffs between quality dimensions"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Expanding radius → Metric improvement over time"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Why Comparison Matters -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="Why Comparison Matters"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#ffd93d}" />
+                            <Label Text="Path A (Orthogonal): Evaluators measure different qualities. Model learns to satisfy each independently. Maintains diversity but may not converge."
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="Path B (Correlated): Evaluators share underlying structure. Model finds unified representation. Converges but may miss orthogonal qualities."
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                                   Margin="0,8,0,0" />
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+            </Frame>
 
             <!-- Quick Actions -->
             <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
