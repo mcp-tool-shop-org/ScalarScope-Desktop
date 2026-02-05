@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AspireDesktop.Views.HelpPage"
+             Title="Help &amp; Troubleshooting"
+             BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#0f0f1a}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="24">
+
+            <!-- Header -->
+            <Label Text="Help Center"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+            <!-- Quick Actions -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Quick Actions"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+                    <FlexLayout Wrap="Wrap" JustifyContent="Start">
+                        <Button Text="🔍 Run Diagnostics"
+                                Clicked="OnRunDiagnosticsClicked"
+                                BackgroundColor="#4ecdc4"
+                                TextColor="White"
+                                Margin="0,0,12,12"
+                                Padding="16,10"
+                                CornerRadius="8" />
+
+                        <Button Text="📦 Create Support Bundle"
+                                Clicked="OnCreateSupportBundleClicked"
+                                BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                                TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                Margin="0,0,12,12"
+                                Padding="16,10"
+                                CornerRadius="8" />
+
+                        <Button Text="📋 Copy System Info"
+                                Clicked="OnCopySystemInfoClicked"
+                                BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                                TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                Margin="0,0,12,12"
+                                Padding="16,10"
+                                CornerRadius="8" />
+                    </FlexLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Diagnostics Result (hidden by default) -->
+            <Frame x:Name="DiagnosticsFrame"
+                   IsVisible="False"
+                   BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#16213e}"
+                   BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Diagnostics Results"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+                    <Label x:Name="DiagnosticsResultLabel"
+                           FontFamily="Consolas"
+                           FontSize="14"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#AAAAAA}" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Common Issues -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Common Issues"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+                    <!-- Issue 1 -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="❌ File won't load"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="• Ensure the file is valid JSON format"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Check the file isn't corrupted or truncated"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Verify the schema matches ASPIRE training run format"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Issue 2 -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="🐌 Slow or choppy playback"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="• Close other GPU-intensive applications"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Try reducing the export resolution"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Update your graphics drivers"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Issue 3 -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="📸 Export fails"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="• Ensure you have write access to the destination"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Check available disk space (Run Diagnostics)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Try a lower resolution export"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Issue 4 -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="🔧 App crashes on startup"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="• Delete settings: %LOCALAPPDATA%\AspireDesktop\settings.json"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Reinstall the application"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Create a support bundle and report the issue"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                    <!-- Issue 5 -->
+                    <Frame BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                           BorderColor="Transparent"
+                           CornerRadius="8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="8">
+                            <Label Text="⌨️ Keyboard shortcuts not working"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="• Click inside the visualization area first"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• Check if another window has focus"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="• See QUICK_REFERENCE.md for shortcut list"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                        </VerticalStackLayout>
+                    </Frame>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Keyboard Shortcuts -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Keyboard Shortcuts"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="24" RowSpacing="8">
+                        <Label Grid.Row="0" Grid.Column="0" Text="Space" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="0" Grid.Column="1" Text="Play / Pause" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                        <Label Grid.Row="1" Grid.Column="0" Text="← / →" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="1" Grid.Column="1" Text="Step backward / forward" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                        <Label Grid.Row="2" Grid.Column="0" Text="Home / End" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="2" Grid.Column="1" Text="Jump to start / end" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                        <Label Grid.Row="3" Grid.Column="0" Text="+ / -" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="3" Grid.Column="1" Text="Increase / decrease speed" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                        <Label Grid.Row="4" Grid.Column="0" Text="S" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="4" Grid.Column="1" Text="Take screenshot" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                        <Label Grid.Row="5" Grid.Column="0" Text="Ctrl+O" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#00d9ff}" />
+                        <Label Grid.Row="5" Grid.Column="1" Text="Open file" TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- About -->
+            <Frame BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   BorderColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   CornerRadius="12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="About ASPIRE Desktop"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+                    <Label Text="Version 1.0.0-rc.1"
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                    <Label Text="Visualization tool for machine learning training dynamics."
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                    <Label Text="© 2025 ASPIRE Project (mcp-tool-shop-org)"
+                           TextColor="{AppThemeBinding Light=#888888, Dark=#666666}" />
+
+                    <HorizontalStackLayout Spacing="16" Margin="0,8,0,0">
+                        <Button Text="GitHub"
+                                Clicked="OnGitHubClicked"
+                                BackgroundColor="Transparent"
+                                TextColor="#00d9ff"
+                                Padding="0" />
+                        <Button Text="Report Issue"
+                                Clicked="OnReportIssueClicked"
+                                BackgroundColor="Transparent"
+                                TextColor="#00d9ff"
+                                Padding="0" />
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -244,7 +244,44 @@ For every commit:
 
 ## Commit 7 — Help Center Upgrade to Troubleshooting Assistant
 
-**Status**: 🔄 Pending
+**Status**: ✅ Complete
+**Date**: 2025-02-04
+
+### What Changed
+- Added `Services/DiagnosticsService.cs` for system diagnostics
+- Added `Views/HelpPage.xaml` as dedicated Help tab
+- Added Help tab to navigation
+- Integrated diagnostics, support bundle, and common issues
+
+### Help Center Features
+- **Run Diagnostics**: System checks (memory, disk, .NET, GPU)
+- **Create Support Bundle**: One-click export of debug info
+- **Copy System Info**: Quick clipboard copy for issue reports
+- **Common Issues**: Decision tree for frequent problems:
+  - File won't load
+  - Slow/choppy playback
+  - Export fails
+  - App crashes on startup
+  - Keyboard shortcuts not working
+- **Keyboard Shortcuts**: Quick reference in-app
+- **About**: Version, copyright, GitHub/Issue links
+
+### Test Evidence
+- [x] Diagnostics run and display results
+- [x] Support bundle generates successfully
+- [x] Common issues documented with solutions
+- [x] Deep-links to GitHub for reporting
+
+### Screenshots
+- Pending
+
+### Human-Experience Checklist
+- [x] Users can self-rescue
+- [x] Fewer support requests expected
+- [x] Help feels alive and useful
+
+### Known Issues
+- None
 
 ---
 
