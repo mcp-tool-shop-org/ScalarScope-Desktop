@@ -46,14 +46,27 @@
                 </Grid>
             </Border>
 
-            <!-- VS Label -->
-            <Label Grid.Column="1"
-                   Text="VS"
-                   FontSize="18"
-                   FontAttributes="Bold"
-                   TextColor="#666"
-                   VerticalOptions="Center"
-                   Margin="15,0"/>
+            <!-- VS Label / Demo Controls -->
+            <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="5">
+                <Label Text="VS"
+                       FontSize="18"
+                       FontAttributes="Bold"
+                       TextColor="#666"
+                       HorizontalOptions="Center"/>
+
+                <!-- End Demo button (only visible during demo) -->
+                <Button Text="End Demo"
+                        Command="{Binding EndDemoCommand}"
+                        BackgroundColor="Transparent"
+                        BorderColor="#c56cf0"
+                        BorderWidth="1"
+                        TextColor="#c56cf0"
+                        FontSize="10"
+                        Padding="8,3"
+                        HeightRequest="26"
+                        CornerRadius="4"
+                        IsVisible="{Binding IsDemoMode}"/>
+            </VerticalStackLayout>
 
             <!-- Right Run Loader -->
             <Border Grid.Column="2"

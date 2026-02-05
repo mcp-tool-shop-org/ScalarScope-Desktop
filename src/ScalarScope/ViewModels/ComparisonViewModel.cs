@@ -1,5 +1,6 @@
 using System.Text.Json;
 using ScalarScope.Models;
+using ScalarScope.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
@@ -53,6 +54,13 @@ public partial class ComparisonViewModel : ObservableObject
 
     [ObservableProperty]
     private bool? _isRightDominant;
+
+    // Demo mode state
+    [ObservableProperty]
+    private bool _isDemoMode;
+
+    [ObservableProperty]
+    private bool _isDemoComplete;
 
     // Shared playback controller
     public TrajectoryPlayerViewModel Player { get; } = new();
@@ -156,6 +164,13 @@ public partial class ComparisonViewModel : ObservableObject
             Player.PlayPauseCommand.Execute(null);
         }
 
+        // Set demo mode
+        IsDemoMode = true;
+        IsDemoComplete = false;
+
+        // Subscribe to demo completion
+        DemoAnnotationService.DemoCompleted += OnDemoCompleted;
+
         // Load Path A (orthogonal) on the left
         LeftRun = pathA;
         LeftRunName = pathA.Metadata?.Condition ?? "Path A: Orthogonal";
@@ -172,6 +187,50 @@ public partial class ComparisonViewModel : ObservableObject
         // Reset player to start
         Player.JumpToTimeCommand.Execute(0.0);
         NotifyComputedPropertiesChanged();
+    }
+
+    private void OnDemoCompleted()
+    {
+        IsDemoComplete = true;
+        DemoService.EndDemo(completed: true);
+    }
+
+    /// <summary>
+    /// End the demo early (user requested).
+    /// </summary>
+    [RelayCommand]
+    public void EndDemo()
+    {
+        if (!IsDemoMode) return;
+
+        // Stop playback
+        if (Player.IsPlaying)
+        {
+            Player.PlayPauseCommand.Execute(null);
+        }
+
+        // Clean up demo state
+        IsDemoMode = false;
+        IsDemoComplete = false;
+        DemoAnnotationService.DemoCompleted -= OnDemoCompleted;
+        DemoService.EndDemo(completed: false);
+
+        // Reset the comparison view
+        ResetAll();
+    }
+
+    /// <summary>
+    /// Silently end demo mode when user takes over with their own file.
+    /// Does not reset the view - just cleans up demo state.
+    /// </summary>
+    private void EndDemoModeIfActive()
+    {
+        if (!IsDemoMode) return;
+
+        IsDemoMode = false;
+        IsDemoComplete = false;
+        DemoAnnotationService.DemoCompleted -= OnDemoCompleted;
+        DemoService.EndDemo(completed: false);
     }
 
     [RelayCommand]
@@ -214,6 +273,9 @@ public partial class ComparisonViewModel : ObservableObject
 
     public async Task LoadLeftFromFileAsync(string path)
     {
+        // End demo mode if user loads their own file
+        EndDemoModeIfActive();
+
         try
         {
             var json = await File.ReadAllTextAsync(path);
@@ -236,6 +298,9 @@ public partial class ComparisonViewModel : ObservableObject
 
     public async Task LoadRightFromFileAsync(string path)
     {
+        // End demo mode if user loads their own file
+        EndDemoModeIfActive();
+
         try
         {
             var json = await File.ReadAllTextAsync(path);

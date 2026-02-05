@@ -119,6 +119,12 @@ public static class DemoAnnotationService
         CurrentAnnotation = annotation;
         AnnotationTriggered?.Invoke(annotation);
 
+        // Fire demo completed event when we show the final annotation
+        if (annotation.Id == "demo_complete")
+        {
+            DemoCompleted?.Invoke();
+        }
+
         // Auto-dismiss after duration
         Task.Delay(annotation.Duration).ContinueWith(_ =>
         {
@@ -148,6 +154,11 @@ public static class DemoAnnotationService
     /// Check if the demo has completed (all annotations shown and past final threshold).
     /// </summary>
     public static bool IsDemoComplete => ShownAnnotations.Contains("demo_complete");
+
+    /// <summary>
+    /// Event fired when the demo reaches completion (final annotation shown).
+    /// </summary>
+    public static event Action? DemoCompleted;
 }
 
 /// <summary>
