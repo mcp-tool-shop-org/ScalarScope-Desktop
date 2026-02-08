@@ -71,4 +71,8 @@
 		<PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="3.116.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<ProjectReference Include="..\VortexKit\VortexKit.csproj" />
+	</ItemGroup>
+
 </Project>

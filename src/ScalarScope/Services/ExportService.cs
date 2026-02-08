@@ -1,6 +1,7 @@
 using ScalarScope.Models;
 using ScalarScope.ViewModels;
 using SkiaSharp;
+using VortexKit.Core;
 
 namespace ScalarScope.Services;
 
@@ -290,6 +291,202 @@ public class ExportService
         data.SaveTo(stream);
 
         return outputPath;
+    }
+
+    /// <summary>
+    /// Export trajectory as SVG with full vector fidelity.
+    /// </summary>
+    public async Task<ExportResult> ExportSvgAsync(
+        GeometryRun run,
+        double time,
+        string outputPath,
+        SvgExportOptions? svgOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        svgOptions ??= new SvgExportOptions();
+
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // Convert GeometryRun to SvgExportData
+            var svgData = ConvertToSvgData(run, time, svgOptions);
+
+            // Export using SvgExportService
+            var svgService = new SvgExportService();
+            var path = await svgService.ExportSvgAsync(svgData, outputPath, svgOptions);
+
+            return ExportResult.Succeeded(path);
+        }
+        catch (OperationCanceledException)
+        {
+            return ExportResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            return ExportResult.Failure($"SVG export failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Convert GeometryRun to SvgExportData.
+    /// </summary>
+    private SvgExportData ConvertToSvgData(GeometryRun run, double time, SvgExportOptions options)
+    {
+        var timesteps = run.Trajectory?.Timesteps ?? [];
+        var maxIdx = Math.Min((int)(time * Math.Max(1, timesteps.Count - 1)), timesteps.Count - 1);
+
+        // Calculate view bounds from trajectory
+        var (minX, maxX, minY, maxY) = CalculateBounds(timesteps);
+        var padding = Math.Max(maxX - minX, maxY - minY) * 0.1;
+        var viewBox = new SvgViewBox(
+            minX - padding,
+            minY - padding,
+            (maxX - minX) + padding * 2,
+            (maxY - minY) + padding * 2
+        );
+
+        // Convert trajectory points
+        var trajectoryPoints = new List<SvgPoint>();
+        var velocities = new List<double>();
+        var curvatures = new List<double>();
+
+        for (int i = 0; i <= maxIdx && i < timesteps.Count; i++)
+        {
+            var ts = timesteps[i];
+            if (ts.State2D.Count >= 2)
+            {
+                trajectoryPoints.Add(new SvgPoint(ts.State2D[0], ts.State2D[1]));
+                velocities.Add(ts.VelocityMagnitude);
+                curvatures.Add(ts.Curvature);
+            }
+        }
+
+        var trajectory = new SvgTrajectoryData
+        {
+            Points = trajectoryPoints,
+            Label = run.Metadata?.Condition ?? "Trajectory",
+            Velocities = velocities,
+            Curvatures = curvatures
+        };
+
+        // Create grid data
+        var grid = CreateGridData(viewBox);
+
+        // Create markers for failures
+        var markers = new List<SvgMarker>();
+        if (run.Failures != null)
+        {
+            foreach (var failure in run.Failures.Where(f => f.T <= time))
+            {
+                var idx = (int)(failure.T * Math.Max(1, timesteps.Count - 1));
+                if (idx >= 0 && idx < timesteps.Count && timesteps[idx].State2D.Count >= 2)
+                {
+                    markers.Add(new SvgMarker(
+                        timesteps[idx].State2D[0],
+                        timesteps[idx].State2D[1],
+                        0.05,
+                        SvgMarkerType.Failure,
+                        failure.Description
+                    ));
+                }
+            }
+        }
+
+        // Create annotations
+        var annotations = new List<SvgAnnotation>
+        {
+            new(viewBox.X + 0.05, viewBox.Y + 0.05,
+                $"{run.Metadata?.Condition ?? "Run"} | t={time:P0}")
+        };
+
+        return new SvgExportData
+        {
+            ViewBox = viewBox,
+            Trajectories = [trajectory],
+            Grid = grid,
+            Markers = markers,
+            Annotations = annotations
+        };
+    }
+
+    private static (double minX, double maxX, double minY, double maxY) CalculateBounds(
+        IList<TrajectoryTimestep> timesteps)
+    {
+        if (timesteps.Count == 0)
+            return (-1, 1, -1, 1);
+
+        double minX = double.MaxValue, maxX = double.MinValue;
+        double minY = double.MaxValue, maxY = double.MinValue;
+
+        foreach (var ts in timesteps)
+        {
+            if (ts.State2D.Count >= 2)
+            {
+                minX = Math.Min(minX, ts.State2D[0]);
+                maxX = Math.Max(maxX, ts.State2D[0]);
+                minY = Math.Min(minY, ts.State2D[1]);
+                maxY = Math.Max(maxY, ts.State2D[1]);
+            }
+        }
+
+        // Ensure minimum size
+        if (maxX - minX < 0.01) { minX -= 0.5; maxX += 0.5; }
+        if (maxY - minY < 0.01) { minY -= 0.5; maxY += 0.5; }
+
+        return (minX, maxX, minY, maxY);
+    }
+
+    private static SvgGridData CreateGridData(SvgViewBox viewBox)
+    {
+        var majorLines = new List<SvgLine>();
+        var minorLines = new List<SvgLine>();
+        var labels = new List<SvgLabel>();
+
+        // Calculate grid spacing (round to nice numbers)
+        var rangeX = viewBox.Width;
+        var rangeY = viewBox.Height;
+        var majorSpacing = Math.Pow(10, Math.Floor(Math.Log10(Math.Max(rangeX, rangeY))));
+        if (majorSpacing > Math.Max(rangeX, rangeY) / 2) majorSpacing /= 2;
+
+        var minorSpacing = majorSpacing / 5;
+
+        // Vertical lines
+        var startX = Math.Floor(viewBox.X / majorSpacing) * majorSpacing;
+        for (var x = startX; x <= viewBox.X + viewBox.Width; x += majorSpacing)
+        {
+            majorLines.Add(new SvgLine(x, viewBox.Y, x, viewBox.Y + viewBox.Height));
+            labels.Add(new SvgLabel(x, viewBox.Y + viewBox.Height + majorSpacing * 0.1, $"{x:G3}"));
+
+            for (var mx = x + minorSpacing; mx < x + majorSpacing && mx <= viewBox.X + viewBox.Width; mx += minorSpacing)
+            {
+                minorLines.Add(new SvgLine(mx, viewBox.Y, mx, viewBox.Y + viewBox.Height));
+            }
+        }
+
+        // Horizontal lines
+        var startY = Math.Floor(viewBox.Y / majorSpacing) * majorSpacing;
+        for (var y = startY; y <= viewBox.Y + viewBox.Height; y += majorSpacing)
+        {
+            majorLines.Add(new SvgLine(viewBox.X, y, viewBox.X + viewBox.Width, y));
+            labels.Add(new SvgLabel(viewBox.X - majorSpacing * 0.1, y, $"{y:G3}"));
+
+            for (var my = y + minorSpacing; my < y + majorSpacing && my <= viewBox.Y + viewBox.Height; my += minorSpacing)
+            {
+                minorLines.Add(new SvgLine(viewBox.X, my, viewBox.X + viewBox.Width, my));
+            }
+        }
+
+        return new SvgGridData
+        {
+            MajorLines = majorLines,
+            MinorLines = minorLines,
+            Labels = labels
+        };
     }
 
     private void RenderTrajectoryFrame(

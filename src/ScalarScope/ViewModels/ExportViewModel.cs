@@ -2,6 +2,11 @@ using ScalarScope.Models;
 using ScalarScope.Services;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using VortexKit.Core;
+
+// Resolve ambiguity between ScalarScope.Services and VortexKit.Core
+using ExportService = ScalarScope.Services.ExportService;
+using ExportOptions = ScalarScope.Services.ExportOptions;
 
 namespace ScalarScope.ViewModels;
 
@@ -54,6 +59,65 @@ public partial class ExportViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _showEigenvalues = true;
+
+    // SVG export settings
+    [ObservableProperty]
+    private bool _svgUseCatmullRom = true;
+
+    [ObservableProperty]
+    private bool _svgEnableGlow = true;
+
+    [ObservableProperty]
+    private bool _svgIncludeGrid = true;
+
+    [ObservableProperty]
+    private int _svgColorModeIndex;
+
+    public string[] SvgColorModes { get; } = ["Solid", "Time Gradient", "Velocity Gradient", "Curvature"];
+
+    [ObservableProperty]
+    private int _svgPaletteIndex;
+
+    public string[] SvgPalettes { get; } = ["Dark (Default)", "Light", "High Contrast", "Publication"];
+
+    [RelayCommand]
+    private async Task ExportSvgAsync()
+    {
+        if (Run == null) return;
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_{timestamp}.svg");
+
+        try
+        {
+            IsExporting = true;
+            ExportStatus = "Exporting SVG...";
+
+            var svgOptions = CreateSvgExportOptions();
+            var result = await _exportService.ExportSvgAsync(Run, CurrentTime, outputPath, svgOptions);
+
+            if (result.IsSuccess)
+            {
+                ExportStatus = $"SVG saved: {Path.GetFileName(result.OutputPath)}";
+            }
+            else
+            {
+                ExportStatus = $"Error: {result.ErrorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ExportStatus = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
 
     [RelayCommand]
     private async Task ExportCurrentFrameAsync()
@@ -195,6 +259,40 @@ public partial class ExportViewModel : ObservableObject
             ShowProfessors = ShowProfessors,
             ShowMetrics = ShowMetrics,
             ShowEigenvalues = ShowEigenvalues
+        };
+    }
+
+    private SvgExportOptions CreateSvgExportOptions()
+    {
+        var palette = SvgPaletteIndex switch
+        {
+            1 => SvgColorPalette.Light,
+            2 => SvgColorPalette.HighContrast,
+            3 => SvgColorPalette.Publication,
+            _ => SvgColorPalette.Default
+        };
+
+        var colorMode = SvgColorModeIndex switch
+        {
+            1 => SvgColorMode.Time,
+            2 => SvgColorMode.Velocity,
+            3 => SvgColorMode.Curvature,
+            _ => SvgColorMode.Solid
+        };
+
+        return new SvgExportOptions
+        {
+            Width = Width,
+            Height = Height,
+            Title = Run?.Metadata?.Condition ?? "ScalarScope Export",
+            Description = $"Training trajectory visualization - t={CurrentTime:P0}",
+            UseCatmullRomSplines = SvgUseCatmullRom,
+            EnableGlow = SvgEnableGlow,
+            IncludeGrid = SvgIncludeGrid,
+            ColorMode = colorMode,
+            Palette = palette,
+            IncludeInkscapeMetadata = true,
+            IncludeStartEndMarkers = true
         };
     }
 }
