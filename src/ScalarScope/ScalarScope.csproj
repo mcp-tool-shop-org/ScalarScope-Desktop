@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<!-- Windows-only for now to simplify CI. Add other platforms when needed. -->
 		<TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
-		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>ScalarScope</RootNamespace>
