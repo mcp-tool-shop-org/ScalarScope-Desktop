@@ -8,13 +8,13 @@
 *Make the vortex visualization world-class*
 
 ### 1.1 Organic Flow Rendering
-- [ ] **Catmull-Rom Spline Interpolation**: Replace line segments with smooth, organic curves
-- [ ] **Adaptive Stroke Width**: Thickness varies with velocity (faster = thinner, like ink brush)
-- [ ] **Trail Opacity Decay**: History fades naturally, recent path emphasized
+- [x] **Catmull-Rom Spline Interpolation**: Replace line segments with smooth, organic curves
+- [x] **Adaptive Stroke Width**: Thickness varies with velocity (faster = thinner, like ink brush)
+- [x] **Trail Opacity Decay**: History fades naturally, recent path emphasized
 - [ ] **Anti-aliased Rendering**: Subpixel accuracy for publication-quality output
 
 ### 1.2 Energy Visualization  
-- [ ] **Glow/Bloom Effects**: Radial luminance around high-energy regions
+- [x] **Glow/Bloom Effects**: Radial luminance around high-energy regions
 - [ ] **Heat Map Overlay**: Optional density heatmap showing where trajectory lingers
 - [ ] **Curvature Halos**: Subtle rings at phase transition points
 - [ ] **Color Mode Selection**: Choose between time-based, velocity-based, or curvature-based coloring

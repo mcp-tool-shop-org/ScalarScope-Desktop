@@ -404,36 +404,181 @@ public class TrajectoryCanvas : SKCanvasView
         var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
         if (points.Count < 2) return;
 
-        using var path = new SKPath();
-        var first = ToScreen(points[0].State2D);
-        path.MoveTo(first);
+        // Calculate velocity stats for adaptive stroke width
+        var maxVelocity = points.Max(p => p.VelocityMagnitude);
+        if (maxVelocity < 0.0001) maxVelocity = 1.0;
 
-        for (int i = 1; i < points.Count; i++)
+        // Draw glow layer first (behind main trajectory)
+        DrawTrajectoryGlow(canvas, points, maxVelocity);
+
+        // Draw main trajectory with Catmull-Rom splines
+        DrawTrajectorySpline(canvas, points, maxVelocity);
+    }
+
+    private void DrawTrajectoryGlow(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity)
+    {
+        using var glowPaint = new SKPaint
         {
-            var pt = ToScreen(points[i].State2D);
-            path.LineTo(pt);
-        }
+            Style = SKPaintStyle.Stroke,
+            IsAntialias = true,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round
+        };
 
-        // Gradient stroke based on time
+        // Draw multiple glow passes with decreasing opacity and increasing width
+        for (int glowPass = 3; glowPass >= 1; glowPass--)
+        {
+            var glowWidth = 8f + glowPass * 4f;
+            var glowAlpha = (byte)(30 / glowPass);
+
+            for (int i = 1; i < points.Count; i++)
+            {
+                var t = (float)i / points.Count;
+                var opacity = GetTrailOpacity(t, points.Count);
+                
+                var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+                glowPaint.Color = color.WithAlpha((byte)(glowAlpha * opacity));
+                glowPaint.StrokeWidth = glowWidth;
+                glowPaint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, glowPass * 2);
+
+                var p1 = ToScreen(points[i - 1].State2D);
+                var p2 = ToScreen(points[i].State2D);
+                canvas.DrawLine(p1, p2, glowPaint);
+            }
+        }
+    }
+
+    private void DrawTrajectorySpline(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity)
+    {
         using var paint = new SKPaint
         {
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = 3,
             IsAntialias = true,
-            StrokeCap = SKStrokeCap.Round
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round
         };
 
-        // Draw with color gradient (time-based)
-        for (int i = 1; i < points.Count; i++)
+        // Need at least 4 points for Catmull-Rom
+        if (points.Count >= 4)
         {
-            var t = (float)i / points.Count;
-            var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
-            paint.Color = color;
-
-            var p1 = ToScreen(points[i - 1].State2D);
-            var p2 = ToScreen(points[i].State2D);
-            canvas.DrawLine(p1, p2, paint);
+            // Draw Catmull-Rom spline segments
+            for (int i = 1; i < points.Count - 2; i++)
+            {
+                DrawCatmullRomSegment(canvas, paint, points, i, maxVelocity);
+            }
+            
+            // Draw the first and last segments as simple lines (not enough control points)
+            DrawSimpleSegment(canvas, paint, points, 0, maxVelocity);
+            DrawSimpleSegment(canvas, paint, points, points.Count - 2, maxVelocity);
         }
+        else
+        {
+            // Fallback to simple lines for very short trajectories
+            for (int i = 1; i < points.Count; i++)
+            {
+                DrawSimpleSegment(canvas, paint, points, i - 1, maxVelocity);
+            }
+        }
+    }
+
+    private void DrawCatmullRomSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity)
+    {
+        var p0 = ToScreen(points[i - 1].State2D);
+        var p1 = ToScreen(points[i].State2D);
+        var p2 = ToScreen(points[i + 1].State2D);
+        var p3 = ToScreen(points[i + 2].State2D);
+
+        var t = (float)(i + 1) / points.Count;
+        var opacity = GetTrailOpacity(t, points.Count);
+        var velocity = points[i + 1].VelocityMagnitude;
+        var strokeWidth = GetAdaptiveStrokeWidth(velocity, maxVelocity);
+
+        var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+        paint.Color = color.WithAlpha((byte)(255 * opacity));
+        paint.StrokeWidth = strokeWidth;
+
+        // Catmull-Rom spline interpolation
+        using var path = new SKPath();
+        path.MoveTo(p1);
+
+        const int subdivisions = 8;
+        for (int s = 1; s <= subdivisions; s++)
+        {
+            float u = s / (float)subdivisions;
+            var pt = CatmullRom(p0, p1, p2, p3, u);
+            path.LineTo(pt);
+        }
+
+        canvas.DrawPath(path, paint);
+    }
+
+    private void DrawSimpleSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity)
+    {
+        if (i + 1 >= points.Count) return;
+
+        var t = (float)(i + 1) / points.Count;
+        var opacity = GetTrailOpacity(t, points.Count);
+        var velocity = points[i + 1].VelocityMagnitude;
+        var strokeWidth = GetAdaptiveStrokeWidth(velocity, maxVelocity);
+
+        var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+        paint.Color = color.WithAlpha((byte)(255 * opacity));
+        paint.StrokeWidth = strokeWidth;
+
+        var p1 = ToScreen(points[i].State2D);
+        var p2 = ToScreen(points[i + 1].State2D);
+        canvas.DrawLine(p1, p2, paint);
+    }
+
+    /// <summary>
+    /// Catmull-Rom spline interpolation between p1 and p2.
+    /// </summary>
+    private static SKPoint CatmullRom(SKPoint p0, SKPoint p1, SKPoint p2, SKPoint p3, float t)
+    {
+        float t2 = t * t;
+        float t3 = t2 * t;
+
+        // Catmull-Rom basis functions
+        float b0 = -0.5f * t3 + t2 - 0.5f * t;
+        float b1 = 1.5f * t3 - 2.5f * t2 + 1.0f;
+        float b2 = -1.5f * t3 + 2.0f * t2 + 0.5f * t;
+        float b3 = 0.5f * t3 - 0.5f * t2;
+
+        return new SKPoint(
+            b0 * p0.X + b1 * p1.X + b2 * p2.X + b3 * p3.X,
+            b0 * p0.Y + b1 * p1.Y + b2 * p2.Y + b3 * p3.Y
+        );
+    }
+
+    /// <summary>
+    /// Calculate trail opacity - older points fade out.
+    /// </summary>
+    private static float GetTrailOpacity(float t, int totalPoints)
+    {
+        // More aggressive fade for longer trajectories
+        var fadeStart = Math.Max(0.3f, 1.0f - totalPoints / 2000f);
+        
+        if (t < fadeStart)
+        {
+            // Fade increases from 0.4 at start to 1.0 at fadeStart
+            return 0.4f + 0.6f * (t / fadeStart);
+        }
+        return 1.0f;
+    }
+
+    /// <summary>
+    /// Calculate stroke width based on velocity - faster = thinner (like calligraphy).
+    /// </summary>
+    private static float GetAdaptiveStrokeWidth(double velocity, double maxVelocity)
+    {
+        const float minWidth = 1.5f;
+        const float maxWidth = 5.0f;
+
+        // Inverse relationship: high velocity = thin stroke
+        var normalizedVelocity = Math.Clamp(velocity / maxVelocity, 0, 1);
+        var width = maxWidth - (maxWidth - minWidth) * (float)normalizedVelocity;
+        
+        return width;
     }
 
     private void DrawVelocityVectors(SKCanvas canvas)

@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-02-08
+
+### Added
+- **Catmull-Rom Spline Smoothing**: Trajectory paths now render with smooth, organic curves instead of jagged line segments
+- **Adaptive Stroke Width**: Line thickness varies inversely with velocity (faster motion = thinner lines, like calligraphy)
+- **Trail Opacity Decay**: Older trajectory points fade naturally, with recent path emphasized
+- **Glow Effects**: Multi-layered ambient glow around trajectory for enhanced visual depth and energy visualization
+- **v2.0 Roadmap**: Added comprehensive roadmap document outlining the path to ScalarScope 2.0
+
+### Technical
+- Implemented Catmull-Rom spline interpolation with 8 subdivisions per segment for smooth curves
+- Added velocity-normalized stroke width calculation (1.5px - 5px range)
+- Added progressive opacity fade starting at 40% for trajectory history
+- Multi-pass glow rendering with blur masks for realistic luminance
+
 ## [1.1.0] - 2026-02-08
 
 ### Added
