@@ -80,6 +80,109 @@ public partial class ExportViewModel : ObservableObject
 
     public string[] SvgPalettes { get; } = ["Dark (Default)", "Light", "High Contrast", "Publication"];
 
+    // Phase 2.2: High-resolution raster settings
+    [ObservableProperty]
+    private int _resolutionPresetIndex;
+
+    public string[] ResolutionPresets { get; } = ["Custom", "HD 720p", "Full HD 1080p", "2K QHD", "4K UHD", "8K UHD"];
+
+    [ObservableProperty]
+    private int _formatIndex;
+
+    public string[] ExportFormats { get; } = ["PNG", "JPEG", "WebP", "PDF"];
+
+    [ObservableProperty]
+    private bool _transparentBackground;
+
+    [ObservableProperty]
+    private int _jpegQuality = 95;
+
+    partial void OnResolutionPresetIndexChanged(int value)
+    {
+        // Update Width/Height when preset changes
+        var (w, h) = value switch
+        {
+            1 => (1280, 720),
+            2 => (1920, 1080),
+            3 => (2560, 1440),
+            4 => (3840, 2160),
+            5 => (7680, 4320),
+            _ => (Width, Height) // Custom - keep current values
+        };
+
+        if (value > 0) // Only update for presets, not Custom
+        {
+            Width = w;
+            Height = h;
+        }
+    }
+
+    [RelayCommand]
+    private async Task ExportHighResAsync()
+    {
+        if (Run == null) return;
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var extension = FormatIndex switch
+        {
+            1 => ".jpg",
+            2 => ".webp",
+            3 => ".pdf",
+            _ => ".png"
+        };
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_{timestamp}{extension}");
+
+        try
+        {
+            IsExporting = true;
+            ExportStatus = FormatIndex == 3 ? "Exporting PDF..." : $"Exporting {Width}x{Height}...";
+
+            var options = CreateExportOptions() with
+            {
+                TransparentBackground = TransparentBackground,
+                Format = FormatIndex switch
+                {
+                    1 => ExportFormat.Jpeg,
+                    2 => ExportFormat.Webp,
+                    3 => ExportFormat.Pdf,
+                    _ => ExportFormat.Png
+                },
+                JpegQuality = JpegQuality
+            };
+
+            ExportResult result;
+            if (FormatIndex == 3) // PDF
+            {
+                result = await _exportService.ExportPdfAsync(Run, CurrentTime, outputPath, options);
+            }
+            else
+            {
+                result = await _exportService.ExportStillAsync(Run, CurrentTime, outputPath, options, CancellationToken.None);
+            }
+
+            if (result.IsSuccess)
+            {
+                ExportStatus = $"Saved: {Path.GetFileName(result.OutputPath)}";
+            }
+            else
+            {
+                ExportStatus = $"Error: {result.ErrorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ExportStatus = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
     [RelayCommand]
     private async Task ExportSvgAsync()
     {

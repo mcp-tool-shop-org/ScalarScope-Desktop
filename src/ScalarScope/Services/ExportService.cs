@@ -83,7 +83,10 @@ public class ExportService
             var width = validOptions.Width ?? DefaultWidth;
             var height = validOptions.Height ?? DefaultHeight;
 
-            using var surface = SKSurface.Create(new SKImageInfo(width, height));
+            // Use alpha channel for transparent background
+            var colorType = validOptions.TransparentBackground ? SKColorType.Rgba8888 : SKColorType.Bgra8888;
+            var alphaType = validOptions.TransparentBackground ? SKAlphaType.Premul : SKAlphaType.Opaque;
+            using var surface = SKSurface.Create(new SKImageInfo(width, height, colorType, alphaType));
             if (surface == null)
                 return ExportResult.Failure("Failed to create rendering surface. Try a smaller resolution.");
 
@@ -103,7 +106,8 @@ public class ExportService
 
             // Save to file
             using var image = surface.Snapshot();
-            using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+            var (format, quality) = GetEncodingFormat(validOptions);
+            using var data = image.Encode(format, quality);
             await using var stream = File.Create(outputPath);
             data.SaveTo(stream);
 
@@ -136,6 +140,142 @@ public class ExportService
         if (!result.IsSuccess)
             throw new InvalidOperationException(result.ErrorMessage);
         return result.OutputPath!;
+    }
+
+    /// <summary>
+    /// Export trajectory as PDF document.
+    /// </summary>
+    public async Task<ExportResult> ExportPdfAsync(
+        GeometryRun run,
+        double time,
+        string outputPath,
+        ExportOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        try
+        {
+            var (width, height) = validOptions.GetDimensions();
+
+            // Ensure output directory exists
+            var dir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(dir))
+                Directory.CreateDirectory(dir);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            await using var stream = File.Create(outputPath);
+            using var document = SKDocument.CreatePdf(stream);
+            using var canvas = document.BeginPage(width, height);
+
+            // Render the visualization
+            RenderTrajectoryFrame(canvas, run, time, width, height, validOptions);
+
+            document.EndPage();
+            document.Close();
+
+            return ExportResult.Succeeded(outputPath, warning);
+        }
+        catch (OperationCanceledException)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            return ExportResult.Failure($"PDF export failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Batch export multiple runs to separate files.
+    /// </summary>
+    public async Task<BatchExportResult> ExportBatchAsync(
+        IEnumerable<(GeometryRun run, string name)> runs,
+        double time,
+        string outputDir,
+        ExportOptions? options = null,
+        IProgress<ExportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        Directory.CreateDirectory(outputDir);
+
+        var runList = runs.ToList();
+        var results = new List<(string name, ExportResult result)>();
+        var successCount = 0;
+
+        for (int i = 0; i < runList.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var (run, name) = runList[i];
+            var safeName = SanitizeFileName(name);
+            var extension = GetFileExtension(options?.Format ?? ExportFormat.Png);
+            var outputPath = Path.Combine(outputDir, $"{safeName}{extension}");
+
+            progress?.Report(new ExportProgress
+            {
+                CurrentFrame = i + 1,
+                TotalFrames = runList.Count,
+                PercentComplete = (int)((i + 1) * 100.0 / runList.Count),
+                CurrentFile = Path.GetFileName(outputPath)
+            });
+
+            var result = options?.Format == ExportFormat.Pdf
+                ? await ExportPdfAsync(run, time, outputPath, options, cancellationToken)
+                : await ExportStillAsync(run, time, outputPath, options, cancellationToken);
+
+            results.Add((name, result));
+            if (result.IsSuccess) successCount++;
+        }
+
+        return new BatchExportResult
+        {
+            IsSuccess = successCount > 0,
+            TotalCount = runList.Count,
+            SuccessCount = successCount,
+            OutputDirectory = outputDir,
+            Results = results
+        };
+    }
+
+    /// <summary>
+    /// Get file extension for export format.
+    /// </summary>
+    private static string GetFileExtension(ExportFormat format) => format switch
+    {
+        ExportFormat.Png => ".png",
+        ExportFormat.Jpeg => ".jpg",
+        ExportFormat.Webp => ".webp",
+        ExportFormat.Pdf => ".pdf",
+        _ => ".png"
+    };
+
+    /// <summary>
+    /// Get SkiaSharp encoding format and quality.
+    /// </summary>
+    private static (SKEncodedImageFormat format, int quality) GetEncodingFormat(ExportOptions options)
+    {
+        return options.Format switch
+        {
+            ExportFormat.Jpeg => (SKEncodedImageFormat.Jpeg, options.JpegQuality),
+            ExportFormat.Webp => (SKEncodedImageFormat.Webp, 95),
+            _ => (SKEncodedImageFormat.Png, 100)
+        };
+    }
+
+    /// <summary>
+    /// Sanitize filename by removing invalid characters.
+    /// </summary>
+    private static string SanitizeFileName(string name)
+    {
+        var invalid = Path.GetInvalidFileNameChars();
+        return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
     }
 
     /// <summary>
@@ -497,7 +637,7 @@ public class ExportService
         int height,
         ExportOptions options)
     {
-        var backgroundColor = SKColor.Parse("#0f0f1a");
+        var backgroundColor = options.TransparentBackground ? SKColors.Transparent : SKColor.Parse("#0f0f1a");
         var gridColor = SKColor.Parse("#2a2a4e");
         var accentColor = options.AccentColor ?? SKColor.Parse("#00d9ff");
 
@@ -506,8 +646,11 @@ public class ExportService
         var center = new SKPoint(width / 2f, height / 2f);
         var scale = Math.Min(width, height) / 4f;
 
-        // Draw grid
-        DrawGrid(canvas, width, height, center, scale, gridColor);
+        // Draw grid (skip if transparent background for clean overlay use)
+        if (!options.TransparentBackground)
+        {
+            DrawGrid(canvas, width, height, center, scale, gridColor);
+        }
 
         // Draw label if provided
         if (!string.IsNullOrEmpty(options.Label))
@@ -815,6 +958,55 @@ public record ExportOptions
     public bool ShowMetrics { get; init; } = true;
     public bool ShowEigenvalues { get; init; } = true;
     public bool ShowAnnotations { get; init; } = false;
+
+    // Phase 2.2: High-resolution raster options
+    public bool TransparentBackground { get; init; } = false;
+    public ExportFormat Format { get; init; } = ExportFormat.Png;
+    public int JpegQuality { get; init; } = 95;
+    public ResolutionPreset? Preset { get; init; }
+
+    /// <summary>
+    /// Get dimensions based on preset or explicit values.
+    /// </summary>
+    public (int width, int height) GetDimensions()
+    {
+        if (Preset.HasValue)
+        {
+            return Preset.Value switch
+            {
+                ResolutionPreset.HD720 => (1280, 720),
+                ResolutionPreset.FullHD => (1920, 1080),
+                ResolutionPreset.QHD => (2560, 1440),
+                ResolutionPreset.UHD4K => (3840, 2160),
+                ResolutionPreset.UHD8K => (7680, 4320),
+                _ => (Width ?? 1920, Height ?? 1080)
+            };
+        }
+        return (Width ?? 1920, Height ?? 1080);
+    }
+}
+
+/// <summary>
+/// Export image format.
+/// </summary>
+public enum ExportFormat
+{
+    Png,
+    Jpeg,
+    Webp,
+    Pdf
+}
+
+/// <summary>
+/// Standard resolution presets.
+/// </summary>
+public enum ResolutionPreset
+{
+    HD720,      // 1280x720
+    FullHD,     // 1920x1080
+    QHD,        // 2560x1440
+    UHD4K,      // 3840x2160
+    UHD8K       // 7680x4320
 }
 
 /// <summary>
@@ -871,4 +1063,17 @@ public record ExportProgress
     public int TotalFrames { get; init; }
     public int PercentComplete { get; init; }
     public string? CurrentFile { get; init; }
+}
+
+/// <summary>
+/// Result of a batch export operation.
+/// </summary>
+public record BatchExportResult
+{
+    public bool IsSuccess { get; init; }
+    public int TotalCount { get; init; }
+    public int SuccessCount { get; init; }
+    public string? OutputDirectory { get; init; }
+    public List<(string name, ExportResult result)> Results { get; init; } = [];
+    public int FailureCount => TotalCount - SuccessCount;
 }
