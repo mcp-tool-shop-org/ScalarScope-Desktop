@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
 
     steps:
@@ -18,59 +18,29 @@ jobs:
       with:
         global-json-file: global.json
 
-    - name: Verify SDK version
-      run: dotnet --version
-
     - name: Install MAUI workload
       run: dotnet workload install maui-windows --skip-sign-check
 
-    - name: Clean NuGet cache
-      run: dotnet nuget locals all --clear
-
-    - name: Restore ScalarScope
-      run: dotnet restore src/ScalarScope/ScalarScope.csproj
+    - name: Restore
+      run: dotnet restore
 
     - name: Build ScalarScope
       run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore
 
     - name: Build VortexKit
-      run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release
+      run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
 
-    - name: Upload build artifacts
+    - name: Pack VortexKit
+      run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build
+
+    - name: Upload ScalarScope artifacts
       uses: actions/upload-artifact@v4
       with:
         name: scalarscope-windows
         path: src/ScalarScope/bin/Release/
         retention-days: 7
 
-  build-vortexkit:
-    runs-on: windows-latest
-
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        clean: true
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        global-json-file: global.json
-
-    - name: Verify SDK version
-      run: dotnet --version
-
-    - name: Install MAUI workload
-      run: dotnet workload install maui-windows --skip-sign-check
-
-    - name: Clean obj and bin folders
-      run: |
-        if (Test-Path src/VortexKit/obj) { Remove-Item -Recurse -Force src/VortexKit/obj }
-        if (Test-Path src/VortexKit/bin) { Remove-Item -Recurse -Force src/VortexKit/bin }
-
-    - name: Pack VortexKit
-      run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release
-
-    - name: Upload NuGet package
+    - name: Upload VortexKit NuGet
       uses: actions/upload-artifact@v4
       with:
         name: vortexkit-nuget
