@@ -96,22 +96,22 @@
 ## Phase 5: Collaboration & Ecosystem (v2.0)
 *Share, compare, and build community*
 
-### 5.1 Cloud Features
-- [ ] **Share Links**: Generate URLs to specific views/times
-- [ ] **Embedding**: Iframe-compatible viewer for websites
-- [ ] **Gallery**: Public collection of interesting trajectories
-- [ ] **Comments**: Annotate specific points with notes
+### 5.1 Cloud Features ✅
+- [x] **Share Links**: Generate URLs to specific views/times
+- [x] **Embedding**: Iframe-compatible viewer for websites
+- [x] **Gallery**: Public collection of interesting trajectories
+- [x] **Comments**: Annotate specific points with notes
 
-### 5.2 Plugin Architecture
-- [ ] **Custom Analyzers**: User-defined metrics and detectors
-- [ ] **Theme Packs**: Downloadable color schemes and styles
-- [ ] **Export Plugins**: Additional format support via plugins
-- [ ] **Render Pipelines**: Swap out rendering backends (WebGPU, etc.)
+### 5.2 Plugin Architecture ✅
+- [x] **Custom Analyzers**: User-defined metrics and detectors
+- [x] **Theme Packs**: Downloadable color schemes and styles
+- [x] **Export Plugins**: Additional format support via plugins
+- [x] **Render Pipelines**: Swap out rendering backends (WebGPU, etc.)
 
-### 5.3 Integration
-- [ ] **Weights & Biases**: Direct pull from W&B runs
-- [ ] **TensorBoard**: Import TensorBoard scalars
-- [ ] **MLflow**: Read from MLflow tracking server
+### 5.3 Integration ✅
+- [x] **Weights & Biases**: Direct pull from W&B runs
+- [x] **TensorBoard**: Import TensorBoard scalars
+- [x] **MLflow**: Read from MLflow tracking server
 - [ ] **Jupyter Widget**: Inline ScalarScope in notebooks
 
 ---
