@@ -29,11 +29,11 @@
 ## Phase 2: Publication Ready (v1.4)
 *Export quality that rivals hand-crafted figures*
 
-### 2.1 SVG Export Engine
-- [ ] **Full Vector Export**: Infinite resolution for any zoom level
-- [ ] **Layer Separation**: Trajectory, annotations, grid as separate SVG groups
-- [ ] **Inkscape Metadata**: Embed layer names and semantic grouping
-- [ ] **Custom Color Palettes**: Export with user-defined or journal-specific colors
+### 2.1 SVG Export Engine ✅
+- [x] **Full Vector Export**: Infinite resolution for any zoom level
+- [x] **Layer Separation**: Trajectory, annotations, grid as separate SVG groups
+- [x] **Inkscape Metadata**: Embed layer names and semantic grouping
+- [x] **Custom Color Palettes**: Export with user-defined or journal-specific colors
 
 ### 2.2 High-Resolution Raster
 - [ ] **8K Export**: Up to 7680×4320 for large format printing
