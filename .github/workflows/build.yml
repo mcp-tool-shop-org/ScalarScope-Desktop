@@ -24,11 +24,8 @@ jobs:
     - name: Restore
       run: dotnet restore ScalarScope.sln
 
-    - name: Build ScalarScope
-      run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore
-
-    - name: Build VortexKit
-      run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
+    - name: Build
+      run: dotnet build ScalarScope.sln --configuration Release --no-restore
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build
