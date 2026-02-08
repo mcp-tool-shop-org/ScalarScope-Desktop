@@ -104,6 +104,97 @@
                 </VerticalStackLayout>
             </Border>
 
+            <!-- Accessibility Section (Phase 4.3) -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Accessibility"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#c56cf0"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Color Vision Mode -->
+                    <Grid ColumnDefinitions="*,Auto" RowSpacing="4">
+                        <VerticalStackLayout>
+                            <Label Text="Color Vision Mode"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                   SemanticProperties.Description="Select color palette for colorblind users" />
+                            <Label Text="Optimized palettes for different types of color vision"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding ColorVisionOptions}"
+                                SelectedIndex="{Binding ColorVisionIndex}"
+                                WidthRequest="160"
+                                SemanticProperties.Description="Color vision mode selection" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Screen Reader Support -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Enhanced Screen Reader"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Generate detailed audio descriptions of visualizations"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding ScreenReaderMode}"
+                                OnColor="#c56cf0"
+                                SemanticProperties.Description="Toggle enhanced screen reader mode" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Large Pointer -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Large Pointer"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Increase size of selection indicators and cursors"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding LargePointer}"
+                                OnColor="#c56cf0"
+                                SemanticProperties.Description="Toggle large pointer mode" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Text Scale -->
+                    <VerticalStackLayout Spacing="8">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Text Scale"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Grid.Column="1"
+                                   Text="{Binding TextScaleDisplay}"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"
+                                   WidthRequest="50"
+                                   HorizontalTextAlignment="End" />
+                        </Grid>
+                        <Slider Minimum="0.75"
+                                Maximum="2.0"
+                                Value="{Binding TextScale}"
+                                ThumbColor="#c56cf0"
+                                MinimumTrackColor="#c56cf0"
+                                MaximumTrackColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                                SemanticProperties.Description="Text scale slider" />
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
             <!-- Playback Section -->
             <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
                     Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"

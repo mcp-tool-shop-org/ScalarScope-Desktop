@@ -58,6 +58,19 @@ public partial class TrajectoryPlayerViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private bool _reducedDetailMode;
 
+    // Phase 4.2: Playback Effects
+    [ObservableProperty]
+    private bool _enableParticles = true;
+
+    [ObservableProperty]
+    private bool _enableMotionBlur;
+
+    [ObservableProperty]
+    private int _cinematicModeIndex;
+
+    [ObservableProperty]
+    private bool _loop;
+
     private const int LargeRunThreshold = 10_000; // timesteps
     private const int VeryLargeRunThreshold = 30_000;
 
@@ -238,9 +251,16 @@ public partial class TrajectoryPlayerViewModel : ObservableObject, IDisposable
 
         if (Time >= 1.0)
         {
-            Time = 1.0;
-            IsPlaying = false;
-            _playbackTimer?.Stop();
+            if (Loop)
+            {
+                Time = 0.0; // Loop back to start
+            }
+            else
+            {
+                Time = 1.0;
+                IsPlaying = false;
+                _playbackTimer?.Stop();
+            }
         }
 
         // Check for demo annotations at current time

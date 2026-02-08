@@ -5,72 +5,129 @@
              x:Class="ScalarScope.Views.Controls.PlaybackControl"
              x:DataType="vm:TrajectoryPlayerViewModel">
 
-    <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
-          ColumnSpacing="10"
-          Padding="15,10"
-          BackgroundColor="#16213e">
+    <Grid RowDefinitions="Auto,Auto" RowSpacing="5" Padding="15,10" BackgroundColor="#16213e">
+        <!-- Main playback controls row -->
+        <Grid Grid.Row="0"
+              ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto"
+              ColumnSpacing="10">
 
-        <!-- Play/Pause Button -->
-        <Button Grid.Column="0"
-                Text="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseConverter}}"
-                Command="{Binding PlayPauseCommand}"
-                WidthRequest="50"
-                HeightRequest="40"
-                BackgroundColor="#00d9ff"
-                TextColor="White"
-                FontAttributes="Bold"/>
-
-        <!-- Time Slider -->
-        <Slider Grid.Column="1"
-                Minimum="0"
-                Maximum="1"
-                Value="{Binding Time}"
-                ThumbColor="#00d9ff"
-                MinimumTrackColor="#00d9ff"
-                MaximumTrackColor="#2a2a4e"/>
-
-        <!-- Time Display -->
-        <Label Grid.Column="2"
-               Text="{Binding TimeDisplay}"
-               VerticalOptions="Center"
-               TextColor="White"
-               FontSize="12"
-               WidthRequest="50"/>
-
-        <!-- Speed Control -->
-        <HorizontalStackLayout Grid.Column="3" Spacing="5">
-            <Label Text="Speed:" TextColor="#888" VerticalOptions="Center" FontSize="11"/>
-            <Picker SelectedIndex="{Binding SpeedIndex}"
-                    WidthRequest="60"
+            <!-- Play/Pause Button -->
+            <Button Grid.Column="0"
+                    Text="{Binding IsPlaying, Converter={StaticResource BoolToPlayPauseConverter}}"
+                    Command="{Binding PlayPauseCommand}"
+                    WidthRequest="50"
+                    HeightRequest="40"
+                    BackgroundColor="#00d9ff"
                     TextColor="White"
-                    BackgroundColor="#2a2a4e">
-                <Picker.ItemsSource>
-                    <x:Array Type="{x:Type x:String}">
-                        <x:String>0.25x</x:String>
-                        <x:String>0.5x</x:String>
-                        <x:String>1x</x:String>
-                        <x:String>2x</x:String>
-                        <x:String>4x</x:String>
-                    </x:Array>
-                </Picker.ItemsSource>
-            </Picker>
+                    FontAttributes="Bold"/>
+
+            <!-- Time Slider -->
+            <Slider Grid.Column="1"
+                    Minimum="0"
+                    Maximum="1"
+                    Value="{Binding Time}"
+                    ThumbColor="#00d9ff"
+                    MinimumTrackColor="#00d9ff"
+                    MaximumTrackColor="#2a2a4e"/>
+
+            <!-- Time Display -->
+            <Label Grid.Column="2"
+                   Text="{Binding TimeDisplay}"
+                   VerticalOptions="Center"
+                   TextColor="White"
+                   FontSize="12"
+                   WidthRequest="50"/>
+
+            <!-- Speed Control -->
+            <HorizontalStackLayout Grid.Column="3" Spacing="5">
+                <Label Text="Speed:" TextColor="#888" VerticalOptions="Center" FontSize="11"/>
+                <Picker SelectedIndex="{Binding SpeedIndex}"
+                        WidthRequest="60"
+                        TextColor="White"
+                        BackgroundColor="#2a2a4e">
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>0.25x</x:String>
+                            <x:String>0.5x</x:String>
+                            <x:String>1x</x:String>
+                            <x:String>2x</x:String>
+                            <x:String>4x</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </HorizontalStackLayout>
+
+            <!-- Step Controls -->
+            <Button Grid.Column="4"
+                    Text="◀"
+                    Command="{Binding StepBackwardCommand}"
+                    WidthRequest="35"
+                    HeightRequest="35"
+                    BackgroundColor="#2a2a4e"
+                    TextColor="White"/>
+
+            <Button Grid.Column="5"
+                    Text="▶"
+                    Command="{Binding StepForwardCommand}"
+                    WidthRequest="35"
+                    HeightRequest="35"
+                    BackgroundColor="#2a2a4e"
+                    TextColor="White"/>
+        </Grid>
+
+        <!-- Effects and Cinematic Controls Row -->
+        <HorizontalStackLayout Grid.Row="1" Spacing="20">
+            <!-- Particle Trail Toggle -->
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="✨ Particles" TextColor="#ff6b9d" VerticalOptions="Center" FontSize="11"/>
+                <Switch x:Name="particlesSwitch" 
+                        IsToggled="{Binding EnableParticles}" 
+                        OnColor="#ff6b9d" 
+                        Scale="0.8"/>
+            </HorizontalStackLayout>
+
+            <!-- Motion Blur Toggle -->
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="🌀 Motion Blur" TextColor="#4ecdc4" VerticalOptions="Center" FontSize="11"/>
+                <Switch x:Name="motionBlurSwitch" 
+                        IsToggled="{Binding EnableMotionBlur}" 
+                        OnColor="#4ecdc4" 
+                        Scale="0.8"/>
+            </HorizontalStackLayout>
+
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,2"/>
+
+            <!-- Cinematic Mode -->
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="🎬 Cinematic:" TextColor="#ffd93d" VerticalOptions="Center" FontSize="11"/>
+                <Picker x:Name="cinematicPicker"
+                        SelectedIndex="{Binding CinematicModeIndex}"
+                        WidthRequest="110"
+                        TextColor="White"
+                        BackgroundColor="#2a2a4e"
+                        FontSize="11">
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>None</x:String>
+                            <x:String>Slow Zoom In</x:String>
+                            <x:String>Slow Zoom Out</x:String>
+                            <x:String>Pan Right</x:String>
+                            <x:String>Pan Left</x:String>
+                            <x:String>Orbit Spin</x:String>
+                            <x:String>Dramatic Reveal</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </HorizontalStackLayout>
+
+            <!-- Loop Toggle -->
+            <HorizontalStackLayout Spacing="5">
+                <Label Text="🔁 Loop" TextColor="#a29bfe" VerticalOptions="Center" FontSize="11"/>
+                <Switch x:Name="loopSwitch" 
+                        IsToggled="{Binding Loop}" 
+                        OnColor="#a29bfe" 
+                        Scale="0.8"/>
+            </HorizontalStackLayout>
         </HorizontalStackLayout>
-
-        <!-- Step Controls -->
-        <Button Grid.Column="4"
-                Text="◀"
-                Command="{Binding StepBackwardCommand}"
-                WidthRequest="35"
-                HeightRequest="35"
-                BackgroundColor="#2a2a4e"
-                TextColor="White"/>
-
-        <Button Grid.Column="5"
-                Text="▶"
-                Command="{Binding StepForwardCommand}"
-                WidthRequest="35"
-                HeightRequest="35"
-                BackgroundColor="#2a2a4e"
-                TextColor="White"/>
     </Grid>
 </ContentView>

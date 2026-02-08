@@ -124,6 +124,10 @@ public partial class SettingsViewModel : ObservableObject
     partial void OnHighContrastModeChanged(bool value)
     {
         UserPreferencesService.SetHighContrastMode(value);
+        AccessibilityService.Instance.Settings = AccessibilityService.Instance.Settings with
+        {
+            HighContrastEnabled = value
+        };
     }
 
     [ObservableProperty]
@@ -140,6 +144,70 @@ public partial class SettingsViewModel : ObservableObject
             _ => AnnotationDensity.Standard
         };
         UserPreferencesService.SetAnnotationDensity(density);
+    }
+
+    // Phase 4.3: Enhanced Accessibility
+
+    [ObservableProperty]
+    private int _colorVisionIndex;
+
+    public string[] ColorVisionOptions { get; } =
+    [
+        "Default",
+        "Deuteranopia (Green-blind)",
+        "Protanopia (Red-blind)",
+        "Tritanopia (Blue-blind)",
+        "High Contrast",
+        "Monochrome"
+    ];
+
+    partial void OnColorVisionIndexChanged(int value)
+    {
+        var mode = (ColorPaletteMode)value;
+        UserPreferencesService.SetColorVisionMode((int)mode);
+        AccessibilityService.Instance.Settings = AccessibilityService.Instance.Settings with
+        {
+            ColorPaletteMode = mode
+        };
+    }
+
+    [ObservableProperty]
+    private bool _screenReaderMode;
+
+    partial void OnScreenReaderModeChanged(bool value)
+    {
+        UserPreferencesService.SetScreenReaderMode(value);
+        AccessibilityService.Instance.Settings = AccessibilityService.Instance.Settings with
+        {
+            ScreenReaderEnabled = value
+        };
+    }
+
+    [ObservableProperty]
+    private bool _largePointer;
+
+    partial void OnLargePointerChanged(bool value)
+    {
+        UserPreferencesService.SetLargePointer(value);
+        AccessibilityService.Instance.Settings = AccessibilityService.Instance.Settings with
+        {
+            LargePointer = value
+        };
+    }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(TextScaleDisplay))]
+    private float _textScale = 1.0f;
+
+    public string TextScaleDisplay => $"{TextScale:P0}";
+
+    partial void OnTextScaleChanged(float value)
+    {
+        UserPreferencesService.SetTextScale(value);
+        AccessibilityService.Instance.Settings = AccessibilityService.Instance.Settings with
+        {
+            TextScale = value
+        };
     }
 
     // --- Commands ---
@@ -226,6 +294,23 @@ public partial class SettingsViewModel : ObservableObject
             AnnotationDensity.Minimal => 0,
             AnnotationDensity.Full => 2,
             _ => 1
+        };
+
+        // Phase 4.3: Enhanced Accessibility
+        ColorVisionIndex = UserPreferencesService.GetColorVisionMode();
+        ScreenReaderMode = UserPreferencesService.GetScreenReaderMode();
+        LargePointer = UserPreferencesService.GetLargePointer();
+        TextScale = UserPreferencesService.GetTextScale();
+
+        // Update AccessibilityService with loaded settings
+        AccessibilityService.Instance.Settings = new AccessibilitySettings
+        {
+            ColorPaletteMode = (ColorPaletteMode)ColorVisionIndex,
+            HighContrastEnabled = HighContrastMode,
+            ReducedMotionEnabled = ReduceAnimations,
+            ScreenReaderEnabled = ScreenReaderMode,
+            TextScale = TextScale,
+            LargePointer = LargePointer
         };
     }
 }

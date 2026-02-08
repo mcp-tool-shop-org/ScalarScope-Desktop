@@ -296,6 +296,60 @@ public static class UserPreferencesService
         Save(_cached);
     }
 
+    // --- Phase 4.3: Enhanced Accessibility ---
+
+    public static int GetColorVisionMode()
+    {
+        var prefs = Load();
+        return prefs.ColorVisionMode;
+    }
+
+    public static void SetColorVisionMode(int mode)
+    {
+        var prefs = Load();
+        prefs.ColorVisionMode = mode;
+        Save(prefs);
+    }
+
+    public static bool GetScreenReaderMode()
+    {
+        var prefs = Load();
+        return prefs.ScreenReaderMode;
+    }
+
+    public static void SetScreenReaderMode(bool enabled)
+    {
+        var prefs = Load();
+        prefs.ScreenReaderMode = enabled;
+        Save(prefs);
+    }
+
+    public static bool GetLargePointer()
+    {
+        var prefs = Load();
+        return prefs.LargePointer;
+    }
+
+    public static void SetLargePointer(bool enabled)
+    {
+        var prefs = Load();
+        prefs.LargePointer = enabled;
+        Save(prefs);
+    }
+
+    public static float GetTextScale()
+    {
+        var prefs = Load();
+        return prefs.TextScale;
+    }
+
+    public static void SetTextScale(float scale)
+    {
+        var prefs = Load();
+        prefs.TextScale = Math.Clamp(scale, 0.75f, 2.0f);
+        Save(prefs);
+    }
+
     /// <summary>
     /// Get the list of recently opened files.
     /// </summary>
@@ -440,6 +494,12 @@ public class UserPreferences
     public string DefaultExportPath { get; set; } = "";
     public int DefaultExportWidth { get; set; } = 1920;
     public int DefaultExportHeight { get; set; } = 1080;
+
+    // Phase 4.3: Enhanced Accessibility
+    public int ColorVisionMode { get; set; }
+    public bool ScreenReaderMode { get; set; }
+    public bool LargePointer { get; set; }
+    public float TextScale { get; set; } = 1.0f;
 }
 
 public enum AnnotationDensity
