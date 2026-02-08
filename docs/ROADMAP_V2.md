@@ -35,11 +35,11 @@
 - [x] **Inkscape Metadata**: Embed layer names and semantic grouping
 - [x] **Custom Color Palettes**: Export with user-defined or journal-specific colors
 
-### 2.2 High-Resolution Raster
-- [ ] **8K Export**: Up to 7680×4320 for large format printing
-- [ ] **Transparent Background**: PNG-alpha for compositing
-- [ ] **Batch Export**: Generate figure sets for multiple runs automatically
-- [ ] **PDF/EPS Output**: Direct export for LaTeX workflows
+### 2.2 High-Resolution Raster ✅
+- [x] **8K Export**: Up to 7680×4320 for large format printing
+- [x] **Transparent Background**: PNG-alpha for compositing
+- [x] **Batch Export**: Generate figure sets for multiple runs automatically
+- [x] **PDF/EPS Output**: Direct export for LaTeX workflows
 
 ### 2.3 Animation Export
 - [ ] **GIF Generator**: Smooth animated GIFs with configurable FPS
