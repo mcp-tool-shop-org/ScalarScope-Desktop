@@ -21,11 +21,17 @@ jobs:
     - name: Install MAUI workload
       run: dotnet workload install maui-windows --skip-sign-check
 
-    - name: Restore
-      run: dotnet restore ScalarScope.sln
+    - name: Restore VortexKit
+      run: dotnet restore src/VortexKit/VortexKit.csproj
 
-    - name: Build
-      run: dotnet build ScalarScope.sln --configuration Release --no-restore
+    - name: Restore ScalarScope
+      run: dotnet restore src/ScalarScope/ScalarScope.csproj -r win-x64
+
+    - name: Build VortexKit
+      run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
+
+    - name: Build ScalarScope
+      run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build
