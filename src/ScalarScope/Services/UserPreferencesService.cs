@@ -157,6 +157,68 @@ public static class UserPreferencesService
         Save(prefs);
     }
 
+    /// <summary>
+    /// Get the list of recently opened files.
+    /// </summary>
+    public static IReadOnlyList<RecentFileEntry> GetRecentFiles()
+    {
+        var prefs = Load();
+        // Filter out files that no longer exist
+        var validFiles = prefs.RecentFiles
+            .Where(f => File.Exists(f.Path))
+            .ToList();
+        
+        // Update stored list if some files were removed
+        if (validFiles.Count != prefs.RecentFiles.Count)
+        {
+            prefs.RecentFiles = validFiles;
+            Save(prefs);
+        }
+        
+        return validFiles.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Add a file to the recent files list.
+    /// </summary>
+    public static void AddRecentFile(string path, string? runName = null)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        var prefs = Load();
+        
+        // Remove existing entry for this path (if any)
+        prefs.RecentFiles.RemoveAll(f => string.Equals(f.Path, path, StringComparison.OrdinalIgnoreCase));
+        
+        // Add to the front of the list
+        prefs.RecentFiles.Insert(0, new RecentFileEntry
+        {
+            Path = path,
+            Name = runName ?? Path.GetFileNameWithoutExtension(path),
+            LastOpened = DateTime.UtcNow
+        });
+        
+        // Keep only the most recent 10 files
+        const int MaxRecentFiles = 10;
+        if (prefs.RecentFiles.Count > MaxRecentFiles)
+        {
+            prefs.RecentFiles = prefs.RecentFiles.Take(MaxRecentFiles).ToList();
+        }
+        
+        Save(prefs);
+    }
+
+    /// <summary>
+    /// Clear the recent files list.
+    /// </summary>
+    public static void ClearRecentFiles()
+    {
+        var prefs = Load();
+        prefs.RecentFiles.Clear();
+        Save(prefs);
+    }
+
     private static UserPreferences Load()
     {
         if (_cached != null)
@@ -211,6 +273,9 @@ public class UserPreferences
     public DateTime? DemoCompletedAt { get; set; }
     public DateTime? DemoSkippedAt { get; set; }
 
+    // Recent files
+    public List<RecentFileEntry> RecentFiles { get; set; } = [];
+
     // Legacy field (kept for backwards compatibility)
     public bool HasCompletedFirstRun
     {
@@ -226,4 +291,11 @@ public enum AnnotationDensity
     Minimal,
     Standard,
     Full
+}
+
+public class RecentFileEntry
+{
+    public string Path { get; set; } = "";
+    public string Name { get; set; } = "";
+    public DateTime LastOpened { get; set; }
 }

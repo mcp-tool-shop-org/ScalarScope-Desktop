@@ -6,10 +6,13 @@
 |-----|--------|
 | `Space` | Play / Pause |
 | `←` `→` | Step backward / forward |
+| `Shift+←` `Shift+→` | Fine step (0.1%) |
 | `Home` | Jump to start |
 | `End` | Jump to end |
 | `+` `-` | Speed up / down |
 | `S` | Quick screenshot |
+| `Ctrl+S` | Quick screenshot |
+| `Ctrl+E` | Quick screenshot (export) |
 | `1-6` | Switch tabs |
 
 ## Tabs

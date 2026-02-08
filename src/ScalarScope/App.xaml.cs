@@ -54,7 +54,7 @@ public partial class App : Application
     {
         var state = new SessionState
         {
-            LoadedFilePath = Session.Run?.ToString(), // TODO: Get actual path
+            LoadedFilePath = Session.LoadedFilePath,
             CurrentPage = Shell.Current?.CurrentState?.Location?.ToString() ?? "Trajectory",
             PlaybackTime = Session.Player?.Time ?? 0,
             IsPlaying = Session.Player?.IsPlaying ?? false,

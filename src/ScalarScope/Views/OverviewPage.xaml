@@ -29,6 +29,39 @@
                     HorizontalOptions="Center"
                     IsVisible="{Binding IsFirstRun, Converter={StaticResource InverseBoolConverter}}"/>
 
+            <!-- Recent Files Panel (hidden during first-run) -->
+            <Frame x:Name="recentFilesFrame"
+                   BackgroundColor="#16213e"
+                   BorderColor="#2a2a4e"
+                   CornerRadius="10"
+                   Padding="15"
+                   MaximumWidthRequest="500"
+                   HorizontalOptions="Center"
+                   IsVisible="False">
+                <VerticalStackLayout Spacing="10">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="Recent Files"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               TextColor="#888"
+                               VerticalOptions="Center"/>
+                        <Button Grid.Column="1"
+                                Text="Clear"
+                                x:Name="clearRecentButton"
+                                Clicked="OnClearRecentFilesClicked"
+                                BackgroundColor="Transparent"
+                                TextColor="#666"
+                                FontSize="11"
+                                HeightRequest="24"
+                                Padding="8,0"/>
+                    </Grid>
+                    
+                    <VerticalStackLayout x:Name="recentFilesContainer" Spacing="5">
+                        <!-- Recent files are populated in code-behind -->
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Frame>
+
             <!-- First-Run Welcome Panel -->
             <Frame BackgroundColor="#16213e"
                    BorderColor="#00d9ff"
@@ -290,7 +323,7 @@
                            FontAttributes="Bold"
                            TextColor="#a29bfe"/>
 
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="20" RowSpacing="5">
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="20" RowSpacing="5">
                         <Label Grid.Row="0" Grid.Column="0" Text="Space" TextColor="#00d9ff" FontAttributes="Bold"/>
                         <Label Grid.Row="0" Grid.Column="1" Text="Play/Pause" TextColor="White"/>
 
@@ -300,11 +333,14 @@
                         <Label Grid.Row="2" Grid.Column="0" Text="Home/End" TextColor="#00d9ff" FontAttributes="Bold"/>
                         <Label Grid.Row="2" Grid.Column="1" Text="Jump to start/end" TextColor="White"/>
 
-                        <Label Grid.Row="3" Grid.Column="0" Text="S" TextColor="#00d9ff" FontAttributes="Bold"/>
+                        <Label Grid.Row="3" Grid.Column="0" Text="S / Ctrl+E" TextColor="#00d9ff" FontAttributes="Bold"/>
                         <Label Grid.Row="3" Grid.Column="1" Text="Quick screenshot" TextColor="White"/>
 
                         <Label Grid.Row="4" Grid.Column="0" Text="A" TextColor="#00d9ff" FontAttributes="Bold"/>
                         <Label Grid.Row="4" Grid.Column="1" Text="Toggle annotations" TextColor="White"/>
+
+                        <Label Grid.Row="5" Grid.Column="0" Text="1-6" TextColor="#00d9ff" FontAttributes="Bold"/>
+                        <Label Grid.Row="5" Grid.Column="1" Text="Switch tabs" TextColor="White"/>
                     </Grid>
                 </VerticalStackLayout>
             </Frame>

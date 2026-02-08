@@ -19,6 +19,9 @@ public partial class VortexSessionViewModel : ObservableObject
     private string _runName = "No training run loaded yet";
 
     [ObservableProperty]
+    private string? _loadedFilePath;
+
+    [ObservableProperty]
     private bool _hasRun;
 
     [ObservableProperty]
@@ -140,6 +143,7 @@ public partial class VortexSessionViewModel : ObservableObject
 
         Run = run;
         RunName = Path.GetFileNameWithoutExtension(path);
+        LoadedFilePath = path;
         HasRun = true;
         HasLoadError = false;
         LoadWarnings = result.Warnings;
@@ -149,6 +153,9 @@ public partial class VortexSessionViewModel : ObservableObject
         Player.TotalCycles = run.Metadata?.Cycles ?? run.Trajectory?.Timesteps?.Count ?? 0;
         Player.ConfigureForRunSize(run.Trajectory?.Timesteps?.Count ?? 0);
         Player.JumpToTimeCommand.Execute(0.0);
+
+        // Add to recent files list
+        UserPreferencesService.AddRecentFile(path, RunName);
 
         // Notify all computed properties have changed
         NotifyComputedPropertiesChanged();
@@ -170,6 +177,7 @@ public partial class VortexSessionViewModel : ObservableObject
         // Clear run data
         Run = null;
         RunName = "No training run loaded yet";
+        LoadedFilePath = null;
         HasRun = false;
 
         // Clear error state

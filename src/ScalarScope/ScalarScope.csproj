@@ -25,9 +25,9 @@
 		<ApplicationId>org.mcptoolshop.scalarscope</ApplicationId>
 
 		<!-- Versions -->
-		<ApplicationDisplayVersion>1.0.3</ApplicationDisplayVersion>
-		<ApplicationVersion>3</ApplicationVersion>
-		<Version>1.0.3.0</Version>
+		<ApplicationDisplayVersion>1.0.4</ApplicationDisplayVersion>
+		<ApplicationVersion>4</ApplicationVersion>
+		<Version>1.0.4.0</Version>
 
 		<!-- Package metadata -->
 		<Authors>ScalarScope Project (mcp-tool-shop-org)</Authors>

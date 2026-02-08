@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-02-08
+
+### Added
+- **Recent Files**: Quick access to up to 10 recently opened training runs from the Overview tab
+- **Keyboard Shortcut**: Added `Ctrl+E` as an additional export shortcut (alongside existing `S` and `Ctrl+S`)
+- **Fine Step Control**: `Shift+Left/Right` for 0.1% precision stepping (documented)
+- **Tab Navigation**: `1-6` keyboard shortcuts for switching tabs (now displayed in UI)
+
+### Fixed
+- **CI Build**: Fixed GitHub Actions workflow targeting wrong .NET framework (`net10.0` → `net9.0`)
+- **Session Recovery**: File path now correctly stored for crash recovery (was using object.ToString())
+
+### Changed
+- VortexKit library promoted from `1.0.0-rc.1` to `1.0.0` stable release
+- Updated keyboard shortcuts documentation and UI display
+
 ## [1.0.1.1] - 2026-02-04
 
 ### Added

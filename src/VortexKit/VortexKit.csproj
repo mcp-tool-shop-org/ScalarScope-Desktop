@@ -10,7 +10,7 @@
 
     <!-- Package metadata -->
     <PackageId>VortexKit</PackageId>
-    <Version>1.0.0-rc.1</Version>
+    <Version>1.0.0</Version>
     <Authors>ScalarScope Project (mcp-tool-shop-org)</Authors>
     <Description>Reusable visualization framework for training dynamics. Provides time-synchronized playback, comparison views, annotation overlays, and export functionality.</Description>
     <PackageTags>visualization;training;machine-learning;skiasharp;maui</PackageTags>

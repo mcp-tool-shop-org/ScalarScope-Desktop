@@ -255,4 +255,100 @@ public partial class OverviewPage : ContentPage
             exportStatusLabel.TextColor = Color.FromArgb("#ff6b6b");
         }
     }
+
+    // === Recent Files ===
+
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        RefreshRecentFiles();
+    }
+
+    private void RefreshRecentFiles()
+    {
+        var recentFiles = UserPreferencesService.GetRecentFiles();
+        
+        // Show/hide the recent files panel based on whether there are files and not in first-run mode
+        recentFilesFrame.IsVisible = recentFiles.Count > 0 && !App.Session.IsFirstRun;
+        
+        // Clear existing items
+        recentFilesContainer.Children.Clear();
+        
+        foreach (var file in recentFiles.Take(5)) // Show up to 5 recent files
+        {
+            var fileButton = new Button
+            {
+                Text = file.Name,
+                BackgroundColor = Color.FromArgb("#1a1a2e"),
+                TextColor = Colors.White,
+                FontSize = 13,
+                HeightRequest = 40,
+                HorizontalOptions = LayoutOptions.Fill,
+                Padding = new Thickness(10, 5),
+                CornerRadius = 6
+            };
+            
+            // Store the path in the button's ClassId for retrieval
+            fileButton.ClassId = file.Path;
+            fileButton.Clicked += OnRecentFileClicked;
+            
+            // Add a tooltip-like label below with the path (truncated)
+            var pathLabel = new Label
+            {
+                Text = TruncatePath(file.Path, 50),
+                TextColor = Color.FromArgb("#555"),
+                FontSize = 10,
+                Margin = new Thickness(10, -5, 0, 5)
+            };
+            
+            recentFilesContainer.Children.Add(fileButton);
+            recentFilesContainer.Children.Add(pathLabel);
+        }
+    }
+
+    private static string TruncatePath(string path, int maxLength)
+    {
+        if (path.Length <= maxLength) return path;
+        
+        var fileName = Path.GetFileName(path);
+        var dir = Path.GetDirectoryName(path) ?? "";
+        
+        if (fileName.Length >= maxLength - 4)
+            return "..." + fileName[^(maxLength - 3)..];
+            
+        var availableForDir = maxLength - fileName.Length - 4;
+        if (availableForDir > 0 && dir.Length > availableForDir)
+            dir = "..." + dir[^availableForDir..];
+            
+        return Path.Combine(dir, fileName);
+    }
+
+    private async void OnRecentFileClicked(object? sender, EventArgs e)
+    {
+        if (sender is Button button && !string.IsNullOrEmpty(button.ClassId))
+        {
+            var path = button.ClassId;
+            
+            if (!File.Exists(path))
+            {
+                await DisplayAlert("File Not Found", $"The file no longer exists:\n{path}", "OK");
+                RefreshRecentFiles(); // Refresh to remove invalid entries
+                return;
+            }
+            
+            await App.Session.LoadFromFileAsync(path);
+            
+            // Navigate to trajectory view after loading
+            if (App.Session.HasRun)
+            {
+                await Shell.Current.GoToAsync("//trajectory");
+            }
+        }
+    }
+
+    private void OnClearRecentFilesClicked(object? sender, EventArgs e)
+    {
+        UserPreferencesService.ClearRecentFiles();
+        RefreshRecentFiles();
+    }
 }

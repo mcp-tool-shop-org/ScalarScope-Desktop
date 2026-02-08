@@ -114,6 +114,14 @@ public class KeyboardService
             return true;
         }
 
+        // Ctrl+E for export (common convention)
+        if (key == "E" && ctrl)
+        {
+            _ = SafeQuickExportAsync();
+            ShortcutTriggered?.Invoke("Screenshot saved");
+            return true;
+        }
+
         // Tab navigation (1-6)
         if (key is "D1" or "D2" or "D3" or "D4" or "D5" or "D6")
         {
