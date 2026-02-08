@@ -38,14 +38,26 @@
                                  IsVisible="{Binding HasRun}"/>
         </Grid>
 
-        <!-- Annotation Panel (collapsible sidebar) -->
-        <controls:AnnotationPanel x:Name="annotationPanel"
-                                  Grid.Row="0"
-                                  Grid.Column="1"
-                                  WidthRequest="200"
-                                  Margin="5"
-                                  VerticalOptions="Start"
-                                  IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
+        <!-- Side Panel Container -->
+        <Grid Grid.Row="0" Grid.Column="1" RowDefinitions="Auto,*">
+            <!-- Annotation Panel (collapsible sidebar) -->
+            <controls:AnnotationPanel x:Name="annotationPanel"
+                                      Grid.Row="0"
+                                      WidthRequest="200"
+                                      Margin="5"
+                                      VerticalOptions="Start"
+                                      IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
+
+            <!-- Probing Inspector Panel (Phase 3.3) -->
+            <controls:ProbingInspectorPanel Grid.Row="1"
+                                            WidthRequest="300"
+                                            Margin="5"
+                                            Run="{Binding Run}"
+                                            SelectedIndex="{Binding SelectedTimestepIndex}"
+                                            ShowGradientInspector="{Binding IsToggled, Source={x:Reference gradientSwitch}}"
+                                            WhatIfScenario="{Binding ActiveWhatIfScenario}"
+                                            IsVisible="{Binding IsToggled, Source={x:Reference probingSwitch}}"/>
+        </Grid>
 
         <!-- Analysis Overlay Panel (Phase 3.1: Quantitative Overlays) -->
         <controls:AnalysisOverlayPanel x:Name="analysisPanel"
@@ -129,6 +141,27 @@
                     <HorizontalStackLayout Spacing="2">
                         <Label Text="Bif" TextColor="#ff9500" FontSize="10"/>
                         <Switch x:Name="bifurcationsSwitch" IsToggled="True" OnColor="#ff9500" Scale="0.7"/>
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
+
+            <!-- Probing Toggle (Phase 3.3) -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Probe" TextColor="#c56cf0" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="probingSwitch" IsToggled="False" OnColor="#c56cf0"/>
+                </HorizontalStackLayout>
+                <Label Text="Click to inspect points" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <!-- Probing sub-toggles (visible when probing is on) -->
+            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsToggled, Source={x:Reference probingSwitch}}">
+                <HorizontalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="2">
+                        <Label Text="Grad" TextColor="#4ecdc4" FontSize="10"/>
+                        <Switch x:Name="gradientSwitch" IsToggled="True" OnColor="#4ecdc4" Scale="0.7"/>
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
             </VerticalStackLayout>

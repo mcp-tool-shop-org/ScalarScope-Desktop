@@ -12,6 +12,7 @@ namespace ScalarScope.ViewModels;
 /// </summary>
 public partial class VortexSessionViewModel : ObservableObject
 {
+    private readonly InteractiveProbingService _probingService = new();
     [ObservableProperty]
     private GeometryRun? _run;
 
@@ -57,6 +58,16 @@ public partial class VortexSessionViewModel : ObservableObject
 
     [ObservableProperty]
     private int _failureCount;
+
+    // Phase 3.3: Interactive Probing
+    [ObservableProperty]
+    private int? _selectedTimestepIndex;
+
+    [ObservableProperty]
+    private bool _isProbingMode;
+
+    [ObservableProperty]
+    private WhatIfScenario? _activeWhatIfScenario;
 
     public TrajectoryPlayerViewModel Player { get; } = new();
 
@@ -106,6 +117,103 @@ public partial class VortexSessionViewModel : ObservableObject
         OnPropertyChanged(nameof(CurrentScalars));
         OnPropertyChanged(nameof(CurrentEigenvalues));
     }
+
+    #region Interactive Probing (Phase 3.3)
+
+    /// <summary>
+    /// Select a trajectory point by world coordinates (from click).
+    /// </summary>
+    public void SelectPointAtPosition(double worldX, double worldY, double maxDistance = 0.5)
+    {
+        if (Run == null) return;
+
+        var index = _probingService.FindNearestTimestep(Run, worldX, worldY, maxDistance);
+        if (index != null)
+        {
+            SelectedTimestepIndex = index;
+
+            // Jump playback to this time
+            var trajectory = Run.Trajectory?.Timesteps;
+            if (trajectory != null && index.Value < trajectory.Count)
+            {
+                var time = trajectory[index.Value].T;
+                // Normalize time to [0,1] for the player
+                var maxTime = trajectory.Count > 0 ? trajectory[^1].T : 1.0;
+                var normalizedTime = maxTime > 0 ? time / maxTime : 0;
+                Player.JumpToTimeCommand.Execute(Math.Clamp(normalizedTime, 0, 1));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Select a timestep by index directly.
+    /// </summary>
+    [RelayCommand]
+    public void SelectTimestep(int index)
+    {
+        if (Run?.Trajectory?.Timesteps == null) return;
+        if (index < 0 || index >= Run.Trajectory.Timesteps.Count) return;
+
+        SelectedTimestepIndex = index;
+    }
+
+    /// <summary>
+    /// Clear the selected point.
+    /// </summary>
+    [RelayCommand]
+    public void ClearSelection()
+    {
+        SelectedTimestepIndex = null;
+    }
+
+    /// <summary>
+    /// Get the current time travel state for the selected point.
+    /// </summary>
+    public TimeTravelState? GetSelectedState()
+    {
+        if (Run == null || SelectedTimestepIndex == null) return null;
+        return _probingService.GetStateAt(Run, SelectedTimestepIndex.Value);
+    }
+
+    /// <summary>
+    /// Get gradient inspection for the selected point.
+    /// </summary>
+    public GradientInspection? GetSelectedGradient()
+    {
+        if (Run == null || SelectedTimestepIndex == null) return null;
+        return _probingService.InspectGradient(Run, SelectedTimestepIndex.Value);
+    }
+
+    /// <summary>
+    /// Get what-if projection for the selected point.
+    /// </summary>
+    public WhatIfProjection? GetWhatIfProjection()
+    {
+        if (Run == null || SelectedTimestepIndex == null || ActiveWhatIfScenario == null) return null;
+        return _probingService.ProjectHypothetical(Run, SelectedTimestepIndex.Value, ActiveWhatIfScenario);
+    }
+
+    /// <summary>
+    /// Apply a preset what-if scenario.
+    /// </summary>
+    [RelayCommand]
+    public void ApplyWhatIfScenario(string scenarioName)
+    {
+        ActiveWhatIfScenario = scenarioName switch
+        {
+            "HighLR" => WhatIfScenario.HigherLearningRate,
+            "LowLR" => WhatIfScenario.LowerLearningRate,
+            "HighMomentum" => WhatIfScenario.MoreMomentum,
+            "LowMomentum" => WhatIfScenario.LessMomentum,
+            "Noise" => WhatIfScenario.WithNoise,
+            "TurnLeft" => WhatIfScenario.TurnLeft,
+            "TurnRight" => WhatIfScenario.TurnRight,
+            "None" => null,
+            _ => WhatIfScenario.Default
+        };
+    }
+
+    #endregion
 
     [RelayCommand]
     private async Task LoadRunAsync()

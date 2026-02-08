@@ -57,16 +57,16 @@
 - [x] **Phase Portrait Markers**: Bifurcation detection and annotation
 - [x] **Dimension Collapse Alerts**: Highlight when effective dimension drops
 
-### 3.2 Comparative Analysis
-- [ ] **Overlay Mode**: Multiple trajectories in same view with transparency
-- [ ] **Deviation Highlighting**: Show where runs diverge
-- [ ] **Statistical Bands**: Confidence intervals from multiple seeds
-- [ ] **Distance Metrics**: Quantify trajectory similarity (DTW, Fréchet)
+### 3.2 Comparative Analysis ✅
+- [x] **Overlay Mode**: Multiple trajectories in same view with transparency
+- [x] **Deviation Highlighting**: Show where runs diverge
+- [x] **Statistical Bands**: Confidence intervals from multiple seeds
+- [x] **Distance Metrics**: Quantify trajectory similarity (DTW, Fréchet)
 
-### 3.3 Interactive Probing
-- [ ] **Time Travel**: Click anywhere on trajectory to see full state at that moment
-- [ ] **Gradient Inspector**: Show what direction training wanted to go vs. where it went
-- [ ] **"What-If" Markers**: Annotate hypothetical alternative paths
+### 3.3 Interactive Probing ✅
+- [x] **Time Travel**: Click anywhere on trajectory to see full state at that moment
+- [x] **Gradient Inspector**: Show what direction training wanted to go vs. where it went
+- [x] **"What-If" Markers**: Annotate hypothetical alternative paths
 
 ---
 

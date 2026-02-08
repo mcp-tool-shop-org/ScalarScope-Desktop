@@ -62,6 +62,22 @@ public partial class ComparisonViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDemoComplete;
 
+    // Overlay mode - Phase 3.2 Comparative Analysis
+    [ObservableProperty]
+    private bool _isOverlayMode;
+
+    [ObservableProperty]
+    private bool _showDeviation = true;
+
+    [ObservableProperty]
+    private bool _showStatisticalBands;
+
+    [ObservableProperty]
+    private bool _showDistanceMetrics = true;
+
+    // Collection of runs for overlay view
+    public List<GeometryRun> OverlayRuns => [.. (new[] { LeftRun, RightRun }).OfType<GeometryRun>()];
+
     // Shared playback controller
     public TrajectoryPlayerViewModel Player { get; } = new();
 
@@ -101,6 +117,7 @@ public partial class ComparisonViewModel : ObservableObject
         OnPropertyChanged(nameof(RightCurrentTrajectory));
         OnPropertyChanged(nameof(RightCurrentScalars));
         OnPropertyChanged(nameof(RightCurrentEigenvalues));
+        OnPropertyChanged(nameof(OverlayRuns));
     }
 
     /// <summary>

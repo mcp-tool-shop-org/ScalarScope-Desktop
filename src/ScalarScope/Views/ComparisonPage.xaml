@@ -97,8 +97,9 @@
             </Border>
         </Grid>
 
-        <!-- Side-by-Side Canvases -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,2,*">
+        <!-- Side-by-Side Canvases (normal mode) -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,2,*"
+              IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
             <!-- Left Canvas -->
             <controls:ComparisonTrajectoryCanvas Grid.Column="0"
                                                   Run="{Binding LeftRun}"
@@ -122,13 +123,41 @@
                                                   ShowAnnotations="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
         </Grid>
 
+        <!-- Overlay Canvas (overlay mode) -->
+        <controls:OverlayComparisonCanvas Grid.Row="2"
+                                          Runs="{Binding OverlayRuns}"
+                                          CurrentTime="{Binding Player.Time}"
+                                          ShowDeviation="{Binding ShowDeviation}"
+                                          ShowStatisticalBands="{Binding ShowStatisticalBands}"
+                                          ShowDistanceMetrics="{Binding ShowDistanceMetrics}"
+                                          IsVisible="{Binding IsOverlayMode}"/>
+
         <!-- Toggle Bar -->
         <HorizontalStackLayout Grid.Row="3"
                                Spacing="15"
                                Padding="15,8"
                                BackgroundColor="#1a1a2e"
                                HorizontalOptions="Center">
+            <!-- Overlay Mode Toggle -->
             <HorizontalStackLayout Spacing="5">
+                <Label Text="Overlay" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
+                <Switch IsToggled="{Binding IsOverlayMode}" OnColor="#00d2d3" Scale="0.8"/>
+            </HorizontalStackLayout>
+            <BoxView WidthRequest="1" Color="#2a2a4e"/>
+            
+            <!-- Sub-toggles for overlay mode -->
+            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode}">
+                <Label Text="Deviation" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
+                <Switch IsToggled="{Binding ShowDeviation}" OnColor="#ff6b6b" Scale="0.8"/>
+            </HorizontalStackLayout>
+            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode}">
+                <Label Text="Bands" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
+                <Switch IsToggled="{Binding ShowStatisticalBands}" OnColor="#74b9ff" Scale="0.8"/>
+            </HorizontalStackLayout>
+            <BoxView WidthRequest="1" Color="#2a2a4e" IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}"/>
+
+            <!-- Annotations toggle (side-by-side mode only) -->
+            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
                 <Label Text="Annotations" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
                 <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#a29bfe" Scale="0.8"/>
             </HorizontalStackLayout>
