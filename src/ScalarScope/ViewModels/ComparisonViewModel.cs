@@ -14,53 +14,53 @@ public partial class ComparisonViewModel : ObservableObject
 {
     // Left run (typically Path A / orthogonal)
     [ObservableProperty]
-    public partial GeometryRun? LeftRun { get; set; }
+    private GeometryRun? _leftRun;
 
     [ObservableProperty]
-    public partial string LeftRunName { get; set; } = "Load Path A";
+    private string _leftRunName = "Load Path A";
 
     [ObservableProperty]
-    public partial bool HasLeftRun { get; set; }
+    private bool _hasLeftRun;
 
     // Right run (typically Path B / correlated)
     [ObservableProperty]
-    public partial GeometryRun? RightRun { get; set; }
+    private GeometryRun? _rightRun;
 
     [ObservableProperty]
-    public partial string RightRunName { get; set; } = "Load Path B";
+    private string _rightRunName = "Load Path B";
 
     [ObservableProperty]
-    public partial bool HasRightRun { get; set; }
+    private bool _hasRightRun;
 
     // Comparison state
     [ObservableProperty]
-    public partial bool HasBothRuns { get; set; }
+    private bool _hasBothRuns;
 
     [ObservableProperty]
-    public partial string ComparisonSummary { get; set; } = "";
+    private string _comparisonSummary = "";
 
     [ObservableProperty]
-    public partial string InterpretationVerdict { get; set; } = "";
+    private string _interpretationVerdict = "";
 
     [ObservableProperty]
-    public partial string LeftDescription { get; set; } = "";
+    private string _leftDescription = "";
 
     [ObservableProperty]
-    public partial string RightDescription { get; set; } = "";
+    private string _rightDescription = "";
 
     // Visual dominance indicators for canvas dimming
     [ObservableProperty]
-    public partial bool? IsLeftDominant { get; set; }
+    private bool? _isLeftDominant;
 
     [ObservableProperty]
-    public partial bool? IsRightDominant { get; set; }
+    private bool? _isRightDominant;
 
     // Demo mode state
     [ObservableProperty]
-    public partial bool IsDemoMode { get; set; }
+    private bool _isDemoMode;
 
     [ObservableProperty]
-    public partial bool IsDemoComplete { get; set; }
+    private bool _isDemoComplete;
 
     // Shared playback controller
     public TrajectoryPlayerViewModel Player { get; } = new();

@@ -6,7 +6,7 @@ namespace ScalarScope.ViewModels;
 
 /// <summary>
 /// ViewModel for the Settings page.
-/// Uses partial properties for AOT compatibility.
+/// Uses field-based ObservableProperty for broad C# version compatibility.
 /// </summary>
 public partial class SettingsViewModel : ObservableObject
 {
@@ -18,7 +18,7 @@ public partial class SettingsViewModel : ObservableObject
     // --- Theme Settings ---
 
     [ObservableProperty]
-    public partial int ThemeIndex { get; set; }
+    private int _themeIndex;
 
     public string[] ThemeOptions { get; } = ["System", "Light", "Dark"];
 
@@ -37,7 +37,7 @@ public partial class SettingsViewModel : ObservableObject
     // --- Animation Settings ---
 
     [ObservableProperty]
-    public partial bool ReduceAnimations { get; set; }
+    private bool _reduceAnimations;
 
     partial void OnReduceAnimationsChanged(bool value)
     {
@@ -47,7 +47,7 @@ public partial class SettingsViewModel : ObservableObject
     // --- Playback Settings ---
 
     [ObservableProperty]
-    public partial int DefaultSpeedIndex { get; set; }
+    private int _defaultSpeedIndex;
 
     public string[] SpeedOptions { get; } = ["0.25x", "0.5x", "1x", "2x", "4x"];
 
@@ -62,7 +62,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    public partial bool AutoPlayOnLoad { get; set; }
+    private bool _autoPlayOnLoad;
 
     partial void OnAutoPlayOnLoadChanged(bool value)
     {
@@ -72,7 +72,7 @@ public partial class SettingsViewModel : ObservableObject
     // --- Session Settings ---
 
     [ObservableProperty]
-    public partial bool AutoLoadLastSession { get; set; }
+    private bool _autoLoadLastSession;
 
     partial void OnAutoLoadLastSessionChanged(bool value)
     {
@@ -80,7 +80,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    public partial int RecentFilesLimitIndex { get; set; }
+    private int _recentFilesLimitIndex;
 
     public string[] RecentFilesOptions { get; } = ["5 files", "10 files", "20 files"];
 
@@ -97,13 +97,13 @@ public partial class SettingsViewModel : ObservableObject
     // --- Export Settings ---
 
     [ObservableProperty]
-    public partial string DefaultExportPath { get; set; } = "";
+    private string _defaultExportPath = "";
 
     [ObservableProperty]
-    public partial int DefaultExportWidth { get; set; } = 1920;
+    private int _defaultExportWidth = 1920;
 
     [ObservableProperty]
-    public partial int DefaultExportHeight { get; set; } = 1080;
+    private int _defaultExportHeight = 1080;
 
     partial void OnDefaultExportWidthChanged(int value)
     {
@@ -118,7 +118,7 @@ public partial class SettingsViewModel : ObservableObject
     // --- Accessibility Settings ---
 
     [ObservableProperty]
-    public partial bool HighContrastMode { get; set; }
+    private bool _highContrastMode;
 
     partial void OnHighContrastModeChanged(bool value)
     {
@@ -126,7 +126,7 @@ public partial class SettingsViewModel : ObservableObject
     }
 
     [ObservableProperty]
-    public partial int AnnotationDensityIndex { get; set; }
+    private int _annotationDensityIndex;
 
     public string[] AnnotationOptions { get; } = ["Minimal", "Standard", "Full"];
 

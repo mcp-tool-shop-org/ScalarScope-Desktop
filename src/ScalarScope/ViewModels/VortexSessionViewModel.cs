@@ -13,36 +13,36 @@ namespace ScalarScope.ViewModels;
 public partial class VortexSessionViewModel : ObservableObject
 {
     [ObservableProperty]
-    public partial GeometryRun? Run { get; set; }
+    private GeometryRun? _run;
 
     [ObservableProperty]
-    public partial string RunName { get; set; } = "No training run loaded yet";
+    private string _runName = "No training run loaded yet";
 
     [ObservableProperty]
-    public partial string? LoadedFilePath { get; set; }
+    private string? _loadedFilePath;
 
     [ObservableProperty]
-    public partial bool HasRun { get; set; }
+    private bool _hasRun;
 
     [ObservableProperty]
-    public partial string LoadError { get; set; } = "";
+    private string _loadError = "";
 
     [ObservableProperty]
-    public partial bool HasLoadError { get; set; }
+    private bool _hasLoadError;
 
     [ObservableProperty]
-    public partial List<string> LoadWarnings { get; set; } = [];
+    private List<string> _loadWarnings = [];
 
     // Loading state for shimmer animation
     [ObservableProperty]
-    public partial bool IsLoading { get; set; }
+    private bool _isLoading;
 
     [ObservableProperty]
-    public partial string LoadingMessage { get; set; } = "Loading...";
+    private string _loadingMessage = "Loading...";
 
     // First-run state (checked from UserPreferencesService)
     [ObservableProperty]
-    public partial bool IsFirstRun { get; set; }
+    private bool _isFirstRun;
 
     /// <summary>
     /// True when we should show the empty state panel (not first run, no data loaded).
@@ -50,13 +50,13 @@ public partial class VortexSessionViewModel : ObservableObject
     public bool ShowEmptyState => !IsFirstRun && !HasRun;
 
     [ObservableProperty]
-    public partial string Condition { get; set; } = "";
+    private string _condition = "";
 
     [ObservableProperty]
-    public partial string ConscienceTier { get; set; } = "";
+    private string _conscienceTier = "";
 
     [ObservableProperty]
-    public partial int FailureCount { get; set; }
+    private int _failureCount;
 
     public TrajectoryPlayerViewModel Player { get; } = new();
 
