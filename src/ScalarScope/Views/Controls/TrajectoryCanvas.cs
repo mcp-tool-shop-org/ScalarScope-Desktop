@@ -79,7 +79,7 @@ public class TrajectoryCanvas : SKCanvasView
     private const float HoverRadius = 20f;
 
     // Colors
-    private static readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
+    private static new readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor GridColor = SKColor.Parse("#2a2a4e");
     private static readonly SKColor TrajectoryStartColor = SKColor.Parse("#00d9ff");
     private static readonly SKColor TrajectoryEndColor = SKColor.Parse("#ff6b6b");
@@ -528,9 +528,9 @@ public class TrajectoryCanvas : SKCanvasView
     private void DrawCurrentPosition(SKCanvas canvas)
     {
         var current = Session?.CurrentTrajectoryState;
-        if (current?.State2D.Count < 2) return;
+        if (current?.State2D is not { Count: >= 2 } state2D) return;
 
-        var pos = ToScreen(current.State2D);
+        var pos = ToScreen(state2D);
 
         using var glowPaint = new SKPaint
         {

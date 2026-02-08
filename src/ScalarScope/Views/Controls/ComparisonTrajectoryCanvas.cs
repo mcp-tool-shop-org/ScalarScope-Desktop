@@ -73,7 +73,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         set => SetValue(IsDominantProperty, value);
     }
 
-    private static readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
+    private static new readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor GridColor = SKColor.Parse("#2a2a4e");
 
     private float _scale = 100f;

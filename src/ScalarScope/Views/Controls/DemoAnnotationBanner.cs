@@ -1,3 +1,4 @@
+using Microsoft.Maui.Controls.Shapes;
 using ScalarScope.Services;
 
 namespace ScalarScope.Views.Controls;
@@ -11,7 +12,7 @@ public class DemoAnnotationBanner : ContentView
     private readonly Label _titleLabel;
     private readonly Label _messageLabel;
     private readonly Button _dismissButton;
-    private readonly Frame _container;
+    private readonly Border _container;
 
     public DemoAnnotationBanner()
     {
@@ -65,11 +66,12 @@ public class DemoAnnotationBanner : ContentView
         contentGrid.Add(textStack, 0, 0);
         contentGrid.Add(_dismissButton, 1, 0);
 
-        _container = new Frame
+        _container = new Border
         {
             BackgroundColor = Color.FromArgb("#1a2a4a"),
-            BorderColor = Color.FromArgb("#00d9ff"),
-            CornerRadius = 8,
+            Stroke = Color.FromArgb("#00d9ff"),
+            StrokeShape = new RoundRectangle { CornerRadius = 8 },
+            StrokeThickness = 1,
             Padding = 0,
             Content = contentGrid,
             IsVisible = false,
@@ -92,7 +94,7 @@ public class DemoAnnotationBanner : ContentView
             _messageLabel.Text = annotation.Message;
 
             // Color based on emphasis
-            _container.BorderColor = annotation.Emphasis switch
+            var emphasisColor = annotation.Emphasis switch
             {
                 DemoEmphasis.Introduction => Color.FromArgb("#00d9ff"),  // Blue
                 DemoEmphasis.Observation => Color.FromArgb("#ffd93d"),   // Yellow
@@ -101,7 +103,8 @@ public class DemoAnnotationBanner : ContentView
                 _ => Color.FromArgb("#00d9ff")
             };
 
-            _titleLabel.TextColor = _container.BorderColor;
+            _container.Stroke = emphasisColor;
+            _titleLabel.TextColor = emphasisColor;
             _container.IsVisible = true;
         });
     }

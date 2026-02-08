@@ -37,7 +37,7 @@ public class AnnotationOverlay : SKCanvasView
         BindableProperty.Create(nameof(ShowFailureMarkers), typeof(bool), typeof(AnnotationOverlay), true,
             propertyChanged: OnPropertyChangedInvalidate);
 
-    public static readonly BindableProperty ScaleProperty =
+    public static new readonly BindableProperty ScaleProperty =
         BindableProperty.Create(nameof(Scale), typeof(float), typeof(AnnotationOverlay), 100f);
 
     public static readonly BindableProperty CenterProperty =

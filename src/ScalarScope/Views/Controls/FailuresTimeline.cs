@@ -45,7 +45,7 @@ public class FailuresTimeline : SKCanvasView
     private static readonly SKColor CriticalColor = SKColor.Parse("#ff6b6b");
     private static readonly SKColor WarningColor = SKColor.Parse("#ff9f43");
     private static readonly SKColor InfoColor = SKColor.Parse("#ffd93d");
-    private static readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
+    private static new readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor TrackColor = SKColor.Parse("#2a2a4e");
     private static readonly SKColor TextColor = SKColors.White.WithAlpha(200);
 

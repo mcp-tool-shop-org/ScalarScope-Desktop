@@ -24,7 +24,7 @@ public class EigenSpectrumView : SKCanvasView
         set => SetValue(SessionProperty, value);
     }
 
-    private static readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
+    private static new readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor[] EigenColors =
     [
         SKColor.Parse("#00d9ff"),

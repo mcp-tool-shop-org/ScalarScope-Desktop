@@ -41,7 +41,7 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         set => SetValue(CurrentTimeProperty, value);
     }
 
-    private static readonly SKColor BackgroundColor = SKColor.Parse("#16213e");
+    private static new readonly SKColor BackgroundColor = SKColor.Parse("#16213e");
     private static readonly SKColor LeftColor = SKColor.Parse("#4ecdc4");
     private static readonly SKColor RightColor = SKColor.Parse("#ff6b6b");
     private static readonly SKColor NeutralColor = SKColor.Parse("#ffd93d");

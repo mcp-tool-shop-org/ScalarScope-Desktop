@@ -107,7 +107,7 @@ public partial class OverviewPage : ContentPage
         }
     }
 
-    private async void OnLoadOwnRunClicked(object? sender, EventArgs e)
+    private void OnLoadOwnRunClicked(object? sender, EventArgs e)
     {
         // Mark demo as skipped (user chose their own path)
         UserPreferencesService.MarkDemoSkipped();

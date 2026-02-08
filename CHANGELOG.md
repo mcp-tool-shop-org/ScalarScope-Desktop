@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-02-08
+
+### Added
+- **Session Recovery**: Full crash recovery now restores playback position, current page, and playback state
+  - Automatically reloads the file that was open when the app crashed
+  - Resumes playback from exact position
+  - Navigates to the page you were viewing
+
+### Fixed
+- **Zero-Warning Build**: Eliminated all 11 compiler warnings
+  - CS0108: Added `new` keyword to intentionally hidden members (BackgroundColor, ScaleProperty)
+  - CS0618: Migrated deprecated `Frame` to modern `Border` in DemoAnnotationBanner
+  - CS1998: Removed unnecessary `async` modifier from synchronous methods
+  - CS8602: Fixed potential null reference in TrajectoryCanvas
+
+### Changed
+- DemoAnnotationBanner now uses `Border` with `StrokeShape` instead of deprecated `Frame`
+
 ## [1.0.8] - 2026-02-08
 
 ### Added
