@@ -41,10 +41,10 @@
 - [x] **Batch Export**: Generate figure sets for multiple runs automatically
 - [x] **PDF/EPS Output**: Direct export for LaTeX workflows
 
-### 2.3 Animation Export
-- [ ] **GIF Generator**: Smooth animated GIFs with configurable FPS
-- [ ] **MP4/WebM Export**: High-quality video for presentations
-- [ ] **Frame-by-Frame SVG**: Animated SVG for web embedding
+### 2.3 Animation Export ✅
+- [x] **GIF Generator**: Smooth animated GIFs with configurable FPS
+- [x] **MP4/WebM Export**: High-quality video for presentations (requires FFmpeg)
+- [x] **Frame-by-Frame SVG**: Animated SVG for web embedding
 
 ---
 

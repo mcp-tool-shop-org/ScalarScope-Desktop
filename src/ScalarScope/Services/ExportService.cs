@@ -253,6 +253,9 @@ public class ExportService
         ExportFormat.Jpeg => ".jpg",
         ExportFormat.Webp => ".webp",
         ExportFormat.Pdf => ".pdf",
+        ExportFormat.Gif => ".gif",
+        ExportFormat.Mp4 => ".mp4",
+        ExportFormat.Webm => ".webm",
         _ => ".png"
     };
 
@@ -277,6 +280,412 @@ public class ExportService
         var invalid = Path.GetInvalidFileNameChars();
         return string.Join("_", name.Split(invalid, StringSplitOptions.RemoveEmptyEntries));
     }
+
+    #region Animation Export (Phase 2.3)
+
+    /// <summary>
+    /// Export trajectory animation as an animated GIF.
+    /// </summary>
+    public async Task<ExportResult> ExportGifAsync(
+        GeometryRun run,
+        string outputPath,
+        ExportOptions? options = null,
+        IProgress<ExportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        try
+        {
+            var width = validOptions.Width ?? DefaultWidth;
+            var height = validOptions.Height ?? DefaultHeight;
+            var fps = validOptions.Fps ?? 30;
+            var duration = validOptions.Duration ?? 5.0;
+            var totalFrames = (int)(fps * duration);
+            
+            // GIF frame delay in centiseconds (100 = 1 second)
+            var frameDelay = (int)(100.0 / fps);
+
+            await using var fileStream = File.Create(outputPath);
+            using var gifEncoder = new GifEncoder(fileStream, width, height, frameDelay);
+
+            using var surface = SKSurface.Create(new SKImageInfo(width, height));
+            if (surface == null)
+                return ExportResult.Failure("Failed to create rendering surface");
+
+            var canvas = surface.Canvas;
+
+            for (int frame = 0; frame < totalFrames; frame++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var t = totalFrames > 1 ? (double)frame / (totalFrames - 1) : 0;
+
+                canvas.Clear(validOptions.TransparentBackground ? SKColors.Transparent : SKColors.White);
+                RenderTrajectoryFrame(canvas, run, t, width, height, validOptions);
+
+                using var image = surface.Snapshot();
+                using var bitmap = SKBitmap.FromImage(image);
+                gifEncoder.AddFrame(bitmap);
+
+                progress?.Report(new ExportProgress
+                {
+                    CurrentFrame = frame + 1,
+                    TotalFrames = totalFrames,
+                    PercentComplete = (frame + 1) * 100 / totalFrames,
+                    CurrentFile = $"Frame {frame + 1}/{totalFrames}"
+                });
+            }
+
+            gifEncoder.Finish();
+
+            return ExportResult.Succeeded(outputPath, warning);
+        }
+        catch (OperationCanceledException)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Failure($"GIF export failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Export trajectory animation as MP4 or WebM video using FFmpeg.
+    /// Requires FFmpeg to be installed and available in PATH.
+    /// </summary>
+    public async Task<ExportResult> ExportVideoAsync(
+        GeometryRun run,
+        string outputPath,
+        ExportOptions? options = null,
+        IProgress<ExportProgress>? progress = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        // Check if FFmpeg is available
+        var ffmpegPath = FindFFmpeg();
+        if (ffmpegPath == null)
+            return ExportResult.Failure("FFmpeg not found. Install FFmpeg and ensure it's in your PATH to export video.");
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        string? tempDir = null;
+        try
+        {
+            var width = validOptions.Width ?? DefaultWidth;
+            var height = validOptions.Height ?? DefaultHeight;
+            var fps = validOptions.Fps ?? 30;
+            var duration = validOptions.Duration ?? 5.0;
+            var totalFrames = (int)(fps * duration);
+
+            // Create temp directory for frames
+            tempDir = Path.Combine(Path.GetTempPath(), $"scalarscope_video_{Guid.NewGuid():N}");
+            Directory.CreateDirectory(tempDir);
+
+            // Export frames
+            using var surface = SKSurface.Create(new SKImageInfo(width, height));
+            if (surface == null)
+                return ExportResult.Failure("Failed to create rendering surface");
+
+            var canvas = surface.Canvas;
+
+            for (int frame = 0; frame < totalFrames; frame++)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var t = totalFrames > 1 ? (double)frame / (totalFrames - 1) : 0;
+
+                canvas.Clear(SKColors.White); // Video doesn't support transparency
+                RenderTrajectoryFrame(canvas, run, t, width, height, validOptions);
+
+                using var image = surface.Snapshot();
+                using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+                var framePath = Path.Combine(tempDir, $"frame_{frame:D5}.png");
+                await using var stream = File.Create(framePath);
+                data.SaveTo(stream);
+
+                progress?.Report(new ExportProgress
+                {
+                    CurrentFrame = frame + 1,
+                    TotalFrames = totalFrames + 1, // +1 for encoding step
+                    PercentComplete = frame * 90 / totalFrames, // Reserve 10% for FFmpeg
+                    CurrentFile = $"Frame {frame + 1}/{totalFrames}"
+                });
+            }
+
+            // Determine codec based on output format
+            var extension = Path.GetExtension(outputPath).ToLowerInvariant();
+            var (codec, format) = extension switch
+            {
+                ".webm" => ("libvpx-vp9", "webm"),
+                ".mp4" or _ => ("libx264", "mp4")
+            };
+
+            // Build FFmpeg command
+            var inputPattern = Path.Combine(tempDir, "frame_%05d.png");
+            var ffmpegArgs = $"-y -framerate {fps} -i \"{inputPattern}\" -c:v {codec} -pix_fmt yuv420p -crf 23 -preset medium \"{outputPath}\"";
+
+            progress?.Report(new ExportProgress
+            {
+                CurrentFrame = totalFrames,
+                TotalFrames = totalFrames + 1,
+                PercentComplete = 95,
+                CurrentFile = "Encoding video..."
+            });
+
+            // Run FFmpeg
+            var startInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = ffmpegPath,
+                Arguments = ffmpegArgs,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            };
+
+            using var process = System.Diagnostics.Process.Start(startInfo);
+            if (process == null)
+                return ExportResult.Failure("Failed to start FFmpeg process");
+
+            await process.WaitForExitAsync(cancellationToken);
+
+            if (process.ExitCode != 0)
+            {
+                var error = await process.StandardError.ReadToEndAsync(cancellationToken);
+                return ExportResult.Failure($"FFmpeg encoding failed: {error}");
+            }
+
+            progress?.Report(new ExportProgress
+            {
+                CurrentFrame = totalFrames + 1,
+                TotalFrames = totalFrames + 1,
+                PercentComplete = 100,
+                CurrentFile = "Complete"
+            });
+
+            return ExportResult.Succeeded(outputPath, warning);
+        }
+        catch (OperationCanceledException)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Failure($"Video export failed: {ex.Message}");
+        }
+        finally
+        {
+            // Clean up temp directory
+            if (tempDir != null)
+                TryDeleteDirectory(tempDir);
+        }
+    }
+
+    /// <summary>
+    /// Export trajectory animation as animated SVG using CSS animations.
+    /// </summary>
+    public async Task<ExportResult> ExportAnimatedSvgAsync(
+        GeometryRun run,
+        string outputPath,
+        ExportOptions? options = null,
+        CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateForExport(run);
+        if (!validation.IsValid)
+            return ExportResult.Failure(validation.ErrorMessage!);
+
+        var (validOptions, warning) = ValidateExportOptions(options);
+
+        try
+        {
+            var width = validOptions.Width ?? DefaultWidth;
+            var height = validOptions.Height ?? DefaultHeight;
+            var duration = validOptions.Duration ?? 5.0;
+
+            var trajectory = run.Trajectory!;
+            var timesteps = trajectory.Timesteps;
+
+            // Calculate bounds
+            var allX = timesteps.SelectMany(t => t.State2D!).Where((_, i) => i % 2 == 0);
+            var allY = timesteps.SelectMany(t => t.State2D!).Where((_, i) => i % 2 == 1);
+            var minX = allX.Min();
+            var maxX = allX.Max();
+            var minY = allY.Min();
+            var maxY = allY.Max();
+
+            var rangeX = maxX - minX;
+            var rangeY = maxY - minY;
+            var margin = 0.1;
+            minX -= rangeX * margin;
+            maxX += rangeX * margin;
+            minY -= rangeY * margin;
+            maxY += rangeY * margin;
+            rangeX = maxX - minX;
+            rangeY = maxY - minY;
+
+            var svg = new System.Text.StringBuilder();
+            svg.AppendLine($"<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+            svg.AppendLine($"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 {width} {height}\" width=\"{width}\" height=\"{height}\">");
+            svg.AppendLine("  <defs>");
+            svg.AppendLine($"    <style>");
+            svg.AppendLine($"      @keyframes draw {{ from {{ stroke-dashoffset: 1; }} to {{ stroke-dashoffset: 0; }} }}");
+            svg.AppendLine($"      .trajectory {{ animation: draw {duration}s linear forwards; stroke-dasharray: 1; stroke-dashoffset: 1; }}");
+            svg.AppendLine($"      .point {{ opacity: 0; animation: fadeIn 0.1s forwards; }}");
+            svg.AppendLine($"      @keyframes fadeIn {{ to {{ opacity: 1; }} }}");
+            svg.AppendLine($"    </style>");
+            svg.AppendLine("  </defs>");
+
+            // Background
+            if (!validOptions.TransparentBackground)
+            {
+                svg.AppendLine($"  <rect x=\"0\" y=\"0\" width=\"{width}\" height=\"{height}\" fill=\"white\"/>");
+            }
+
+            // Build path from trajectory points
+            var pathData = new System.Text.StringBuilder();
+            var points = new List<(double x, double y)>();
+
+            foreach (var timestep in timesteps)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                
+                var state2D = timestep.State2D!;
+                for (int i = 0; i < state2D.Count - 1; i += 2)
+                {
+                    var x = (state2D[i] - minX) / rangeX * (width - 40) + 20;
+                    var y = height - ((state2D[i + 1] - minY) / rangeY * (height - 40) + 20);
+                    points.Add((x, y));
+                }
+            }
+
+            if (points.Count > 0)
+            {
+                pathData.Append($"M {points[0].x:F2} {points[0].y:F2}");
+                for (int i = 1; i < points.Count; i++)
+                {
+                    pathData.Append($" L {points[i].x:F2} {points[i].y:F2}");
+                }
+            }
+
+            // Calculate path length for animation
+            double pathLength = 0;
+            for (int i = 1; i < points.Count; i++)
+            {
+                var dx = points[i].x - points[i - 1].x;
+                var dy = points[i].y - points[i - 1].y;
+                pathLength += Math.Sqrt(dx * dx + dy * dy);
+            }
+
+            // Trajectory path with draw animation
+            svg.AppendLine($"  <g id=\"trajectory\">");
+            svg.AppendLine($"    <path d=\"{pathData}\" fill=\"none\" stroke=\"#4169E1\" stroke-width=\"2\" " +
+                          $"stroke-dasharray=\"{pathLength:F0}\" stroke-dashoffset=\"{pathLength:F0}\" " +
+                          $"style=\"animation: draw {duration}s linear forwards;\">");
+            svg.AppendLine($"      <animate attributeName=\"stroke-dashoffset\" from=\"{pathLength:F0}\" to=\"0\" dur=\"{duration}s\" fill=\"freeze\"/>");
+            svg.AppendLine($"    </path>");
+            svg.AppendLine($"  </g>");
+
+            // Animated point following the trajectory
+            if (points.Count > 0)
+            {
+                svg.AppendLine($"  <circle id=\"current-point\" r=\"6\" fill=\"#FF4500\">");
+                
+                // X animation
+                svg.Append($"    <animate attributeName=\"cx\" dur=\"{duration}s\" fill=\"freeze\" values=\"");
+                svg.Append(string.Join(";", points.Select(p => p.x.ToString("F2"))));
+                svg.AppendLine("\"/>");
+                
+                // Y animation
+                svg.Append($"    <animate attributeName=\"cy\" dur=\"{duration}s\" fill=\"freeze\" values=\"");
+                svg.Append(string.Join(";", points.Select(p => p.y.ToString("F2"))));
+                svg.AppendLine("\"/>");
+                
+                svg.AppendLine($"  </circle>");
+            }
+
+            svg.AppendLine("</svg>");
+
+            await File.WriteAllTextAsync(outputPath, svg.ToString(), cancellationToken);
+
+            return ExportResult.Succeeded(outputPath, warning);
+        }
+        catch (OperationCanceledException)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Cancelled();
+        }
+        catch (Exception ex)
+        {
+            TryDeleteFile(outputPath);
+            return ExportResult.Failure($"Animated SVG export failed: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Check if FFmpeg is available on the system.
+    /// </summary>
+    public static bool IsFFmpegAvailable() => FindFFmpeg() != null;
+
+    /// <summary>
+    /// Find FFmpeg executable path.
+    /// </summary>
+    private static string? FindFFmpeg()
+    {
+        // Check common locations
+        var candidates = new[]
+        {
+            "ffmpeg",
+            "ffmpeg.exe",
+            @"C:\ffmpeg\bin\ffmpeg.exe",
+            @"C:\Program Files\ffmpeg\bin\ffmpeg.exe",
+            @"C:\Program Files (x86)\ffmpeg\bin\ffmpeg.exe"
+        };
+
+        foreach (var candidate in candidates)
+        {
+            try
+            {
+                var startInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = candidate,
+                    Arguments = "-version",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                };
+
+                using var process = System.Diagnostics.Process.Start(startInfo);
+                if (process != null)
+                {
+                    process.WaitForExit(1000);
+                    if (process.ExitCode == 0)
+                        return candidate;
+                }
+            }
+            catch
+            {
+                // Not found, try next
+            }
+        }
+
+        return null;
+    }
+
+    #endregion
 
     /// <summary>
     /// Export trajectory animation as a sequence of frames.
@@ -994,7 +1403,11 @@ public enum ExportFormat
     Png,
     Jpeg,
     Webp,
-    Pdf
+    Pdf,
+    Gif,
+    Mp4,
+    Webm,
+    AnimatedSvg
 }
 
 /// <summary>
@@ -1076,4 +1489,334 @@ public record BatchExportResult
     public string? OutputDirectory { get; init; }
     public List<(string name, ExportResult result)> Results { get; init; } = [];
     public int FailureCount => TotalCount - SuccessCount;
+}
+
+/// <summary>
+/// Simple GIF encoder for creating animated GIFs from SkiaSharp bitmaps.
+/// Uses the GIF89a format with global color table and frame delays.
+/// </summary>
+internal class GifEncoder : IDisposable
+{
+    private readonly Stream _stream;
+    private readonly int _width;
+    private readonly int _height;
+    private readonly int _frameDelay; // In centiseconds
+    private bool _headerWritten;
+    private bool _finished;
+
+    public GifEncoder(Stream stream, int width, int height, int frameDelayCentiseconds = 10)
+    {
+        _stream = stream;
+        _width = width;
+        _height = height;
+        _frameDelay = frameDelayCentiseconds;
+    }
+
+    public void AddFrame(SKBitmap bitmap)
+    {
+        if (_finished) throw new InvalidOperationException("Cannot add frames after Finish() has been called");
+
+        // Quantize to 256 colors and build color table
+        var (pixels, colorTable) = QuantizeBitmap(bitmap);
+
+        if (!_headerWritten)
+        {
+            WriteHeader(colorTable);
+            _headerWritten = true;
+        }
+
+        WriteGraphicControlExtension();
+        WriteImageDescriptor();
+        WriteImageData(pixels, colorTable.Length);
+    }
+
+    public void Finish()
+    {
+        if (_finished) return;
+        _finished = true;
+
+        // Write GIF trailer
+        _stream.WriteByte(0x3B);
+        _stream.Flush();
+    }
+
+    public void Dispose()
+    {
+        if (!_finished) Finish();
+    }
+
+    private void WriteHeader(SKColor[] colorTable)
+    {
+        // GIF89a signature
+        var header = "GIF89a"u8.ToArray();
+        _stream.Write(header, 0, header.Length);
+
+        // Logical screen descriptor
+        WriteUInt16((ushort)_width);
+        WriteUInt16((ushort)_height);
+
+        // Global color table flag, color resolution, sort flag, size of global color table
+        var colorTableSize = (int)Math.Ceiling(Math.Log2(colorTable.Length));
+        if (colorTableSize < 1) colorTableSize = 1;
+        byte packed = (byte)(0x80 | ((colorTableSize - 1) << 4) | (colorTableSize - 1));
+        _stream.WriteByte(packed);
+        _stream.WriteByte(0); // Background color index
+        _stream.WriteByte(0); // Pixel aspect ratio
+
+        // Global color table
+        var tableSize = 1 << colorTableSize;
+        for (int i = 0; i < tableSize; i++)
+        {
+            if (i < colorTable.Length)
+            {
+                _stream.WriteByte(colorTable[i].Red);
+                _stream.WriteByte(colorTable[i].Green);
+                _stream.WriteByte(colorTable[i].Blue);
+            }
+            else
+            {
+                _stream.WriteByte(0);
+                _stream.WriteByte(0);
+                _stream.WriteByte(0);
+            }
+        }
+
+        // Netscape application extension for looping
+        _stream.WriteByte(0x21); // Extension introducer
+        _stream.WriteByte(0xFF); // Application extension
+        _stream.WriteByte(0x0B); // Block size
+        var netscape = "NETSCAPE2.0"u8.ToArray();
+        _stream.Write(netscape, 0, netscape.Length);
+        _stream.WriteByte(0x03); // Sub-block size
+        _stream.WriteByte(0x01); // Loop indicator
+        WriteUInt16(0); // Loop count (0 = infinite)
+        _stream.WriteByte(0x00); // Block terminator
+    }
+
+    private void WriteGraphicControlExtension()
+    {
+        _stream.WriteByte(0x21); // Extension introducer
+        _stream.WriteByte(0xF9); // Graphic control label
+        _stream.WriteByte(0x04); // Block size
+        _stream.WriteByte(0x00); // Packed byte (no transparency)
+        WriteUInt16((ushort)_frameDelay);
+        _stream.WriteByte(0x00); // Transparent color index
+        _stream.WriteByte(0x00); // Block terminator
+    }
+
+    private void WriteImageDescriptor()
+    {
+        _stream.WriteByte(0x2C); // Image separator
+        WriteUInt16(0); // Left position
+        WriteUInt16(0); // Top position
+        WriteUInt16((ushort)_width);
+        WriteUInt16((ushort)_height);
+        _stream.WriteByte(0x00); // Packed byte (no local color table)
+    }
+
+    private void WriteImageData(byte[] pixels, int colorCount)
+    {
+        var minCodeSize = (int)Math.Max(2, Math.Ceiling(Math.Log2(colorCount)));
+        _stream.WriteByte((byte)minCodeSize);
+
+        // LZW compress the pixels
+        var compressed = LzwCompress(pixels, minCodeSize);
+        
+        // Write in sub-blocks of max 255 bytes
+        int offset = 0;
+        while (offset < compressed.Length)
+        {
+            var blockSize = Math.Min(255, compressed.Length - offset);
+            _stream.WriteByte((byte)blockSize);
+            _stream.Write(compressed, offset, blockSize);
+            offset += blockSize;
+        }
+
+        _stream.WriteByte(0x00); // Block terminator
+    }
+
+    private void WriteUInt16(ushort value)
+    {
+        _stream.WriteByte((byte)(value & 0xFF));
+        _stream.WriteByte((byte)((value >> 8) & 0xFF));
+    }
+
+    private (byte[] pixels, SKColor[] colorTable) QuantizeBitmap(SKBitmap bitmap)
+    {
+        // Simple median-cut color quantization to 256 colors
+        var colors = new Dictionary<int, int>();
+        var resized = bitmap;
+        
+        if (bitmap.Width != _width || bitmap.Height != _height)
+        {
+            resized = bitmap.Resize(new SKImageInfo(_width, _height), SKFilterQuality.Medium);
+        }
+
+        // Count colors and build histogram
+        for (int y = 0; y < _height; y++)
+        {
+            for (int x = 0; x < _width; x++)
+            {
+                var pixel = resized.GetPixel(x, y);
+                // Reduce precision for quantization
+                var key = ((pixel.Red >> 3) << 10) | ((pixel.Green >> 3) << 5) | (pixel.Blue >> 3);
+                colors[key] = colors.GetValueOrDefault(key) + 1;
+            }
+        }
+
+        // Take top 256 colors by frequency
+        var palette = colors
+            .OrderByDescending(kv => kv.Value)
+            .Take(256)
+            .Select((kv, i) => (Index: i, Color: new SKColor(
+                (byte)((kv.Key >> 10) << 3),
+                (byte)(((kv.Key >> 5) & 0x1F) << 3),
+                (byte)((kv.Key & 0x1F) << 3))))
+            .ToList();
+
+        var colorTable = palette.Select(p => p.Color).ToArray();
+        if (colorTable.Length < 2) colorTable = new[] { SKColors.Black, SKColors.White };
+
+        // Map pixels to palette indices
+        var pixels = new byte[_width * _height];
+        var colorLookup = palette.ToDictionary(
+            p => ((p.Color.Red >> 3) << 10) | ((p.Color.Green >> 3) << 5) | (p.Color.Blue >> 3),
+            p => (byte)p.Index);
+
+        for (int y = 0; y < _height; y++)
+        {
+            for (int x = 0; x < _width; x++)
+            {
+                var pixel = resized.GetPixel(x, y);
+                var key = ((pixel.Red >> 3) << 10) | ((pixel.Green >> 3) << 5) | (pixel.Blue >> 3);
+                
+                if (colorLookup.TryGetValue(key, out var index))
+                {
+                    pixels[y * _width + x] = index;
+                }
+                else
+                {
+                    // Find nearest color
+                    pixels[y * _width + x] = FindNearestColor(pixel, colorTable);
+                }
+            }
+        }
+
+        if (resized != bitmap) resized.Dispose();
+
+        return (pixels, colorTable);
+    }
+
+    private static byte FindNearestColor(SKColor target, SKColor[] palette)
+    {
+        int best = 0;
+        int bestDist = int.MaxValue;
+
+        for (int i = 0; i < palette.Length; i++)
+        {
+            var dr = target.Red - palette[i].Red;
+            var dg = target.Green - palette[i].Green;
+            var db = target.Blue - palette[i].Blue;
+            var dist = dr * dr + dg * dg + db * db;
+            if (dist < bestDist)
+            {
+                bestDist = dist;
+                best = i;
+            }
+        }
+
+        return (byte)best;
+    }
+
+    private static byte[] LzwCompress(byte[] input, int minCodeSize)
+    {
+        var output = new List<byte>();
+        var bitBuffer = 0;
+        var bitCount = 0;
+
+        var clearCode = 1 << minCodeSize;
+        var endCode = clearCode + 1;
+        var codeSize = minCodeSize + 1;
+        var nextCode = endCode + 1;
+        var maxCode = (1 << codeSize) - 1;
+
+        var table = new Dictionary<string, int>();
+
+        void WriteCode(int code)
+        {
+            bitBuffer |= code << bitCount;
+            bitCount += codeSize;
+
+            while (bitCount >= 8)
+            {
+                output.Add((byte)(bitBuffer & 0xFF));
+                bitBuffer >>= 8;
+                bitCount -= 8;
+            }
+        }
+
+        // Initialize table with single-character strings
+        void ResetTable()
+        {
+            table.Clear();
+            for (int i = 0; i < clearCode; i++)
+            {
+                table[((char)i).ToString()] = i;
+            }
+            nextCode = endCode + 1;
+            codeSize = minCodeSize + 1;
+            maxCode = (1 << codeSize) - 1;
+        }
+
+        ResetTable();
+        WriteCode(clearCode);
+
+        if (input.Length == 0)
+        {
+            WriteCode(endCode);
+            if (bitCount > 0) output.Add((byte)(bitBuffer & 0xFF));
+            return output.ToArray();
+        }
+
+        var current = ((char)input[0]).ToString();
+
+        for (int i = 1; i < input.Length; i++)
+        {
+            var c = (char)input[i];
+            var next = current + c;
+
+            if (table.ContainsKey(next))
+            {
+                current = next;
+            }
+            else
+            {
+                WriteCode(table[current]);
+
+                if (nextCode <= 4095)
+                {
+                    table[next] = nextCode++;
+                    if (nextCode > maxCode && codeSize < 12)
+                    {
+                        codeSize++;
+                        maxCode = (1 << codeSize) - 1;
+                    }
+                }
+                else
+                {
+                    WriteCode(clearCode);
+                    ResetTable();
+                }
+
+                current = c.ToString();
+            }
+        }
+
+        WriteCode(table[current]);
+        WriteCode(endCode);
+
+        if (bitCount > 0) output.Add((byte)(bitBuffer & 0xFF));
+
+        return output.ToArray();
+    }
 }

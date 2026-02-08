@@ -97,6 +97,21 @@ public partial class ExportViewModel : ObservableObject
     [ObservableProperty]
     private int _jpegQuality = 95;
 
+    // Phase 2.3: Animation export settings
+    [ObservableProperty]
+    private int _animationFormatIndex;
+
+    public string[] AnimationFormats { get; } = ["GIF", "MP4", "WebM", "Animated SVG"];
+
+    [ObservableProperty]
+    private int _animationFps = 30;
+
+    [ObservableProperty]
+    private double _animationDuration = 5.0;
+
+    [ObservableProperty]
+    private bool _ffmpegAvailable;
+
     partial void OnResolutionPresetIndexChanged(int value)
     {
         // Update Width/Height when preset changes
@@ -220,6 +235,78 @@ public partial class ExportViewModel : ObservableObject
         {
             IsExporting = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task ExportAnimationAsync()
+    {
+        if (Run == null) return;
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var extension = AnimationFormatIndex switch
+        {
+            1 => ".mp4",
+            2 => ".webm",
+            3 => ".svg",
+            _ => ".gif"
+        };
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_animation_{timestamp}{extension}");
+
+        try
+        {
+            IsExporting = true;
+            
+            var options = new ExportOptions
+            {
+                Width = Width,
+                Height = Height,
+                Fps = AnimationFps,
+                Duration = AnimationDuration,
+                TransparentBackground = TransparentBackground
+            };
+
+            var progress = new Progress<ExportProgress>(p =>
+            {
+                ExportStatus = $"Exporting frame {p.CurrentFrame}/{p.TotalFrames} ({p.PercentComplete}%)";
+            });
+
+            ExportResult result = AnimationFormatIndex switch
+            {
+                1 => await _exportService.ExportVideoAsync(Run, outputPath, options, progress),
+                2 => await _exportService.ExportVideoAsync(Run, outputPath, options, progress),
+                3 => await _exportService.ExportAnimatedSvgAsync(Run, outputPath, options),
+                _ => await _exportService.ExportGifAsync(Run, outputPath, options, progress)
+            };
+
+            if (result.IsSuccess)
+            {
+                ExportStatus = $"Animation saved: {Path.GetFileName(result.OutputPath)}";
+            }
+            else
+            {
+                ExportStatus = $"Error: {result.ErrorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            ExportStatus = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    /// <summary>
+    /// Check if FFmpeg is available for video export.
+    /// </summary>
+    public void CheckFFmpegAvailability()
+    {
+        FfmpegAvailable = ExportService.IsFFmpegAvailable();
     }
 
     [RelayCommand]
