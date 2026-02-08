@@ -48,6 +48,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        clean: true
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -58,7 +60,12 @@ jobs:
       run: dotnet --version
 
     - name: Install MAUI workload
-      run: dotnet workload install maui
+      run: dotnet workload install maui-windows --skip-sign-check
+
+    - name: Clean obj and bin folders
+      run: |
+        if (Test-Path src/VortexKit/obj) { Remove-Item -Recurse -Force src/VortexKit/obj }
+        if (Test-Path src/VortexKit/bin) { Remove-Item -Recurse -Force src/VortexKit/bin }
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release
