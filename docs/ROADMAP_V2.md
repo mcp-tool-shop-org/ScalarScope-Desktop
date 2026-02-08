@@ -4,7 +4,7 @@
 
 ---
 
-## Phase 1: Vortex Core (v1.2)
+## Phase 1: Vortex Core (v1.2 - v1.3) ✅
 *Make the vortex visualization world-class*
 
 ### 1.1 Organic Flow Rendering
@@ -15,18 +15,18 @@
 
 ### 1.2 Energy Visualization  
 - [x] **Glow/Bloom Effects**: Radial luminance around high-energy regions
-- [ ] **Heat Map Overlay**: Optional density heatmap showing where trajectory lingers
-- [ ] **Curvature Halos**: Subtle rings at phase transition points
-- [ ] **Color Mode Selection**: Choose between time-based, velocity-based, or curvature-based coloring
+- [x] **Heat Map Overlay**: Optional density heatmap showing where trajectory lingers (v1.3)
+- [x] **Curvature Halos**: Already implemented via existing curvature markers
+- [x] **Color Mode Selection**: Time, velocity, or curvature-based coloring (v1.3)
 
 ### 1.3 Flow Field Context
+- [x] **Vector Field Grid**: Optional background showing gradient directions (v1.3)
 - [ ] **Streamlines**: Show surrounding flow field, not just the taken path
-- [ ] **Vector Field Grid**: Optional background showing gradient directions
 - [ ] **Attractor/Repeller Markers**: Identify fixed points in the dynamics
 
 ---
 
-## Phase 2: Publication Ready (v1.3)
+## Phase 2: Publication Ready (v1.4)
 *Export quality that rivals hand-crafted figures*
 
 ### 2.1 SVG Export Engine

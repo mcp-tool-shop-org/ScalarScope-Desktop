@@ -8,6 +8,19 @@ using SkiaSharp.Views.Maui.Controls;
 namespace ScalarScope.Views.Controls;
 
 /// <summary>
+/// Color modes for trajectory visualization.
+/// </summary>
+public enum TrajectoryColorMode
+{
+    /// <summary>Color by time (start to end gradient).</summary>
+    Time,
+    /// <summary>Color by velocity magnitude (slow=blue, fast=red).</summary>
+    Velocity,
+    /// <summary>Color by curvature (low=blue, high=orange).</summary>
+    Curvature
+}
+
+/// <summary>
 /// Core vortex visualization: trajectory flow field in reduced space.
 /// Shows the path through state space with velocity vectors and curvature.
 /// </summary>
@@ -25,6 +38,15 @@ public class TrajectoryCanvas : SKCanvasView
 
     public static readonly BindableProperty ShowProfessorsProperty =
         BindableProperty.Create(nameof(ShowProfessors), typeof(bool), typeof(TrajectoryCanvas), true);
+
+    public static readonly BindableProperty ShowHeatMapProperty =
+        BindableProperty.Create(nameof(ShowHeatMap), typeof(bool), typeof(TrajectoryCanvas), false);
+
+    public static readonly BindableProperty ShowVectorFieldProperty =
+        BindableProperty.Create(nameof(ShowVectorField), typeof(bool), typeof(TrajectoryCanvas), false);
+
+    public static readonly BindableProperty ColorModeProperty =
+        BindableProperty.Create(nameof(ColorMode), typeof(TrajectoryColorMode), typeof(TrajectoryCanvas), TrajectoryColorMode.Time);
 
     // Hover state for tooltips
     public static readonly BindableProperty HoveredPointProperty =
@@ -57,6 +79,24 @@ public class TrajectoryCanvas : SKCanvasView
         set => SetValue(ShowProfessorsProperty, value);
     }
 
+    public bool ShowHeatMap
+    {
+        get => (bool)GetValue(ShowHeatMapProperty);
+        set => SetValue(ShowHeatMapProperty, value);
+    }
+
+    public bool ShowVectorField
+    {
+        get => (bool)GetValue(ShowVectorFieldProperty);
+        set => SetValue(ShowVectorFieldProperty, value);
+    }
+
+    public TrajectoryColorMode ColorMode
+    {
+        get => (TrajectoryColorMode)GetValue(ColorModeProperty);
+        set => SetValue(ColorModeProperty, value);
+    }
+
     public TrajectoryTimestep? HoveredPoint
     {
         get => (TrajectoryTimestep?)GetValue(HoveredPointProperty);
@@ -87,6 +127,29 @@ public class TrajectoryCanvas : SKCanvasView
     private static readonly SKColor CurvatureHighColor = SKColor.Parse("#ff9f43");
     private static readonly SKColor ProfessorColor = SKColor.Parse("#a29bfe");
     private static readonly SKColor HoldoutColor = SKColor.Parse("#fd79a8");
+
+    // Heat map colors (cool to hot)
+    private static readonly SKColor[] HeatMapGradient = new[]
+    {
+        SKColor.Parse("#000033"), // Deep blue - lowest density
+        SKColor.Parse("#0066cc"), // Blue
+        SKColor.Parse("#00cc99"), // Cyan-green
+        SKColor.Parse("#66ff33"), // Green
+        SKColor.Parse("#ffff00"), // Yellow
+        SKColor.Parse("#ff6600"), // Orange
+        SKColor.Parse("#ff0000"), // Red - highest density
+    };
+
+    // Velocity color mode (slow to fast)
+    private static readonly SKColor VelocitySlowColor = SKColor.Parse("#3498db"); // Blue - slow
+    private static readonly SKColor VelocityFastColor = SKColor.Parse("#e74c3c"); // Red - fast
+
+    // Curvature color mode (low to high)
+    private static readonly SKColor CurvatureLowColor = SKColor.Parse("#2ecc71"); // Green - smooth
+    private static readonly SKColor CurvatureHighModeColor = SKColor.Parse("#e67e22"); // Orange - sharp turn
+
+    // Vector field arrows
+    private static readonly SKColor VectorFieldColor = SKColor.Parse("#4a5568"); // Muted gray-blue
 
     private float _scale = 100f;
     private SKPoint _center;
@@ -248,6 +311,16 @@ public class TrajectoryCanvas : SKCanvasView
             DrawProfessorVectors(canvas);
         }
 
+        if (ShowHeatMap)
+        {
+            DrawHeatMap(canvas, info);
+        }
+
+        if (ShowVectorField)
+        {
+            DrawVectorFieldGrid(canvas, info);
+        }
+
         DrawTrajectory(canvas);
 
         if (ShowVelocity)
@@ -404,18 +477,52 @@ public class TrajectoryCanvas : SKCanvasView
         var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
         if (points.Count < 2) return;
 
-        // Calculate velocity stats for adaptive stroke width
+        // Calculate stats for color modes
         var maxVelocity = points.Max(p => p.VelocityMagnitude);
         if (maxVelocity < 0.0001) maxVelocity = 1.0;
 
+        var maxCurvature = points.Max(p => p.Curvature);
+        if (maxCurvature < 0.0001) maxCurvature = 1.0;
+
         // Draw glow layer first (behind main trajectory)
-        DrawTrajectoryGlow(canvas, points, maxVelocity);
+        DrawTrajectoryGlow(canvas, points, maxVelocity, maxCurvature);
 
         // Draw main trajectory with Catmull-Rom splines
-        DrawTrajectorySpline(canvas, points, maxVelocity);
+        DrawTrajectorySpline(canvas, points, maxVelocity, maxCurvature);
     }
 
-    private void DrawTrajectoryGlow(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity)
+    /// <summary>
+    /// Gets the trajectory color based on the current ColorMode.
+    /// </summary>
+    private SKColor GetTrajectoryColor(TrajectoryTimestep point, int index, int totalPoints, double maxVelocity, double maxCurvature)
+    {
+        return ColorMode switch
+        {
+            TrajectoryColorMode.Velocity => GetVelocityColor(point.VelocityMagnitude, maxVelocity),
+            TrajectoryColorMode.Curvature => GetCurvatureModeColor(point.Curvature, maxCurvature),
+            _ => GetTimeColor(index, totalPoints) // Default: Time mode
+        };
+    }
+
+    private SKColor GetTimeColor(int index, int totalPoints)
+    {
+        var t = (float)index / totalPoints;
+        return InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+    }
+
+    private SKColor GetVelocityColor(double velocity, double maxVelocity)
+    {
+        var t = (float)Math.Clamp(velocity / maxVelocity, 0, 1);
+        return InterpolateColor(VelocitySlowColor, VelocityFastColor, t);
+    }
+
+    private SKColor GetCurvatureModeColor(double curvature, double maxCurvature)
+    {
+        var t = (float)Math.Clamp(curvature / maxCurvature, 0, 1);
+        return InterpolateColor(CurvatureLowColor, CurvatureHighModeColor, t);
+    }
+
+    private void DrawTrajectoryGlow(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity, double maxCurvature)
     {
         using var glowPaint = new SKPaint
         {
@@ -436,7 +543,7 @@ public class TrajectoryCanvas : SKCanvasView
                 var t = (float)i / points.Count;
                 var opacity = GetTrailOpacity(t, points.Count);
                 
-                var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+                var color = GetTrajectoryColor(points[i], i, points.Count, maxVelocity, maxCurvature);
                 glowPaint.Color = color.WithAlpha((byte)(glowAlpha * opacity));
                 glowPaint.StrokeWidth = glowWidth;
                 glowPaint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, glowPass * 2);
@@ -448,7 +555,7 @@ public class TrajectoryCanvas : SKCanvasView
         }
     }
 
-    private void DrawTrajectorySpline(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity)
+    private void DrawTrajectorySpline(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity, double maxCurvature)
     {
         using var paint = new SKPaint
         {
@@ -464,24 +571,24 @@ public class TrajectoryCanvas : SKCanvasView
             // Draw Catmull-Rom spline segments
             for (int i = 1; i < points.Count - 2; i++)
             {
-                DrawCatmullRomSegment(canvas, paint, points, i, maxVelocity);
+                DrawCatmullRomSegment(canvas, paint, points, i, maxVelocity, maxCurvature);
             }
             
             // Draw the first and last segments as simple lines (not enough control points)
-            DrawSimpleSegment(canvas, paint, points, 0, maxVelocity);
-            DrawSimpleSegment(canvas, paint, points, points.Count - 2, maxVelocity);
+            DrawSimpleSegment(canvas, paint, points, 0, maxVelocity, maxCurvature);
+            DrawSimpleSegment(canvas, paint, points, points.Count - 2, maxVelocity, maxCurvature);
         }
         else
         {
             // Fallback to simple lines for very short trajectories
             for (int i = 1; i < points.Count; i++)
             {
-                DrawSimpleSegment(canvas, paint, points, i - 1, maxVelocity);
+                DrawSimpleSegment(canvas, paint, points, i - 1, maxVelocity, maxCurvature);
             }
         }
     }
 
-    private void DrawCatmullRomSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity)
+    private void DrawCatmullRomSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity, double maxCurvature)
     {
         var p0 = ToScreen(points[i - 1].State2D);
         var p1 = ToScreen(points[i].State2D);
@@ -493,7 +600,7 @@ public class TrajectoryCanvas : SKCanvasView
         var velocity = points[i + 1].VelocityMagnitude;
         var strokeWidth = GetAdaptiveStrokeWidth(velocity, maxVelocity);
 
-        var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+        var color = GetTrajectoryColor(points[i + 1], i + 1, points.Count, maxVelocity, maxCurvature);
         paint.Color = color.WithAlpha((byte)(255 * opacity));
         paint.StrokeWidth = strokeWidth;
 
@@ -512,7 +619,7 @@ public class TrajectoryCanvas : SKCanvasView
         canvas.DrawPath(path, paint);
     }
 
-    private void DrawSimpleSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity)
+    private void DrawSimpleSegment(SKCanvas canvas, SKPaint paint, List<TrajectoryTimestep> points, int i, double maxVelocity, double maxCurvature)
     {
         if (i + 1 >= points.Count) return;
 
@@ -521,7 +628,7 @@ public class TrajectoryCanvas : SKCanvasView
         var velocity = points[i + 1].VelocityMagnitude;
         var strokeWidth = GetAdaptiveStrokeWidth(velocity, maxVelocity);
 
-        var color = InterpolateColor(TrajectoryStartColor, TrajectoryEndColor, t);
+        var color = GetTrajectoryColor(points[i + 1], i + 1, points.Count, maxVelocity, maxCurvature);
         paint.Color = color.WithAlpha((byte)(255 * opacity));
         paint.StrokeWidth = strokeWidth;
 
@@ -581,6 +688,194 @@ public class TrajectoryCanvas : SKCanvasView
         return width;
     }
 
+    private void DrawHeatMap(SKCanvas canvas, SKImageInfo info)
+    {
+        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        if (points.Count < 2) return;
+
+        // Create density grid
+        const int gridSize = 64;
+        var density = new int[gridSize, gridSize];
+        var maxDensity = 0;
+
+        // Map trajectory points to grid cells and count visits
+        foreach (var pt in points)
+        {
+            if (pt.State2D.Count < 2) continue;
+            var screenPt = ToScreen(pt.State2D);
+            
+            // Convert screen coordinates to grid indices
+            var gridX = (int)Math.Clamp((screenPt.X / info.Width) * gridSize, 0, gridSize - 1);
+            var gridY = (int)Math.Clamp((screenPt.Y / info.Height) * gridSize, 0, gridSize - 1);
+            
+            density[gridX, gridY]++;
+            maxDensity = Math.Max(maxDensity, density[gridX, gridY]);
+        }
+
+        if (maxDensity == 0) return;
+
+        // Draw heat map cells
+        var cellWidth = (float)info.Width / gridSize;
+        var cellHeight = (float)info.Height / gridSize;
+
+        using var paint = new SKPaint
+        {
+            Style = SKPaintStyle.Fill,
+            IsAntialias = false
+        };
+
+        for (int x = 0; x < gridSize; x++)
+        {
+            for (int y = 0; y < gridSize; y++)
+            {
+                if (density[x, y] == 0) continue;
+
+                // Normalize density to 0-1 range (logarithmic for better visualization)
+                var normalizedDensity = Math.Log(1 + density[x, y]) / Math.Log(1 + maxDensity);
+                
+                // Get color from gradient
+                var color = GetHeatMapColor((float)normalizedDensity);
+                paint.Color = color.WithAlpha(160); // Semi-transparent
+
+                var rect = new SKRect(
+                    x * cellWidth,
+                    y * cellHeight,
+                    (x + 1) * cellWidth,
+                    (y + 1) * cellHeight
+                );
+                canvas.DrawRect(rect, paint);
+            }
+        }
+
+        // Apply Gaussian blur for smoother appearance
+        using var blurPaint = new SKPaint
+        {
+            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, cellWidth / 2)
+        };
+    }
+
+    private static SKColor GetHeatMapColor(float t)
+    {
+        // Map t (0-1) to gradient index
+        var gradientCount = HeatMapGradient.Length - 1;
+        var scaledT = t * gradientCount;
+        var index = (int)Math.Floor(scaledT);
+        var fraction = scaledT - index;
+
+        if (index >= gradientCount)
+            return HeatMapGradient[gradientCount];
+
+        // Interpolate between adjacent colors
+        var c1 = HeatMapGradient[index];
+        var c2 = HeatMapGradient[index + 1];
+
+        return new SKColor(
+            (byte)(c1.Red + (c2.Red - c1.Red) * fraction),
+            (byte)(c1.Green + (c2.Green - c1.Green) * fraction),
+            (byte)(c1.Blue + (c2.Blue - c1.Blue) * fraction),
+            255
+        );
+    }
+
+    private void DrawVectorFieldGrid(SKCanvas canvas, SKImageInfo info)
+    {
+        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        if (points.Count < 2) return;
+
+        // Build velocity lookup for nearby trajectory points
+        var velocityLookup = new Dictionary<(int, int), (double vx, double vy)>();
+        const int gridSize = 12;
+
+        foreach (var pt in points)
+        {
+            if (pt.State2D.Count < 2) continue;
+            
+            var screenPt = ToScreen(pt.State2D);
+            var gridX = (int)Math.Clamp((screenPt.X / info.Width) * gridSize, 0, gridSize - 1);
+            var gridY = (int)Math.Clamp((screenPt.Y / info.Height) * gridSize, 0, gridSize - 1);
+            
+            // Use velocity from trajectory data if available
+            var vx = pt.State2D.Count > 0 ? pt.State2D[0] : 0;
+            var vy = pt.State2D.Count > 1 ? pt.State2D[1] : 0;
+            
+            // Only keep first pass velocity (could average instead)
+            velocityLookup.TryAdd((gridX, gridY), (vx, vy));
+        }
+
+        using var arrowPaint = new SKPaint
+        {
+            Color = VectorFieldColor.WithAlpha(100),
+            StrokeWidth = 1.5f,
+            Style = SKPaintStyle.Stroke,
+            IsAntialias = true,
+            StrokeCap = SKStrokeCap.Round
+        };
+
+        var cellWidth = (float)info.Width / gridSize;
+        var cellHeight = (float)info.Height / gridSize;
+        var arrowLength = Math.Min(cellWidth, cellHeight) * 0.4f;
+
+        // Draw arrows at grid intersections
+        for (int x = 0; x < gridSize; x++)
+        {
+            for (int y = 0; y < gridSize; y++)
+            {
+                var centerX = (x + 0.5f) * cellWidth;
+                var centerY = (y + 0.5f) * cellHeight;
+
+                // Try to get velocity from nearby trajectory points
+                if (velocityLookup.TryGetValue((x, y), out var vel))
+                {
+                    var mag = Math.Sqrt(vel.vx * vel.vx + vel.vy * vel.vy);
+                    if (mag > 0.001)
+                    {
+                        // Normalize and scale
+                        var dx = (float)(vel.vx / mag * arrowLength);
+                        var dy = (float)(-vel.vy / mag * arrowLength); // Y inverted
+
+                        DrawSmallArrow(canvas, arrowPaint,
+                            new SKPoint(centerX, centerY),
+                            new SKPoint(centerX + dx, centerY + dy));
+                    }
+                }
+                else
+                {
+                    // No trajectory data - draw a small dot placeholder
+                    canvas.DrawCircle(centerX, centerY, 2f, arrowPaint);
+                }
+            }
+        }
+    }
+
+    private static void DrawSmallArrow(SKCanvas canvas, SKPaint paint, SKPoint from, SKPoint to)
+    {
+        canvas.DrawLine(from, to, paint);
+        
+        // Arrow head
+        var dx = to.X - from.X;
+        var dy = to.Y - from.Y;
+        var length = (float)Math.Sqrt(dx * dx + dy * dy);
+        
+        if (length < 5) return;
+
+        var headLength = Math.Min(length * 0.3f, 8f);
+        var headAngle = 0.5f; // radians
+
+        var angle = (float)Math.Atan2(dy, dx);
+        
+        var head1 = new SKPoint(
+            to.X - headLength * (float)Math.Cos(angle - headAngle),
+            to.Y - headLength * (float)Math.Sin(angle - headAngle)
+        );
+        var head2 = new SKPoint(
+            to.X - headLength * (float)Math.Cos(angle + headAngle),
+            to.Y - headLength * (float)Math.Sin(angle + headAngle)
+        );
+
+        canvas.DrawLine(to, head1, paint);
+        canvas.DrawLine(to, head2, paint);
+    }
+
     private void DrawVelocityVectors(SKCanvas canvas)
     {
         var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
@@ -618,6 +913,13 @@ public class TrajectoryCanvas : SKCanvasView
         var maxCurvature = points.Max(p => p.Curvature);
         if (maxCurvature < 0.01) return;
 
+        var curvatureThreshold = maxCurvature * 0.5;
+        var highCurvaturePoints = points.Where(p => p.Curvature > curvatureThreshold).ToList();
+
+        // Draw halos first (behind markers)
+        DrawCurvatureHalos(canvas, highCurvaturePoints, maxCurvature);
+
+        // Draw core markers on top
         using var paint = new SKPaint
         {
             Style = SKPaintStyle.Stroke,
@@ -625,7 +927,7 @@ public class TrajectoryCanvas : SKCanvasView
             IsAntialias = true
         };
 
-        foreach (var pt in points.Where(p => p.Curvature > maxCurvature * 0.5))
+        foreach (var pt in highCurvaturePoints)
         {
             var pos = ToScreen(pt.State2D);
             var intensity = (float)(pt.Curvature / maxCurvature);
@@ -633,6 +935,47 @@ public class TrajectoryCanvas : SKCanvasView
 
             var radius = 5 + intensity * 15;
             canvas.DrawCircle(pos, radius, paint);
+        }
+    }
+
+    private void DrawCurvatureHalos(SKCanvas canvas, List<TrajectoryTimestep> highCurvaturePoints, double maxCurvature)
+    {
+        using var haloPaint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            IsAntialias = true
+        };
+
+        // Draw multiple concentric rings for each high-curvature point
+        foreach (var pt in highCurvaturePoints)
+        {
+            var pos = ToScreen(pt.State2D);
+            var intensity = (float)(pt.Curvature / maxCurvature);
+
+            // Draw 3 expanding halo rings
+            for (int ring = 1; ring <= 3; ring++)
+            {
+                var baseRadius = 10 + intensity * 20;
+                var ringRadius = baseRadius + ring * 8;
+                var ringAlpha = (byte)(80 * intensity / ring);
+                var ringWidth = 3f / ring;
+
+                haloPaint.Color = CurvatureHighColor.WithAlpha(ringAlpha);
+                haloPaint.StrokeWidth = ringWidth;
+                haloPaint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, ring * 2);
+
+                canvas.DrawCircle(pos, ringRadius, haloPaint);
+            }
+
+            // Draw inner glow
+            using var glowPaint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+                MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 8)
+            };
+            glowPaint.Color = CurvatureHighColor.WithAlpha((byte)(40 * intensity));
+            canvas.DrawCircle(pos, 15 * intensity + 5, glowPaint);
         }
     }
 

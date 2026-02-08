@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-02-08
+
+### Added
+- **Heat Map Overlay**: Optional density visualization showing where the trajectory lingers longest
+  - Logarithmic scaling for better visualization of density variations
+  - 7-color gradient from deep blue (sparse) to red (dense)
+  - Toggle via `ShowHeatMap` property
+
+- **Vector Field Grid**: Background arrows showing local flow directions
+  - 12x12 grid with contextual velocity indicators
+  - Muted styling to avoid distracting from main trajectory
+  - Toggle via `ShowVectorField` property
+
+- **Color Mode Selection**: Choose how trajectory color is determined
+  - **Time mode** (default): Gradient from start (cyan) to end (red)
+  - **Velocity mode**: Slow (blue) to fast (red) coloring
+  - **Curvature mode**: Smooth (green) to sharp turns (orange)
+  - Set via `ColorMode` property with `TrajectoryColorMode` enum
+
+### Technical
+- Added `TrajectoryColorMode` enum for trajectory coloring options
+- Implemented `DrawHeatMap()` with 64x64 density grid and Gaussian-like visualization
+- Implemented `DrawVectorFieldGrid()` with directional arrows
+- Added color mode-aware trajectory rendering throughout glow and spline drawing
+
 ## [1.2.0] - 2026-02-08
 
 ### Added
