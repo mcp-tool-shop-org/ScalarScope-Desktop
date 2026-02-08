@@ -315,14 +315,13 @@ public class ExportService
         // Draw label if provided
         if (!string.IsNullOrEmpty(options.Label))
         {
+            using var labelFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 24);
             using var labelPaint = new SKPaint
             {
                 Color = accentColor,
-                TextSize = 24,
-                IsAntialias = true,
-                Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+                IsAntialias = true
             };
-            canvas.DrawText(options.Label, 20, 40, labelPaint);
+            canvas.DrawText(options.Label, 20, 40, SKTextAlign.Left, labelFont, labelPaint);
         }
 
         // Draw professor vectors
@@ -467,21 +466,21 @@ public class ExportService
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
+        using var font = new SKFont(SKTypeface.Default, 16);
         using var paint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(200),
-            TextSize = 16,
             IsAntialias = true
         };
 
         var x = 20f;
         var y = height - 60f;
 
-        canvas.DrawText($"Time: {time:P0}", x, y, paint);
+        canvas.DrawText($"Time: {time:P0}", x, y, SKTextAlign.Left, font, paint);
         y += 22;
-        canvas.DrawText($"Eff.Dim: {current.EffectiveDim:F2}", x, y, paint);
+        canvas.DrawText($"Eff.Dim: {current.EffectiveDim:F2}", x, y, SKTextAlign.Left, font, paint);
         y += 22;
-        canvas.DrawText($"Curvature: {current.Curvature:F3}", x, y, paint);
+        canvas.DrawText($"Curvature: {current.Curvature:F3}", x, y, SKTextAlign.Left, font, paint);
     }
 
     private void DrawEigenSpectrum(SKCanvas canvas, GeometryRun run, double time, int width, int height)
@@ -510,12 +509,11 @@ public class ExportService
             IsAntialias = true
         };
 
+        using var textFont = new SKFont(SKTypeface.Default, 12);
         using var textPaint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(180),
-            TextSize = 12,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
 
         var colors = new[]
@@ -535,7 +533,7 @@ public class ExportService
 
             barPaint.Color = colors[i % colors.Length];
             canvas.DrawRect(x, chartY + maxBarHeight - barHeight, barWidth, barHeight, barPaint);
-            canvas.DrawText($"λ{i + 1}", x + barWidth / 2, chartY + maxBarHeight + 15, textPaint);
+            canvas.DrawText($"λ{i + 1}", x + barWidth / 2, chartY + maxBarHeight + 15, SKTextAlign.Center, textFont, textPaint);
         }
     }
 
@@ -548,27 +546,24 @@ public class ExportService
         };
         canvas.DrawRect(0, 0, width, 60, bgPaint);
 
+        using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 20);
         using var titlePaint = new SKPaint
         {
             Color = SKColors.White,
-            TextSize = 20,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold),
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
 
-        canvas.DrawText("ScalarScope Training Dynamics Comparison", width / 2f, 35, titlePaint);
+        canvas.DrawText("ScalarScope Training Dynamics Comparison", width / 2f, 35, SKTextAlign.Center, titleFont, titlePaint);
 
+        using var subtitleFont = new SKFont(SKTypeface.Default, 12);
         using var subtitlePaint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(150),
-            TextSize = 12,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
 
         canvas.DrawText($"Time: {time:P0} | Left: {leftRun.Metadata.Condition} | Right: {rightRun.Metadata.Condition}",
-            width / 2f, 52, subtitlePaint);
+            width / 2f, 52, SKTextAlign.Center, subtitleFont, subtitlePaint);
     }
 
     private void DrawArrow(SKCanvas canvas, SKPoint from, SKPoint to, SKPaint paint)

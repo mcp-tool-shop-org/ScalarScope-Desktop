@@ -192,35 +192,33 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
             (byte)(AccentColor.Blue * 255)
         );
 
+        using var boldFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 16);
+        using var subtitleFont = new SKFont(SKTypeface.Default, 12);
         using var paint = new SKPaint
         {
             Color = skAccent,
-            TextSize = 16,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
-        canvas.DrawText(Label, 15, 25, paint);
+        canvas.DrawText(Label, 15, 25, SKTextAlign.Left, boldFont, paint);
 
         // Condition subtitle
         if (Run != null)
         {
-            paint.TextSize = 12;
             paint.Color = SKColors.Gray;
-            canvas.DrawText(Run.Metadata.Condition, 15, 42, paint);
+            canvas.DrawText(Run.Metadata.Condition, 15, 42, SKTextAlign.Left, subtitleFont, paint);
         }
     }
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 14);
         using var paint = new SKPaint
         {
             Color = SKColors.Gray,
-            TextSize = 14,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText("Load a training run", _center.X, _center.Y, paint);
+        canvas.DrawText("Load a training run", _center.X, _center.Y, SKTextAlign.Center, font, paint);
     }
 
     private void DrawTrajectory(SKCanvas canvas)
@@ -332,10 +330,10 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
+        using var annotFont = new SKFont(SKTypeface.Default, 10);
         using var paint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(200),
-            TextSize = 10,
             IsAntialias = true
         };
 
@@ -344,8 +342,8 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         {
             var pos = ToScreen(current.State2D);
             paint.Color = SKColor.Parse("#ff9f43");
-            canvas.DrawText($"↻ Curvature: {current.Curvature:F2}", pos.X + 15, pos.Y - 10, paint);
-            canvas.DrawText("Phase transition detected", pos.X + 15, pos.Y + 5, paint);
+            canvas.DrawText($"↻ Curvature: {current.Curvature:F2}", pos.X + 15, pos.Y - 10, SKTextAlign.Left, annotFont, paint);
+            canvas.DrawText("Phase transition detected", pos.X + 15, pos.Y + 5, SKTextAlign.Left, annotFont, paint);
         }
 
         // Effective dimensionality annotation
@@ -369,7 +367,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
                 EigenInterpretation.ModerateUnification => "λ₁ moderate: Partial unification",
                 _ => "λ₁ weak: Orthogonal evaluators"
             };
-            canvas.DrawText(annotationText, 15, y, paint);
+            canvas.DrawText(annotationText, 15, y, SKTextAlign.Left, annotFont, paint);
         }
     }
 
@@ -382,19 +380,19 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
+        using var font = new SKFont(SKTypeface.Default, 11);
         using var paint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(180),
-            TextSize = 11,
             IsAntialias = true
         };
 
         var x = 15f;
         var y = info.Height - 40f;
 
-        canvas.DrawText($"Eff.Dim: {current.EffectiveDim:F2}", x, y, paint);
+        canvas.DrawText($"Eff.Dim: {current.EffectiveDim:F2}", x, y, SKTextAlign.Left, font, paint);
         y += 15;
-        canvas.DrawText($"Curvature: {current.Curvature:F3}", x, y, paint);
+        canvas.DrawText($"Curvature: {current.Curvature:F3}", x, y, SKTextAlign.Left, font, paint);
     }
 
     private void DrawArrow(SKCanvas canvas, SKPoint from, SKPoint to, SKPaint paint)
@@ -431,11 +429,11 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
     {
         if (IsDominant == null) return;
 
+        using var boldFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var smallFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 9);
         using var paint = new SKPaint
         {
-            TextSize = 10,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
         var x = info.Width - 90;
@@ -444,12 +442,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         if (IsDominant == true)
         {
             paint.Color = SKColor.Parse("#4ecdc4");
-            canvas.DrawText("★ STRONGER", x, y, paint);
+            canvas.DrawText("★ STRONGER", x, y, SKTextAlign.Left, boldFont, paint);
         }
         else
         {
             paint.Color = SKColor.Parse("#888888");
-            canvas.DrawText("○ WEAKER", x, y, paint);
+            canvas.DrawText("○ WEAKER", x, y, SKTextAlign.Left, boldFont, paint);
         }
 
         // Draw evaluator alignment indicator
@@ -466,23 +464,22 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
                 var firstFactor = ConsistencyCheckService.ComputeFirstFactorVariance(eigen.Values, "ComparisonTrajectoryCanvas.Dominance");
 
                 y += 15;
-                paint.TextSize = 9;
 
                 // Use centralized thresholds for dominance indicator
                 if (firstFactor > ConsistencyCheckService.DominantFirstFactorThreshold)
                 {
                     paint.Color = SKColor.Parse("#4ecdc4");
-                    canvas.DrawText("Aligned evaluators", x, y, paint);
+                    canvas.DrawText("Aligned evaluators", x, y, SKTextAlign.Left, smallFont, paint);
                 }
                 else if (firstFactor > ConsistencyCheckService.ModerateFirstFactorThreshold)
                 {
                     paint.Color = SKColor.Parse("#ffd93d");
-                    canvas.DrawText("Partial alignment", x, y, paint);
+                    canvas.DrawText("Partial alignment", x, y, SKTextAlign.Left, smallFont, paint);
                 }
                 else
                 {
                     paint.Color = SKColor.Parse("#ff6b6b");
-                    canvas.DrawText("Orthogonal evaluators", x, y, paint);
+                    canvas.DrawText("Orthogonal evaluators", x, y, SKTextAlign.Left, smallFont, paint);
                 }
             }
         }

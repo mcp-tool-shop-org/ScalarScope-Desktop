@@ -97,14 +97,13 @@ public class LoadingOverlay : SKCanvasView
         DrawShimmerBars(canvas, centerX, centerY - 60, info.Width);
 
         // Draw loading message
+        using var textFont = new SKFont(SKTypeface.Default, 18);
         using var textPaint = new SKPaint
         {
             Color = SKColors.White,
-            TextSize = 18,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText(Message, centerX, centerY + 40, textPaint);
+        canvas.DrawText(Message, centerX, centerY + 40, SKTextAlign.Center, textFont, textPaint);
 
         // Draw animated spinner dots
         DrawSpinnerDots(canvas, centerX, centerY + 70);

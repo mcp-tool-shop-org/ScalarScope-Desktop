@@ -284,10 +284,10 @@ public class TrajectoryCanvas : SKCanvasView
             $"dim = {pt.EffectiveDim:F2}"
         };
 
+        using var textFont = new SKFont(SKTypeface.Default, 12);
         using var textPaint = new SKPaint
         {
             Color = SKColors.White,
-            TextSize = 12,
             IsAntialias = true
         };
 
@@ -307,7 +307,7 @@ public class TrajectoryCanvas : SKCanvasView
         // Calculate tooltip size
         var lineHeight = 16f;
         var padding = 8f;
-        var maxWidth = tooltipText.Max(t => textPaint.MeasureText(t)) + padding * 2;
+        var maxWidth = tooltipText.Max(t => textFont.MeasureText(t, textPaint)) + padding * 2;
         var height = tooltipText.Length * lineHeight + padding * 2;
 
         // Position tooltip (offset from hover point, keep on screen)
@@ -323,7 +323,7 @@ public class TrajectoryCanvas : SKCanvasView
         var y = tooltipY + padding + 12;
         foreach (var line in tooltipText)
         {
-            canvas.DrawText(line, tooltipX + padding, y, textPaint);
+            canvas.DrawText(line, tooltipX + padding, y, SKTextAlign.Left, textFont, textPaint);
             y += lineHeight;
         }
 
@@ -342,16 +342,16 @@ public class TrajectoryCanvas : SKCanvasView
     {
         if (Math.Abs(_zoomLevel - 1.0f) < 0.01f && _panOffset == SKPoint.Empty) return;
 
+        using var font = new SKFont(SKTypeface.Default, 11);
         using var paint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(150),
-            TextSize = 11,
             IsAntialias = true
         };
 
         var text = $"Zoom: {_zoomLevel:F1}x";
-        var x = info.Width - paint.MeasureText(text) - 10;
-        canvas.DrawText(text, x, info.Height - 10, paint);
+        var x = info.Width - font.MeasureText(text, paint) - 10;
+        canvas.DrawText(text, x, info.Height - 10, SKTextAlign.Left, font, paint);
     }
 
     /// <summary>
@@ -390,14 +390,13 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 18);
         using var paint = new SKPaint
         {
             Color = SKColors.Gray,
-            TextSize = 18,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText("Load a geometry run to visualize", _center.X, _center.Y, paint);
+        canvas.DrawText("Load a geometry run to visualize", _center.X, _center.Y, SKTextAlign.Center, font, paint);
     }
 
     private void DrawTrajectory(SKCanvas canvas)
@@ -504,10 +503,10 @@ public class TrajectoryCanvas : SKCanvasView
             StrokeCap = SKStrokeCap.Round
         };
 
+        using var textFont = new SKFont(SKTypeface.Default, 12);
         using var textPaint = new SKPaint
         {
             Color = SKColors.White,
-            TextSize = 12,
             IsAntialias = true
         };
 
@@ -522,7 +521,7 @@ public class TrajectoryCanvas : SKCanvasView
 
             // Label
             textPaint.Color = paint.Color;
-            canvas.DrawText(prof.Name, end.X + 5, end.Y - 5, textPaint);
+            canvas.DrawText(prof.Name, end.X + 5, end.Y - 5, SKTextAlign.Left, textFont, textPaint);
         }
     }
 
@@ -553,10 +552,10 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawLegend(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 11);
         using var paint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(180),
-            TextSize = 11,
             IsAntialias = true
         };
 
@@ -568,24 +567,24 @@ public class TrajectoryCanvas : SKCanvasView
         if (Session?.Player.IsLargeRun == true)
         {
             paint.Color = SKColor.Parse("#ffd93d").WithAlpha(200);
-            canvas.DrawText($"⚡ {Session.Player.FrameSkipDisplay}", x, y, paint);
+            canvas.DrawText($"⚡ {Session.Player.FrameSkipDisplay}", x, y, SKTextAlign.Left, font, paint);
             y += spacing;
             paint.Color = SKColors.White.WithAlpha(180);
         }
 
         // Time indicator
         var time = Session?.Player.Time ?? 0;
-        canvas.DrawText($"t = {time:P0}", x, y, paint);
+        canvas.DrawText($"t = {time:P0}", x, y, SKTextAlign.Left, font, paint);
         y += spacing;
 
         // Effective dimension
         var effDim = Session?.CurrentTrajectoryState?.EffectiveDim ?? 0;
-        canvas.DrawText($"Eff. Dim = {effDim:F2}", x, y, paint);
+        canvas.DrawText($"Eff. Dim = {effDim:F2}", x, y, SKTextAlign.Left, font, paint);
         y += spacing;
 
         // Curvature
         var curvature = Session?.CurrentTrajectoryState?.Curvature ?? 0;
-        canvas.DrawText($"Curvature = {curvature:F3}", x, y, paint);
+        canvas.DrawText($"Curvature = {curvature:F3}", x, y, SKTextAlign.Left, font, paint);
     }
 
     private void DrawArrow(SKCanvas canvas, SKPoint from, SKPoint to, SKPaint paint)

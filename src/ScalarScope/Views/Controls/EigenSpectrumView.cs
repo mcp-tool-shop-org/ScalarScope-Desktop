@@ -85,14 +85,13 @@ public class EigenSpectrumView : SKCanvasView
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 16);
         using var paint = new SKPaint
         {
             Color = SKColors.Gray,
-            TextSize = 16,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText("Load a training run to see eigenvalues", info.Width / 2f, info.Height / 2f, paint);
+        canvas.DrawText("Load a training run to see eigenvalues", info.Width / 2f, info.Height / 2f, SKTextAlign.Center, font, paint);
     }
 
     private void DrawEigenBars(SKCanvas canvas, SKImageInfo info)
@@ -121,12 +120,11 @@ public class EigenSpectrumView : SKCanvasView
             MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 8)
         };
 
+        using var textFont = new SKFont(SKTypeface.Default, 11);
         using var textPaint = new SKPaint
         {
             Color = SKColors.White.WithAlpha(180),
-            TextSize = 11,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
 
         for (int i = 0; i < Math.Min(eigenvalues.Count, 5); i++)
@@ -145,10 +143,10 @@ public class EigenSpectrumView : SKCanvasView
             canvas.DrawRoundRect(x, y, barWidth, normalizedHeight, 4, 4, paint);
 
             // Value label
-            canvas.DrawText($"{value:F2}", x + barWidth / 2, y - 8, textPaint);
+            canvas.DrawText($"{value:F2}", x + barWidth / 2, y - 8, SKTextAlign.Center, textFont, textPaint);
 
             // Index label
-            canvas.DrawText($"λ{i + 1}", x + barWidth / 2, info.Height - padding + 15, textPaint);
+            canvas.DrawText($"λ{i + 1}", x + barWidth / 2, info.Height - padding + 15, SKTextAlign.Center, textFont, textPaint);
         }
     }
 
@@ -164,9 +162,9 @@ public class EigenSpectrumView : SKCanvasView
         var effDim = ConsistencyCheckService.ComputeEffectiveDimensionality(eigenvalues, "EigenSpectrumView");
         var firstFactorVar = ConsistencyCheckService.ComputeFirstFactorVariance(eigenvalues, "EigenSpectrumView");
 
+        using var font = new SKFont(SKTypeface.Default, 14);
         using var paint = new SKPaint
         {
-            TextSize = 14,
             IsAntialias = true
         };
 
@@ -175,7 +173,7 @@ public class EigenSpectrumView : SKCanvasView
 
         // Effective dimensionality
         paint.Color = SKColors.White;
-        canvas.DrawText($"Effective Dim: {effDim:F2} / {eigenvalues.Count}", x, y, paint);
+        canvas.DrawText($"Effective Dim: {effDim:F2} / {eigenvalues.Count}", x, y, SKTextAlign.Left, font, paint);
 
         y += 20;
         // First factor variance - use centralized threshold
@@ -185,7 +183,7 @@ public class EigenSpectrumView : SKCanvasView
             ? SKColors.LightGreen
             : SKColors.Orange;
         paint.Color = varColor;
-        canvas.DrawText($"λ₁ Variance: {firstFactorVar:P0}", x, y, paint);
+        canvas.DrawText($"λ₁ Variance: {firstFactorVar:P0}", x, y, SKTextAlign.Left, font, paint);
     }
 
     private void DrawInterpretation(SKCanvas canvas, SKImageInfo info)
@@ -196,9 +194,9 @@ public class EigenSpectrumView : SKCanvasView
         // Use centralized calculation for consistency
         var firstFactorVar = ConsistencyCheckService.ComputeFirstFactorVariance(eigenvalues, "EigenSpectrumView");
 
+        using var font = new SKFont(SKTypeface.Default, 12);
         using var paint = new SKPaint
         {
-            TextSize = 12,
             IsAntialias = true
         };
 
@@ -220,11 +218,11 @@ public class EigenSpectrumView : SKCanvasView
         };
 
         paint.Color = color;
-        canvas.DrawText(interpretationText, x, y, paint);
+        canvas.DrawText(interpretationText, x, y, SKTextAlign.Left, font, paint);
 
         y += 18;
         paint.Color = SKColors.Gray;
         var transferPrediction = firstFactorVar > 0.4 ? "Transfer viable" : "Transfer unlikely";
-        canvas.DrawText(transferPrediction, x, y, paint);
+        canvas.DrawText(transferPrediction, x, y, SKTextAlign.Left, font, paint);
     }
 }

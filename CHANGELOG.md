@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-02-08
+
+### Changed
+- **SkiaSharp API Modernization**: Migrated all text rendering from deprecated `SKPaint.TextSize`, `SKPaint.TextAlign`, and `SKCanvas.DrawText(string, float, float, SKPaint)` to modern `SKFont`-based APIs
+  - All controls now use `SKFont` for text size and typeface
+  - `DrawText` calls updated to use 6-parameter overload with `SKTextAlign` and `SKFont`
+  - `MeasureText` calls updated to use `SKFont.MeasureText(string, SKPaint)`
+- Reduced SkiaSharp deprecation warnings from 170+ to 0 (text API related)
+
+### Technical
+- Future-proofs codebase for SkiaSharp 4.x compatibility
+- Files updated: TrajectoryCanvas, ComparisonTrajectoryCanvas, ComparisonAnalyticsPanel, FailuresTimeline, EigenSpectrumView, ScalarRingStack, AnnotationOverlay, LoadingOverlay, ExportService
+
 ## [1.0.5] - 2026-02-08
 
 ### Added

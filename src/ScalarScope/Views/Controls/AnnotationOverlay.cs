@@ -174,10 +174,10 @@ public class AnnotationOverlay : SKCanvasView
         // Detect phase transitions (sudden changes in effective dimensionality)
         var phases = DetectPhases(steps, currentIdx);
 
+        using var font = new SKFont(SKTypeface.Default, 11);
         using var paint = new SKPaint
         {
             Color = PhaseColor,
-            TextSize = 11,
             IsAntialias = true
         };
 
@@ -198,13 +198,13 @@ public class AnnotationOverlay : SKCanvasView
 
             // Draw phase marker
             var label = phase.Label;
-            var textWidth = paint.MeasureText(label);
+            var textWidth = font.MeasureText(label, paint);
             var labelRect = new SKRect(
                 pos.X + 10, pos.Y - 15,
                 pos.X + 20 + textWidth, pos.Y + 2);
 
             canvas.DrawRoundRect(labelRect, 3, 3, bgPaint);
-            canvas.DrawText(label, pos.X + 15, pos.Y - 2, paint);
+            canvas.DrawText(label, pos.X + 15, pos.Y - 2, SKTextAlign.Left, font, paint);
 
             // Draw connecting line
             paint.StrokeWidth = 1;
@@ -220,10 +220,10 @@ public class AnnotationOverlay : SKCanvasView
         var currentIdx = (int)(CurrentTime * (steps.Count - 1));
         currentIdx = Math.Clamp(currentIdx, 0, steps.Count - 1);
 
+        using var curvatureFont = new SKFont(SKTypeface.Default, 10);
         using var paint = new SKPaint
         {
             Color = CurvatureWarningColor,
-            TextSize = 10,
             IsAntialias = true
         };
 
@@ -266,7 +266,7 @@ public class AnnotationOverlay : SKCanvasView
                 // Draw curvature icon and value (only in Standard/Full)
                 if (ShowDetailedCurvatureLabels && step.Curvature > 0.25)
                 {
-                    canvas.DrawText($"⚠ {step.Curvature:F2}", pos.X + radius + 5, pos.Y + 4, paint);
+                    canvas.DrawText($"⚠ {step.Curvature:F2}", pos.X + radius + 5, pos.Y + 4, SKTextAlign.Left, curvatureFont, paint);
                 }
             }
         }
@@ -289,9 +289,10 @@ public class AnnotationOverlay : SKCanvasView
         var firstFactor = eigen.Values[0] / total;
         var secondFactor = eigen.Values.Count > 1 ? eigen.Values[1] / total : 0;
 
+        using var font12 = new SKFont(SKTypeface.Default, 12);
+        using var font10 = new SKFont(SKTypeface.Default, 10);
         using var paint = new SKPaint
         {
-            TextSize = 12,
             IsAntialias = true
         };
 
@@ -335,15 +336,14 @@ public class AnnotationOverlay : SKCanvasView
         }
 
         paint.Color = insightColor;
-        canvas.DrawText(insight, x, y, paint);
+        canvas.DrawText(insight, x, y, SKTextAlign.Left, font12, paint);
 
         paint.Color = SKColors.White.WithAlpha(180);
-        paint.TextSize = 10;
-        canvas.DrawText($"λ₁: {firstFactor:P0}  λ₂: {secondFactor:P0}", x, y + 18, paint);
+        canvas.DrawText($"λ₁: {firstFactor:P0}  λ₂: {secondFactor:P0}", x, y + 18, SKTextAlign.Left, font10, paint);
 
         // Calculate effective dimensionality
         var effDim = CalculateEffectiveDim(eigen.Values);
-        canvas.DrawText($"Eff.Dim: {effDim:F2} / {eigen.Values.Count}", x, y + 33, paint);
+        canvas.DrawText($"Eff.Dim: {effDim:F2} / {eigen.Values.Count}", x, y + 33, SKTextAlign.Left, font10, paint);
     }
 
     private void DrawFailureMarkers(SKCanvas canvas, SKPoint center, float scale)
@@ -351,10 +351,10 @@ public class AnnotationOverlay : SKCanvasView
         var failures = Run!.Failures;
         if (failures.Count == 0) return;
 
+        using var failureFont = new SKFont(SKTypeface.Default, 10);
         using var paint = new SKPaint
         {
             Color = FailureColor,
-            TextSize = 10,
             IsAntialias = true
         };
 
@@ -395,13 +395,13 @@ public class AnnotationOverlay : SKCanvasView
 
             // Draw failure label
             var label = TruncateLabel(failure.Category, 20);
-            var textWidth = paint.MeasureText(label);
+            var textWidth = failureFont.MeasureText(label, paint);
             var labelRect = new SKRect(
                 pos.X + 12, pos.Y - 8,
                 pos.X + 22 + textWidth, pos.Y + 8);
 
             canvas.DrawRoundRect(labelRect, 2, 2, bgPaint);
-            canvas.DrawText(label, pos.X + 17, pos.Y + 4, paint);
+            canvas.DrawText(label, pos.X + 17, pos.Y + 4, SKTextAlign.Left, failureFont, paint);
         }
     }
 

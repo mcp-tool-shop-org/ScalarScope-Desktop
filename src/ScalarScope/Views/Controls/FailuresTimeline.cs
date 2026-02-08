@@ -97,12 +97,11 @@ public class FailuresTimeline : SKCanvasView
         canvas.DrawLine(trackLeft, trackY, trackRight, trackY, paint);
 
         // Time markers
+        using var timeFont = new SKFont(SKTypeface.Default, 10);
         using var textPaint = new SKPaint
         {
             Color = TextColor.WithAlpha(100),
-            TextSize = 10,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
 
         for (int i = 0; i <= 10; i++)
@@ -114,14 +113,13 @@ public class FailuresTimeline : SKCanvasView
             paint.Color = TrackColor;
             canvas.DrawLine(x, trackY - 5, x, trackY + 5, paint);
 
-            canvas.DrawText($"{t * 100:F0}%", x, trackY + 18, textPaint);
+            canvas.DrawText($"{t * 100:F0}%", x, trackY + 18, SKTextAlign.Center, timeFont, textPaint);
         }
 
         // Labels
-        textPaint.TextAlign = SKTextAlign.Left;
-        textPaint.TextSize = 11;
+        using var labelFont = new SKFont(SKTypeface.Default, 11);
         textPaint.Color = TextColor;
-        canvas.DrawText("Timeline", 10, trackY + 4, textPaint);
+        canvas.DrawText("Timeline", 10, trackY + 4, SKTextAlign.Left, labelFont, textPaint);
     }
 
     private void DrawFailureMarkers(SKCanvas canvas, SKImageInfo info)
@@ -170,14 +168,13 @@ public class FailuresTimeline : SKCanvasView
             // Draw category icon for critical failures
             if (failure.Severity.Equals("critical", StringComparison.OrdinalIgnoreCase))
             {
+                using var iconFont = new SKFont(SKTypeface.Default, 10);
                 using var iconPaint = new SKPaint
                 {
                     Color = SKColors.White,
-                    TextSize = 10,
-                    IsAntialias = true,
-                    TextAlign = SKTextAlign.Center
+                    IsAntialias = true
                 };
-                canvas.DrawText("!", x, trackY + 4, iconPaint);
+                canvas.DrawText("!", x, trackY + 4, SKTextAlign.Center, iconFont, iconPaint);
             }
         }
     }
@@ -222,29 +219,29 @@ public class FailuresTimeline : SKCanvasView
             IsAntialias = true
         };
 
+        using var legendFont = new SKFont(SKTypeface.Default, 10);
         using var textPaint = new SKPaint
         {
             Color = TextColor,
-            TextSize = 10,
             IsAntialias = true
         };
 
         // Critical
         paint.Color = CriticalColor;
         canvas.DrawCircle(x, y, 6, paint);
-        canvas.DrawText("Critical", x + 12, y + 4, textPaint);
+        canvas.DrawText("Critical", x + 12, y + 4, SKTextAlign.Left, legendFont, textPaint);
 
         // Warning
         x += 60;
         paint.Color = WarningColor;
         canvas.DrawCircle(x, y, 5, paint);
-        canvas.DrawText("Warning", x + 12, y + 4, textPaint);
+        canvas.DrawText("Warning", x + 12, y + 4, SKTextAlign.Left, legendFont, textPaint);
 
         // Info
         x += 60;
         paint.Color = InfoColor;
         canvas.DrawCircle(x, y, 4, paint);
-        canvas.DrawText("Info", x + 12, y + 4, textPaint);
+        canvas.DrawText("Info", x + 12, y + 4, SKTextAlign.Left, legendFont, textPaint);
     }
 
     private void DrawSelectedFailureDetails(SKCanvas canvas, SKImageInfo info)
@@ -275,32 +272,30 @@ public class FailuresTimeline : SKCanvasView
 
         using var textPaint = new SKPaint
         {
-            TextSize = 12,
             IsAntialias = true
         };
 
         var y = boxY + 20;
 
+        using var boldFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 12);
         textPaint.Color = GetSeverityColor(SelectedFailure.Severity);
-        textPaint.Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold);
-        canvas.DrawText($"{SelectedFailure.Category} ({SelectedFailure.Severity})", boxX + 15, y, textPaint);
+        canvas.DrawText($"{SelectedFailure.Category} ({SelectedFailure.Severity})", boxX + 15, y, SKTextAlign.Left, boldFont, textPaint);
 
         y += 18;
+        using var normalFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal), 11);
         textPaint.Color = TextColor;
-        textPaint.Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal);
-        textPaint.TextSize = 11;
 
         // Truncate description if too long
         var desc = SelectedFailure.Description;
         if (desc.Length > 50)
             desc = desc[..47] + "...";
 
-        canvas.DrawText(desc, boxX + 15, y, textPaint);
+        canvas.DrawText(desc, boxX + 15, y, SKTextAlign.Left, normalFont, textPaint);
 
         y += 16;
+        using var smallFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal), 10);
         textPaint.Color = TextColor.WithAlpha(150);
-        textPaint.TextSize = 10;
-        canvas.DrawText($"Time: {SelectedFailure.T:P0}", boxX + 15, y, textPaint);
+        canvas.DrawText($"Time: {SelectedFailure.T:P0}", boxX + 15, y, SKTextAlign.Left, smallFont, textPaint);
     }
 
     private void OnTouch(object? sender, SKTouchEventArgs e)

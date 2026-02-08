@@ -83,99 +83,94 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 14);
         using var paint = new SKPaint
         {
             Color = TextColor.WithAlpha(100),
-            TextSize = 14,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText("Load both runs to see analytics", info.Width / 2f, info.Height / 2f, paint);
+        canvas.DrawText("Load both runs to see analytics", info.Width / 2f, info.Height / 2f, SKTextAlign.Center, font, paint);
     }
 
     private void DrawEigenAnalysis(SKCanvas canvas, ComparisonMetricsData metrics, float x, float width, float height)
     {
+        using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 14);
         using var titlePaint = new SKPaint
         {
             Color = TextColor,
-            TextSize = 14,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
-        };
-
-        using var textPaint = new SKPaint
-        {
-            Color = TextColor.WithAlpha(200),
-            TextSize = 11,
             IsAntialias = true
         };
 
+        using var textFont = new SKFont(SKTypeface.Default, 11);
+        using var textPaint = new SKPaint
+        {
+            Color = TextColor.WithAlpha(200),
+            IsAntialias = true
+        };
+
+        using var valueFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 20);
         using var valuePaint = new SKPaint
         {
-            TextSize = 20,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
         var y = 25f;
-        canvas.DrawText("Eigenvalue Analysis", x + 15, y, titlePaint);
+        canvas.DrawText("Eigenvalue Analysis", x + 15, y, SKTextAlign.Left, titleFont, titlePaint);
 
         y += 30;
 
         // Left λ₁
         textPaint.Color = LeftColor;
-        canvas.DrawText("Path A λ₁:", x + 15, y, textPaint);
+        canvas.DrawText("Path A λ₁:", x + 15, y, SKTextAlign.Left, textFont, textPaint);
         valuePaint.Color = LeftColor;
-        canvas.DrawText($"{metrics.LeftFirstFactor:P0}", x + 15, y + 22, valuePaint);
+        canvas.DrawText($"{metrics.LeftFirstFactor:P0}", x + 15, y + 22, SKTextAlign.Left, valueFont, valuePaint);
 
         // Right λ₁
         y += 55;
         textPaint.Color = RightColor;
-        canvas.DrawText("Path B λ₁:", x + 15, y, textPaint);
+        canvas.DrawText("Path B λ₁:", x + 15, y, SKTextAlign.Left, textFont, textPaint);
         valuePaint.Color = RightColor;
-        canvas.DrawText($"{metrics.RightFirstFactor:P0}", x + 15, y + 22, valuePaint);
+        canvas.DrawText($"{metrics.RightFirstFactor:P0}", x + 15, y + 22, SKTextAlign.Left, valueFont, valuePaint);
 
         // Delta
         y += 55;
         var deltaColor = metrics.FirstFactorDelta > 0.1 ? LeftColor
             : metrics.FirstFactorDelta < -0.1 ? RightColor : NeutralColor;
         textPaint.Color = TextColor.WithAlpha(150);
-        canvas.DrawText("Δ λ₁:", x + 15, y, textPaint);
+        canvas.DrawText("Δ λ₁:", x + 15, y, SKTextAlign.Left, textFont, textPaint);
         valuePaint.Color = deltaColor;
         var sign = metrics.FirstFactorDelta >= 0 ? "+" : "";
-        canvas.DrawText($"{sign}{metrics.FirstFactorDelta:P0}", x + 15, y + 22, valuePaint);
+        canvas.DrawText($"{sign}{metrics.FirstFactorDelta:P0}", x + 15, y + 22, SKTextAlign.Left, valueFont, valuePaint);
 
         // Interpretation
         y += 50;
         textPaint.Color = TextColor.WithAlpha(150);
-        textPaint.TextSize = 10;
+        using var smallTextFont = new SKFont(SKTypeface.Default, 10);
         var interpretation = metrics.RightFirstFactor > 0.7
             ? "B shows shared evaluative axis"
             : metrics.RightFirstFactor > metrics.LeftFirstFactor + 0.1
                 ? "B shows more unification"
                 : "Similar latent structure";
-        canvas.DrawText(interpretation, x + 15, y, textPaint);
+        canvas.DrawText(interpretation, x + 15, y, SKTextAlign.Left, smallTextFont, textPaint);
     }
 
     private void DrawTrajectoryAnalysis(SKCanvas canvas, ComparisonMetricsData metrics, float x, float width, float height)
     {
+        using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 14);
         using var titlePaint = new SKPaint
         {
             Color = TextColor,
-            TextSize = 14,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
         using var textPaint = new SKPaint
         {
             Color = TextColor.WithAlpha(200),
-            TextSize = 11,
             IsAntialias = true
         };
 
         var y = 25f;
-        canvas.DrawText("Trajectory Metrics", x + 15, y, titlePaint);
+        canvas.DrawText("Trajectory Metrics", x + 15, y, SKTextAlign.Left, titleFont, titlePaint);
 
         y += 30;
 
@@ -199,30 +194,29 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
         // Path length (as proxy for stability)
         textPaint.Color = TextColor.WithAlpha(150);
-        textPaint.TextSize = 10;
+        using var smallTextFont = new SKFont(SKTypeface.Default, 10);
         var stabilityInterpretation = metrics.RightCurvature < metrics.LeftCurvature
             ? "B shows smoother trajectory"
             : metrics.RightCurvature > metrics.LeftCurvature
                 ? "A shows smoother trajectory"
                 : "Similar trajectory smoothness";
-        canvas.DrawText(stabilityInterpretation, x + 15, y, textPaint);
+        canvas.DrawText(stabilityInterpretation, x + 15, y, SKTextAlign.Left, smallTextFont, textPaint);
     }
 
     private void DrawComparisonBar(SKCanvas canvas, string label, double leftValue, double rightValue,
         float x, float y, float width, bool lowerIsBetter)
     {
+        using var labelFont = new SKFont(SKTypeface.Default, 10);
         using var labelPaint = new SKPaint
         {
             Color = TextColor.WithAlpha(180),
-            TextSize = 10,
             IsAntialias = true
         };
 
+        using var valueFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 12);
         using var valuePaint = new SKPaint
         {
-            TextSize = 12,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
         using var barPaint = new SKPaint
@@ -232,7 +226,7 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         };
 
         // Label
-        canvas.DrawText(label, x, y, labelPaint);
+        canvas.DrawText(label, x, y, SKTextAlign.Left, labelFont, labelPaint);
 
         // Values
         var barY = y + 12;
@@ -245,50 +239,48 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         barPaint.Color = LeftColor;
         canvas.DrawRoundRect(x, barY, leftBarWidth, barHeight, 3, 3, barPaint);
         valuePaint.Color = LeftColor;
-        canvas.DrawText($"{leftValue:F2}", x + leftBarWidth + 5, barY + 12, valuePaint);
+        canvas.DrawText($"{leftValue:F2}", x + leftBarWidth + 5, barY + 12, SKTextAlign.Left, valueFont, valuePaint);
 
         // Right bar
         var rightBarWidth = (float)(rightValue / maxVal * halfWidth * 0.8);
         barPaint.Color = RightColor;
         canvas.DrawRoundRect(x + halfWidth + 10, barY, rightBarWidth, barHeight, 3, 3, barPaint);
         valuePaint.Color = RightColor;
-        canvas.DrawText($"{rightValue:F2}", x + halfWidth + 10 + rightBarWidth + 5, barY + 12, valuePaint);
+        canvas.DrawText($"{rightValue:F2}", x + halfWidth + 10 + rightBarWidth + 5, barY + 12, SKTextAlign.Left, valueFont, valuePaint);
     }
 
     private void DrawOverallVerdict(SKCanvas canvas, ComparisonMetricsData metrics, float x, float width, float height)
     {
+        using var titleFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 14);
         using var titlePaint = new SKPaint
         {
             Color = TextColor,
-            TextSize = 14,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
         var y = 25f;
-        canvas.DrawText("Overall Assessment", x + 15, y, titlePaint);
+        canvas.DrawText("Overall Assessment", x + 15, y, SKTextAlign.Left, titleFont, titlePaint);
 
         y += 30;
 
         // Compute verdict
         var verdict = ComputeVerdict(metrics);
 
+        using var verdictFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 16);
         using var verdictPaint = new SKPaint
         {
             Color = verdict.Color,
-            TextSize = 16,
-            IsAntialias = true,
-            Typeface = SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold)
+            IsAntialias = true
         };
 
-        canvas.DrawText(verdict.Title, x + 15, y, verdictPaint);
+        canvas.DrawText(verdict.Title, x + 15, y, SKTextAlign.Left, verdictFont, verdictPaint);
 
         y += 25;
 
+        using var descFont = new SKFont(SKTypeface.Default, 11);
         using var descPaint = new SKPaint
         {
             Color = TextColor.WithAlpha(180),
-            TextSize = 11,
             IsAntialias = true
         };
 
@@ -300,11 +292,11 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         foreach (var word in words)
         {
             var testLine = line.Length == 0 ? word : $"{line} {word}";
-            var testWidth = descPaint.MeasureText(testLine);
+            var testWidth = descFont.MeasureText(testLine, descPaint);
 
             if (testWidth > width - 30)
             {
-                canvas.DrawText(line, x + 15, y, descPaint);
+                canvas.DrawText(line, x + 15, y, SKTextAlign.Left, descFont, descPaint);
                 y += lineHeight;
                 line = word;
             }
@@ -316,7 +308,7 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
         if (line.Length > 0)
         {
-            canvas.DrawText(line, x + 15, y, descPaint);
+            canvas.DrawText(line, x + 15, y, SKTextAlign.Left, descFont, descPaint);
         }
 
         // Draw confidence indicator
@@ -327,14 +319,14 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
     private void DrawConfidenceMeter(SKCanvas canvas, float x, float y, float width, double confidence)
     {
+        using var labelFont = new SKFont(SKTypeface.Default, 10);
         using var labelPaint = new SKPaint
         {
             Color = TextColor.WithAlpha(150),
-            TextSize = 10,
             IsAntialias = true
         };
 
-        canvas.DrawText("Confidence", x, y, labelPaint);
+        canvas.DrawText("Confidence", x, y, SKTextAlign.Left, labelFont, labelPaint);
 
         y += 12;
 
@@ -357,7 +349,7 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         canvas.DrawRoundRect(x, y, (float)(barWidth * confidence), 8, 4, 4, fillPaint);
 
         labelPaint.Color = TextColor;
-        canvas.DrawText($"{confidence:P0}", x + barWidth + 10, y + 7, labelPaint);
+        canvas.DrawText($"{confidence:P0}", x + barWidth + 10, y + 7, SKTextAlign.Left, labelFont, labelPaint);
     }
 
     private ComparisonMetricsData ComputeMetrics()

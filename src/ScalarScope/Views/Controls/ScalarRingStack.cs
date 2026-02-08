@@ -121,14 +121,13 @@ public class ScalarRingStack : SKCanvasView
 
     private void DrawNoDataMessage(SKCanvas canvas)
     {
+        using var font = new SKFont(SKTypeface.Default, 18);
         using var paint = new SKPaint
         {
             Color = SKColors.Gray,
-            TextSize = 18,
-            IsAntialias = true,
-            TextAlign = SKTextAlign.Center
+            IsAntialias = true
         };
-        canvas.DrawText("Load a geometry run to visualize", _center.X, _center.Y, paint);
+        canvas.DrawText("Load a geometry run to visualize", _center.X, _center.Y, SKTextAlign.Center, font, paint);
     }
 
     private void DrawScalarRings(SKCanvas canvas)
@@ -242,9 +241,9 @@ public class ScalarRingStack : SKCanvasView
 
     private void DrawLegend(SKCanvas canvas, SKImageInfo info)
     {
+        using var font = new SKFont(SKTypeface.Default, 11);
         using var paint = new SKPaint
         {
-            TextSize = 11,
             IsAntialias = true
         };
 
@@ -262,7 +261,7 @@ public class ScalarRingStack : SKCanvasView
             // Label
             paint.Color = SKColors.White.WithAlpha(200);
             var value = Session?.CurrentScalars?.ToArray()[i] ?? 0;
-            canvas.DrawText($"{DimensionNames[i]}: {value:F2}", x + 15, y, paint);
+            canvas.DrawText($"{DimensionNames[i]}: {value:F2}", x + 15, y, SKTextAlign.Left, font, paint);
 
             y += spacing;
         }
@@ -275,7 +274,7 @@ public class ScalarRingStack : SKCanvasView
             var variance = CalculateVariance(scalars);
             var phaseLock = variance < 0.02 ? "LOCKED" : variance < 0.05 ? "Partial" : "Drift";
             paint.Color = variance < 0.02 ? SKColors.LightGreen : SKColors.Orange;
-            canvas.DrawText($"Phase: {phaseLock}", x, y, paint);
+            canvas.DrawText($"Phase: {phaseLock}", x, y, SKTextAlign.Left, font, paint);
         }
     }
 
