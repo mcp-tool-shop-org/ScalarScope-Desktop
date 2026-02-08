@@ -1,3 +1,4 @@
+using CommunityToolkit.Maui;
 using Microsoft.Extensions.Logging;
 using SkiaSharp.Views.Maui.Controls.Hosting;
 
@@ -10,6 +11,7 @@ public static class MauiProgram
         var builder = MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
+            .UseMauiCommunityToolkit()
             .UseSkiaSharp()
             .ConfigureFonts(fonts =>
             {
