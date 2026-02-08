@@ -51,11 +51,11 @@
 ## Phase 3: Deep Analysis (v1.4)
 *Turn visualization into insight*
 
-### 3.1 Quantitative Overlays
-- [ ] **Eigenvalue Timeline**: Synchronized λ₁/λ₂ plot below trajectory
-- [ ] **Lyapunov Exponent Estimation**: Real-time chaos indicator
-- [ ] **Phase Portrait Markers**: Bifurcation detection and annotation
-- [ ] **Dimension Collapse Alerts**: Highlight when effective dimension drops
+### 3.1 Quantitative Overlays ✅
+- [x] **Eigenvalue Timeline**: Synchronized λ₁/λ₂ plot below trajectory
+- [x] **Lyapunov Exponent Estimation**: Real-time chaos indicator with classification
+- [x] **Phase Portrait Markers**: Bifurcation detection and annotation
+- [x] **Dimension Collapse Alerts**: Highlight when effective dimension drops
 
 ### 3.2 Comparative Analysis
 - [ ] **Overlay Mode**: Multiple trajectories in same view with transparency

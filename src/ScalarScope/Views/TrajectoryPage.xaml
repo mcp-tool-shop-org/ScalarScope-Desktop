@@ -8,7 +8,7 @@
              Title="Trajectory"
              BackgroundColor="#0f0f1a">
 
-    <Grid RowDefinitions="*,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
         <!-- Main Canvas with Annotation Overlay -->
         <Grid Grid.Row="0" Grid.Column="0">
             <controls:TrajectoryCanvas x:Name="trajectoryCanvas"
@@ -47,8 +47,21 @@
                                   VerticalOptions="Start"
                                   IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
 
+        <!-- Analysis Overlay Panel (Phase 3.1: Quantitative Overlays) -->
+        <controls:AnalysisOverlayPanel x:Name="analysisPanel"
+                                       Grid.Row="1"
+                                       Grid.ColumnSpan="2"
+                                       Session="{Binding .}"
+                                       HeightRequest="140"
+                                       Margin="5,0"
+                                       ShowEigenvalues="{Binding IsToggled, Source={x:Reference eigenvaluesSwitch}}"
+                                       ShowLyapunov="{Binding IsToggled, Source={x:Reference lyapunovSwitch}}"
+                                       ShowBifurcations="{Binding IsToggled, Source={x:Reference bifurcationsSwitch}}"
+                                       ShowDimensionAlerts="True"
+                                       IsVisible="{Binding IsToggled, Source={x:Reference analysisSwitch}}"/>
+
         <!-- Toggle Panel with Insight Tooltips -->
-        <HorizontalStackLayout Grid.Row="1"
+        <HorizontalStackLayout Grid.Row="2"
                                Grid.ColumnSpan="2"
                                Spacing="25"
                                Padding="15,8"
@@ -93,6 +106,35 @@
 
             <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
 
+            <!-- Analysis Panel Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Analysis" TextColor="#00d9ff" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Switch x:Name="analysisSwitch" IsToggled="False" OnColor="#00d9ff"/>
+                </HorizontalStackLayout>
+                <Label Text="Quantitative metrics" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <!-- Analysis sub-toggles (visible when analysis is on) -->
+            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsToggled, Source={x:Reference analysisSwitch}}">
+                <HorizontalStackLayout Spacing="8">
+                    <HorizontalStackLayout Spacing="2">
+                        <Label Text="λ" TextColor="#00d9ff" FontSize="10"/>
+                        <Switch x:Name="eigenvaluesSwitch" IsToggled="True" OnColor="#00d9ff" Scale="0.7"/>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="2">
+                        <Label Text="Lyap" TextColor="#ff6b6b" FontSize="10"/>
+                        <Switch x:Name="lyapunovSwitch" IsToggled="True" OnColor="#ff6b6b" Scale="0.7"/>
+                    </HorizontalStackLayout>
+                    <HorizontalStackLayout Spacing="2">
+                        <Label Text="Bif" TextColor="#ff9500" FontSize="10"/>
+                        <Switch x:Name="bifurcationsSwitch" IsToggled="True" OnColor="#ff9500" Scale="0.7"/>
+                    </HorizontalStackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
+
             <!-- Zoom Controls -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
@@ -112,7 +154,7 @@
         </HorizontalStackLayout>
 
         <!-- Toggle Hint -->
-        <controls:InlineHint Grid.Row="2"
+        <controls:InlineHint Grid.Row="3"
                              Grid.ColumnSpan="2"
                              HintId="trajectory_toggles"
                              HintText="Toggle Curvature to see phase transitions, or enable Annotations for deeper insights"
@@ -120,7 +162,7 @@
                              Margin="15,5"/>
 
         <!-- Playback Control -->
-        <controls:PlaybackControl Grid.Row="3"
+        <controls:PlaybackControl Grid.Row="4"
                                   Grid.ColumnSpan="2"
                                   BindingContext="{Binding Player}"/>
     </Grid>
