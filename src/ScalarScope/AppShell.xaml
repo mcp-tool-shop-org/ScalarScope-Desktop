@@ -39,6 +39,9 @@
         <Tab Title="Help" Icon="help.png">
             <ShellContent ContentTemplate="{DataTemplate views:HelpPage}" Route="help"/>
         </Tab>
+        <Tab Title="Settings" Icon="settings.png">
+            <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" Route="settings"/>
+        </Tab>
     </TabBar>
 
 </Shell>

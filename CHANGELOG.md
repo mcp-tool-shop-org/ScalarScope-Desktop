@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.8] - 2026-02-08
+
+### Added
+- **Settings Page**: New dedicated tab for configuring application preferences
+  - Theme selection (System / Light / Dark)
+  - High contrast mode toggle
+  - Reduce animations toggle (accessibility)
+  - Annotation density (Minimal / Standard / Full)
+  - Default playback speed selection
+  - Auto-play on load toggle
+  - Auto-load last session toggle
+  - Configurable recent files limit (5 / 10 / 20)
+  - Default export folder selection
+  - Default export resolution
+  - Reset demo / first-run state
+  - Reset all settings to defaults
+- **Theme Persistence**: Selected theme is saved and restored on app startup
+- **Accessibility**: `SemanticProperties` added to all Settings page controls for screen readers
+
+### Changed
+- UserPreferencesService expanded with 15+ new settings methods
+- Recent files limit now user-configurable (was hardcoded to 10)
+
 ## [1.0.7] - 2026-02-08
 
 ### Changed

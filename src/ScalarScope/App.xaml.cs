@@ -20,6 +20,13 @@ public partial class App : Application
         // Check if we need to show recovery
         NeedsRecovery = CrashReportingService.DidRecoverFromCrash();
 
+        // Apply saved theme preference
+        var savedTheme = UserPreferencesService.GetTheme();
+        if (savedTheme != AppTheme.Unspecified)
+        {
+            UserAppTheme = savedTheme;
+        }
+
         Keyboard = new KeyboardService(Session);
     }
 

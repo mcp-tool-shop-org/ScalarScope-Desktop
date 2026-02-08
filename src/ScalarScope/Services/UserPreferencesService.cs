@@ -157,6 +157,145 @@ public static class UserPreferencesService
         Save(prefs);
     }
 
+    // --- Theme Settings ---
+
+    public static AppTheme GetTheme()
+    {
+        var prefs = Load();
+        return prefs.Theme;
+    }
+
+    public static void SetTheme(AppTheme theme)
+    {
+        var prefs = Load();
+        prefs.Theme = theme;
+        Save(prefs);
+    }
+
+    public static bool GetHighContrastMode()
+    {
+        var prefs = Load();
+        return prefs.HighContrastMode;
+    }
+
+    public static void SetHighContrastMode(bool enabled)
+    {
+        var prefs = Load();
+        prefs.HighContrastMode = enabled;
+        Save(prefs);
+    }
+
+    public static bool GetReduceAnimations()
+    {
+        var prefs = Load();
+        return prefs.ReduceAnimations;
+    }
+
+    public static void SetReduceAnimations(bool reduce)
+    {
+        var prefs = Load();
+        prefs.ReduceAnimations = reduce;
+        Save(prefs);
+    }
+
+    // --- Playback Settings ---
+
+    public static float GetDefaultPlaybackSpeed()
+    {
+        var prefs = Load();
+        return prefs.DefaultPlaybackSpeed;
+    }
+
+    public static void SetDefaultPlaybackSpeed(float speed)
+    {
+        var prefs = Load();
+        prefs.DefaultPlaybackSpeed = speed;
+        Save(prefs);
+    }
+
+    public static bool GetAutoPlayOnLoad()
+    {
+        var prefs = Load();
+        return prefs.AutoPlayOnLoad;
+    }
+
+    public static void SetAutoPlayOnLoad(bool autoPlay)
+    {
+        var prefs = Load();
+        prefs.AutoPlayOnLoad = autoPlay;
+        Save(prefs);
+    }
+
+    // --- Session Settings ---
+
+    public static bool GetAutoLoadLastSession()
+    {
+        var prefs = Load();
+        return prefs.AutoLoadLastSession;
+    }
+
+    public static void SetAutoLoadLastSession(bool autoLoad)
+    {
+        var prefs = Load();
+        prefs.AutoLoadLastSession = autoLoad;
+        Save(prefs);
+    }
+
+    public static int GetRecentFilesLimit()
+    {
+        var prefs = Load();
+        return prefs.RecentFilesLimit;
+    }
+
+    public static void SetRecentFilesLimit(int limit)
+    {
+        var prefs = Load();
+        prefs.RecentFilesLimit = limit;
+        // Trim existing list if needed
+        if (prefs.RecentFiles.Count > limit)
+        {
+            prefs.RecentFiles = prefs.RecentFiles.Take(limit).ToList();
+        }
+        Save(prefs);
+    }
+
+    // --- Export Settings ---
+
+    public static string GetDefaultExportPath()
+    {
+        var prefs = Load();
+        return prefs.DefaultExportPath;
+    }
+
+    public static void SetDefaultExportPath(string path)
+    {
+        var prefs = Load();
+        prefs.DefaultExportPath = path;
+        Save(prefs);
+    }
+
+    public static (int width, int height) GetDefaultExportResolution()
+    {
+        var prefs = Load();
+        return (prefs.DefaultExportWidth, prefs.DefaultExportHeight);
+    }
+
+    public static void SetDefaultExportResolution(int width, int height)
+    {
+        var prefs = Load();
+        prefs.DefaultExportWidth = width;
+        prefs.DefaultExportHeight = height;
+        Save(prefs);
+    }
+
+    // --- Reset ---
+
+    public static void ResetAllSettings()
+    {
+        _cached = new UserPreferences();
+        Save(_cached);
+    }
+
     /// <summary>
     /// Get the list of recently opened files.
     /// </summary>
@@ -199,11 +338,10 @@ public static class UserPreferencesService
             LastOpened = DateTime.UtcNow
         });
         
-        // Keep only the most recent 10 files
-        const int MaxRecentFiles = 10;
-        if (prefs.RecentFiles.Count > MaxRecentFiles)
+        // Keep only up to the configured limit
+        if (prefs.RecentFiles.Count > prefs.RecentFilesLimit)
         {
-            prefs.RecentFiles = prefs.RecentFiles.Take(MaxRecentFiles).ToList();
+            prefs.RecentFiles = prefs.RecentFiles.Take(prefs.RecentFilesLimit).ToList();
         }
         
         Save(prefs);
@@ -275,6 +413,7 @@ public class UserPreferences
 
     // Recent files
     public List<RecentFileEntry> RecentFiles { get; set; } = [];
+    public int RecentFilesLimit { get; set; } = 10;
 
     // Legacy field (kept for backwards compatibility)
     public bool HasCompletedFirstRun
@@ -284,6 +423,23 @@ public class UserPreferences
     }
 
     public AnnotationDensity AnnotationDensity { get; set; } = AnnotationDensity.Standard;
+
+    // Theme settings
+    public AppTheme Theme { get; set; } = AppTheme.Unspecified;
+    public bool HighContrastMode { get; set; }
+    public bool ReduceAnimations { get; set; }
+
+    // Playback settings
+    public float DefaultPlaybackSpeed { get; set; } = 1f;
+    public bool AutoPlayOnLoad { get; set; }
+
+    // Session settings
+    public bool AutoLoadLastSession { get; set; }
+
+    // Export settings
+    public string DefaultExportPath { get; set; } = "";
+    public int DefaultExportWidth { get; set; } = 1920;
+    public int DefaultExportHeight { get; set; } = 1080;
 }
 
 public enum AnnotationDensity

@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ScalarScope.ViewModels"
+             x:Class="ScalarScope.Views.SettingsPage"
+             x:DataType="vm:SettingsViewModel"
+             Title="Settings"
+             BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#0f0f1a}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="24" MaximumWidthRequest="700">
+
+            <!-- Header -->
+            <Label Text="Settings"
+                   FontSize="28"
+                   FontAttributes="Bold"
+                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <!-- Appearance Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Appearance"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#00d9ff"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Theme -->
+                    <Grid ColumnDefinitions="*,Auto" RowSpacing="4">
+                        <VerticalStackLayout>
+                            <Label Text="Theme"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                   SemanticProperties.Description="Select application color theme" />
+                            <Label Text="Choose light, dark, or match system settings"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding ThemeOptions}"
+                                SelectedIndex="{Binding ThemeIndex}"
+                                WidthRequest="140"
+                                SemanticProperties.Description="Theme selection dropdown" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- High Contrast -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="High Contrast Mode"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Increase color contrast for better visibility"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding HighContrastMode}"
+                                OnColor="#00d9ff"
+                                SemanticProperties.Description="Toggle high contrast mode" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Reduce Animations -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Reduce Animations"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Minimize motion for accessibility"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding ReduceAnimations}"
+                                OnColor="#00d9ff"
+                                SemanticProperties.Description="Toggle reduced animations" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Annotation Density -->
+                    <Grid ColumnDefinitions="*,Auto" RowSpacing="4">
+                        <VerticalStackLayout>
+                            <Label Text="Annotation Density"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Control amount of on-screen annotations"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding AnnotationOptions}"
+                                SelectedIndex="{Binding AnnotationDensityIndex}"
+                                WidthRequest="140"
+                                SemanticProperties.Description="Annotation density selection" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Playback Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Playback"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#4ecdc4"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Default Speed -->
+                    <Grid ColumnDefinitions="*,Auto" RowSpacing="4">
+                        <VerticalStackLayout>
+                            <Label Text="Default Playback Speed"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Speed when a new run is loaded"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding SpeedOptions}"
+                                SelectedIndex="{Binding DefaultSpeedIndex}"
+                                WidthRequest="140"
+                                SemanticProperties.Description="Default playback speed selection" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Auto-play -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Auto-Play on Load"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Start playback automatically when loading a run"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding AutoPlayOnLoad}"
+                                OnColor="#4ecdc4"
+                                SemanticProperties.Description="Toggle auto-play on load" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Session Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Session"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#a29bfe"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Auto-load Last Session -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Auto-Load Last Session"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Restore previous run on startup"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding AutoLoadLastSession}"
+                                OnColor="#a29bfe"
+                                SemanticProperties.Description="Toggle auto-load last session" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Recent Files Limit -->
+                    <Grid ColumnDefinitions="*,Auto" RowSpacing="4">
+                        <VerticalStackLayout>
+                            <Label Text="Recent Files Limit"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Maximum files to remember"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Picker Grid.Column="1"
+                                ItemsSource="{Binding RecentFilesOptions}"
+                                SelectedIndex="{Binding RecentFilesLimitIndex}"
+                                WidthRequest="140"
+                                SemanticProperties.Description="Recent files limit selection" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Clear Recent Files -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Recent Files"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Clear the recent files list"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Clear"
+                                Command="{Binding ClearRecentFilesCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                                TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                Padding="16,8"
+                                CornerRadius="6"
+                                SemanticProperties.Description="Clear recent files list" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Export Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Export"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#ff9f43"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Default Export Path -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Default Export Folder"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                        <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                            <Entry Text="{Binding DefaultExportPath}"
+                                   Placeholder="Choose folder..."
+                                   IsReadOnly="True"
+                                   BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#16213e}"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                   SemanticProperties.Description="Default export folder path" />
+                            <Button Grid.Column="1"
+                                    Text="Browse..."
+                                    Command="{Binding BrowseExportPathCommand}"
+                                    BackgroundColor="#ff9f43"
+                                    TextColor="White"
+                                    Padding="16,8"
+                                    CornerRadius="6"
+                                    SemanticProperties.Description="Browse for export folder" />
+                        </Grid>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Default Resolution -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Default Export Resolution"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                        <HorizontalStackLayout Spacing="10">
+                            <Entry Text="{Binding DefaultExportWidth}"
+                                   Keyboard="Numeric"
+                                   WidthRequest="80"
+                                   BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#16213e}"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                   SemanticProperties.Description="Export width in pixels" />
+                            <Label Text="×"
+                                   VerticalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                            <Entry Text="{Binding DefaultExportHeight}"
+                                   Keyboard="Numeric"
+                                   WidthRequest="80"
+                                   BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#16213e}"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                   SemanticProperties.Description="Export height in pixels" />
+                            <Label Text="pixels"
+                                   VerticalOptions="Center"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Advanced Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Advanced"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#ff6b6b"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Reset Demo -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="First-Run Experience"
+                                   FontAttributes="Bold"
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+                            <Label Text="Show the welcome demo again"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Reset"
+                                Command="{Binding ResetDemoStateCommand}"
+                                BackgroundColor="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                                TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                                Padding="16,8"
+                                CornerRadius="6"
+                                SemanticProperties.Description="Reset first-run demo state" />
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Reset All -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <VerticalStackLayout>
+                            <Label Text="Reset All Settings"
+                                   FontAttributes="Bold"
+                                   TextColor="#ff6b6b" />
+                            <Label Text="Restore all settings to defaults"
+                                   FontSize="12"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#888888}" />
+                        </VerticalStackLayout>
+                        <Button Grid.Column="1"
+                                Text="Reset All"
+                                Command="{Binding ResetAllSettingsCommand}"
+                                BackgroundColor="#ff6b6b"
+                                TextColor="White"
+                                Padding="16,8"
+                                CornerRadius="6"
+                                SemanticProperties.Description="Reset all settings to defaults" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Version Info -->
+            <Label Text="ScalarScope v1.0.8"
+                   FontSize="12"
+                   TextColor="{AppThemeBinding Light=#999999, Dark=#666666}"
+                   HorizontalOptions="Center"
+                   Margin="0,10,0,20" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
