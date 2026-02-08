@@ -11,7 +11,7 @@
 - [x] **Catmull-Rom Spline Interpolation**: Replace line segments with smooth, organic curves
 - [x] **Adaptive Stroke Width**: Thickness varies with velocity (faster = thinner, like ink brush)
 - [x] **Trail Opacity Decay**: History fades naturally, recent path emphasized
-- [ ] **Anti-aliased Rendering**: Subpixel accuracy for publication-quality output
+- [x] **Anti-aliased Rendering**: Subpixel accuracy for publication-quality output
 
 ### 1.2 Energy Visualization  
 - [x] **Glow/Bloom Effects**: Radial luminance around high-energy regions
@@ -21,8 +21,8 @@
 
 ### 1.3 Flow Field Context
 - [x] **Vector Field Grid**: Optional background showing gradient directions (v1.3)
-- [ ] **Streamlines**: Show surrounding flow field, not just the taken path
-- [ ] **Attractor/Repeller Markers**: Identify fixed points in the dynamics
+- [x] **Streamlines**: Show surrounding flow field, not just the taken path
+- [x] **Attractor/Repeller Markers**: Identify fixed points in the dynamics
 
 ---
 
