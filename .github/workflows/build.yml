@@ -25,13 +25,13 @@ jobs:
       run: dotnet restore src/VortexKit/VortexKit.csproj
 
     - name: Restore ScalarScope
-      run: dotnet restore src/ScalarScope/ScalarScope.csproj -r win10-x64
+      run: dotnet restore src/ScalarScope/ScalarScope.csproj
 
     - name: Build VortexKit
       run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
 
     - name: Build ScalarScope
-      run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore -r win10-x64
+      run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build
