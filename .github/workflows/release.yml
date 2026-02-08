@@ -18,7 +18,7 @@ jobs:
         dotnet-version: '9.0.x'
 
     - name: Install MAUI workload
-      run: dotnet workload install maui-windows
+      run: dotnet workload install maui-windows --skip-sign-check
 
     - name: Extract version from tag
       id: version
@@ -28,7 +28,7 @@ jobs:
       run: |
         dotnet publish src/ScalarScope/ScalarScope.csproj `
           --configuration Release `
-          -f net10.0-windows10.0.19041.0 `
+          -f net9.0-windows10.0.19041.0 `
           -p:RuntimeIdentifier=win-x64 `
           -p:PublishSingleFile=true `
           -p:SelfContained=true `
@@ -66,7 +66,7 @@ jobs:
         dotnet-version: '9.0.x'
 
     - name: Install MAUI workload
-      run: dotnet workload install maui-windows
+      run: dotnet workload install maui-windows --skip-sign-check
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release
