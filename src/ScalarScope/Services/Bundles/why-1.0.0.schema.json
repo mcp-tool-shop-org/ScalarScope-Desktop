@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/comparison-bundle/why-1.0.0.schema.json",
+  "title": "ScalarScope Findings Why Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["comparisonId", "deltaSpecVersion", "why"],
+  "properties": {
+    "comparisonId": { "type": "string", "format": "uuid" },
+    "deltaSpecVersion": { "type": "string", "minLength": 1 },
+    "why": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/whyItem" }
+    }
+  },
+  "$defs": {
+    "deltaId": {
+      "type": "string",
+      "enum": [
+        "failurePresence",
+        "convergenceTiming",
+        "structuralEmergence",
+        "evaluatorAlignment",
+        "stabilityOscillation"
+      ]
+    },
+    "kvChip": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "value": { "type": "string", "minLength": 1 }
+      }
+    },
+    "confidenceComponent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1 },
+        "value": { "type": ["number", "string", "integer"] }
+      }
+    },
+    "confidenceBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "label", "components"],
+      "properties": {
+        "value": { "type": "number", "minimum": 0.0, "maximum": 1.0 },
+        "label": { "type": "string", "minLength": 1 },
+        "components": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/confidenceComponent" }
+        }
+      }
+    },
+    "showMe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["preferredTargetView", "anchorIndex"],
+      "properties": {
+        "preferredTargetView": {
+          "type": "string",
+          "enum": ["LearningPath", "PerformanceSignals", "EvaluatorAlignment", "ComparePaths", "Global"]
+        },
+        "anchorIndex": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "whyItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deltaId", "whyFired", "conditionSummary", "parameterChips", "showMe"],
+      "properties": {
+        "deltaId": { "$ref": "#/$defs/deltaId" },
+        "whyFired": { "type": "string", "minLength": 1 },
+        "conditionSummary": { "type": "string", "minLength": 1 },
+        "guardrails": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        },
+        "parameterChips": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/kvChip" }
+        },
+        "confidence": {
+          "anyOf": [{ "$ref": "#/$defs/confidenceBlock" }, { "type": "null" }]
+        },
+        "showMe": { "$ref": "#/$defs/showMe" }
+      }
+    }
+  }
+}

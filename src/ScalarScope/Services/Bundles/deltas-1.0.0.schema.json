@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/comparison-bundle/deltas-1.0.0.schema.json",
+  "title": "ScalarScope Findings Deltas Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["comparisonId", "deltaSpecVersion", "generatedUtc", "deltas"],
+  "properties": {
+    "comparisonId": { "type": "string", "format": "uuid" },
+    "deltaSpecVersion": { "type": "string", "minLength": 1 },
+    "generatedUtc": { "type": "string", "format": "date-time" },
+    "deltas": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/deltaMetric" }
+    }
+  },
+  "$defs": {
+    "deltaId": {
+      "type": "string",
+      "enum": [
+        "failurePresence",
+        "convergenceTiming",
+        "structuralEmergence",
+        "evaluatorAlignment",
+        "stabilityOscillation"
+      ]
+    },
+    "deltaStatus": { "type": "string", "enum": ["present", "suppressed", "indeterminate"] },
+    "triggerType": {
+      "type": "string",
+      "enum": [
+        "none",
+        "design_verified",
+        "sustained",
+        "recurrence",
+        "persistence_weighted",
+        "area_episode"
+      ]
+    },
+    "targetView": {
+      "type": "string",
+      "enum": ["LearningPath", "PerformanceSignals", "EvaluatorAlignment", "ComparePaths", "Global"]
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["t0", "t1"],
+      "properties": {
+        "t0": { "type": "integer", "minimum": 0 },
+        "t1": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "anchor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["targetView"],
+      "properties": {
+        "targetView": { "$ref": "#/$defs/targetView" },
+        "markerA": { "type": ["integer", "null"], "minimum": 0 },
+        "markerB": { "type": ["integer", "null"], "minimum": 0 },
+        "rangeA": { "anyOf": [{ "$ref": "#/$defs/range" }, { "type": "null" }] },
+        "rangeB": { "anyOf": [{ "$ref": "#/$defs/range" }, { "type": "null" }] },
+        "compareIndex": { "type": ["integer", "null"], "minimum": 0 },
+        "meta": { "type": ["object", "null"] }
+      }
+    },
+    "deltaMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "name", "explanation"],
+      "properties": {
+        "id": { "$ref": "#/$defs/deltaId" },
+        "status": { "$ref": "#/$defs/deltaStatus" },
+        "name": { "type": "string", "minLength": 1 },
+        "explanation": { "type": "string", "minLength": 1 },
+
+        "summarySentence": { "type": ["string", "null"] },
+        "triggerType": { "$ref": "#/$defs/triggerType" },
+        "confidence": { "type": ["number", "null"], "minimum": 0.0, "maximum": 1.0 },
+        "deltaValue": { "type": ["number", "null"] },
+        "units": { "type": ["string", "null"] },
+        "notes": {
+          "type": ["array", "null"],
+          "items": { "type": "string" }
+        },
+        "anchors": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/$defs/anchor" }
+        },
+        "debug": { "type": ["object", "null"] }
+      }
+    }
+  }
+}

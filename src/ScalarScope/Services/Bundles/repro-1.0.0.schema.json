@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/comparison-bundle/repro-1.0.0.schema.json",
+  "title": "ScalarScope ComparisonBundle Repro Payload",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "comparisonId",
+    "deltaSpecVersion",
+    "inputs",
+    "preset",
+    "determinism",
+    "results",
+    "environment"
+  ],
+  "properties": {
+    "comparisonId": { "type": "string", "format": "uuid" },
+    "deltaSpecVersion": { "type": "string", "minLength": 1 },
+
+    "inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runA", "runB"],
+      "properties": {
+        "runA": { "$ref": "#/$defs/runInput" },
+        "runB": { "$ref": "#/$defs/runInput" }
+      }
+    },
+
+    "preset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["presetId", "presetVersion", "presetHash", "normalization", "alignmentDefaults"],
+      "properties": {
+        "presetId": { "type": "string", "minLength": 1 },
+        "presetVersion": { "type": "string", "minLength": 1 },
+        "presetHash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+
+        "normalization": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["inputNormalizerVersion", "rules"],
+          "properties": {
+            "inputNormalizerVersion": { "type": "string", "minLength": 1 },
+            "rules": {
+              "type": "array",
+              "items": { "type": "string", "minLength": 1 },
+              "minItems": 0,
+              "uniqueItems": true
+            }
+          }
+        },
+
+        "alignmentDefaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["mode"],
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["step", "convergenceOnset", "firstInstability"]
+            }
+          }
+        }
+      }
+    },
+
+    "determinism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seed", "determinismFingerprint"],
+      "properties": {
+        "seed": { "type": "integer" },
+        "determinismFingerprint": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "determinismNotes": { "type": ["string", "null"] }
+      }
+    },
+
+    "results": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["deltaHash", "deltasCount", "computedUtc"],
+      "properties": {
+        "deltaHash": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "deltasCount": { "type": "integer", "minimum": 0 },
+        "computedUtc": { "type": "string", "format": "date-time" }
+      }
+    },
+
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["os", "dotnet", "appVersion"],
+      "properties": {
+        "os": { "type": "string", "minLength": 1 },
+        "dotnet": { "type": "string", "minLength": 1 },
+        "appVersion": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+
+  "$defs": {
+    "runInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceType", "schemaVersion", "fingerprint", "normalizedFingerprint"],
+      "properties": {
+        "sourceType": { "type": "string", "enum": ["file", "bundle", "demo", "unknown"] },
+        "schemaVersion": { "type": "string", "minLength": 1 },
+        "fingerprint": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "normalizedFingerprint": { "type": "string", "pattern": "^[A-Fa-f0-9]{64}$" },
+        "fileName": { "type": ["string", "null"] },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 }
+      }
+    }
+  }
+}
