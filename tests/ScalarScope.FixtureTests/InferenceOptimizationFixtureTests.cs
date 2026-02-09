@@ -2,6 +2,7 @@
 // Golden fixture tests for before/after inference optimization comparison.
 // Uses xUnit with FluentAssertions.
 
+using System.Linq;
 using FluentAssertions;
 using ScalarScope.Services.Connectors;
 using Xunit;
@@ -150,10 +151,11 @@ public class InferenceOptimizationFixtureTests
         result.IsValid.Should().BeFalse("broken fixture should fail validation");
         result.Errors.Should().NotBeEmpty("broken fixture should have errors");
         
-        // Check for stable error codes - validator short-circuits on timeline error
-        // so only RT_TIMELINE_NON_MONOTONIC is reported (scalar check is skipped)
-        result.Errors.Should().Contain(e => e.Code == RunTraceErrorCodes.RT_TIMELINE_NON_MONOTONIC,
-            "should detect non-monotonic steps");
+        // Order-independent assertion: check for expected error code(s)
+        // Validator short-circuits on timeline error, so only RT_TIMELINE_NON_MONOTONIC is reported
+        var errorCodes = result.Errors.Select(e => e.Code).ToHashSet();
+        errorCodes.Should().Contain(RunTraceErrorCodes.RT_TIMELINE_NON_MONOTONIC,
+            "should detect non-monotonic steps (order-independent check)");
     }
 
     [Fact]
@@ -569,17 +571,23 @@ public class InferenceOptimizationFixtureTests
         
         result.IsValid.Should().Be(expected.IsValid ?? true);
         
-        // Note: Validator short-circuits on timeline errors, so only 1 error is reported
-        // The assertions file lists 2 errors for documentation, but only the first fires
-        result.Errors.Should().HaveCountGreaterOrEqualTo(1,
-            "at least timeline error should be present");
+        // Order-independent error code matching:
+        // The assertions file lists ALL errors that exist in the fixture,
+        // but validator may short-circuit (only report first error found).
+        // We check that at least one expected error is present.
+        var actualErrorCodes = result.Errors.Select(e => e.Code).ToHashSet();
+        var expectedErrorCodes = expected.Errors?.Select(e => e.Code).ToHashSet() 
+            ?? new HashSet<string?>();
+
+        // At least one expected error should be detected
+        actualErrorCodes.Intersect(expectedErrorCodes!).Should().NotBeEmpty(
+            "at least one expected error code should be present (order-independent)");
         
-        // Only check for timeline error (first error in expected list)
-        var firstExpectedError = expected.Errors?.FirstOrDefault();
-        if (firstExpectedError?.Code != null)
+        // All actual errors should be in the expected list (no unexpected errors)
+        foreach (var actualCode in actualErrorCodes)
         {
-            result.Errors.Should().Contain(e => e.Code == firstExpectedError.Code,
-                $"should contain error code {firstExpectedError.Code}");
+            expectedErrorCodes.Should().Contain(actualCode,
+                $"error '{actualCode}' should be in expected list");
         }
     }
 

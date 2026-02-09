@@ -73,7 +73,83 @@ public static class FixtureLoader
     {
         return File.Exists(Path.Combine(FixturesRoot, fileName));
     }
+
+/// <summary>
+/// Discover all fixture sets under tests/Fixtures.
+/// Each folder containing at least one *_runtrace.json is a fixture set.
+/// </summary>
+public static IReadOnlyList<FixtureSetInfo> DiscoverFixtureSets()
+{
+    var fixturesBase = Path.GetDirectoryName(FixturesRoot)!;
+    if (!Directory.Exists(fixturesBase))
+    {
+        return Array.Empty<FixtureSetInfo>();
+    }
+
+    var sets = new List<FixtureSetInfo>();
+    foreach (var dir in Directory.GetDirectories(fixturesBase))
+    {
+        var runTraceFiles = Directory.GetFiles(dir, "*_runtrace.json");
+        if (runTraceFiles.Length > 0)
+        {
+            var setName = Path.GetFileName(dir);
+            sets.Add(new FixtureSetInfo(
+                Name: setName,
+                Path: dir,
+                RunTraceFiles: runTraceFiles.Select(Path.GetFileName).ToArray()!,
+                AssertionFiles: Directory.GetFiles(dir, "expected_assertions*.json")
+                    .Select(Path.GetFileName).ToArray()!
+            ));
+        }
+    }
+
+    return sets;
 }
+
+/// <summary>
+/// Load a fixture file from a specific fixture set folder.
+/// </summary>
+public static RuntimeRunTrace LoadRunTraceFromSet(string setPath, string fileName)
+{
+    var path = Path.Combine(setPath, fileName);
+    if (!File.Exists(path))
+    {
+        throw new FileNotFoundException($"Fixture not found: {path}");
+    }
+
+    var json = File.ReadAllText(path);
+    var dto = JsonSerializer.Deserialize<RunTraceDto>(json, JsonOptions)
+        ?? throw new InvalidOperationException($"Failed to deserialize fixture: {fileName}");
+    
+    return dto.ToRuntimeRunTrace();
+}
+
+/// <summary>
+/// Load assertions from a specific fixture set folder.
+/// </summary>
+public static ExpectedAssertions LoadAssertionsFromSet(string setPath, string fileName)
+{
+    var path = Path.Combine(setPath, fileName);
+    if (!File.Exists(path))
+    {
+        throw new FileNotFoundException($"Assertions file not found: {path}");
+    }
+
+    var json = File.ReadAllText(path);
+    return JsonSerializer.Deserialize<ExpectedAssertions>(json, JsonOptions)
+        ?? throw new InvalidOperationException($"Failed to deserialize assertions: {fileName}");
+}
+}
+
+/// <summary>
+/// Information about a discovered fixture set.
+/// </summary>
+public record FixtureSetInfo(
+    string Name,
+    string Path,
+    string[] RunTraceFiles,
+    string[] AssertionFiles
+);
 
 #region DTOs for JSON Deserialization
 
