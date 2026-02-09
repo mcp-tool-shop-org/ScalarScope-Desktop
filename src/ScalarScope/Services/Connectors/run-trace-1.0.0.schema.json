@@ -1,0 +1,242 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/run-trace/run-trace-1.0.0.schema.json",
+  "title": "ScalarScope RunTrace v1.0.0",
+  "description": "Universal intermediate representation for training run data",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["traceVersion", "metadata", "capabilities", "timeline", "scalars"],
+  "properties": {
+    "traceVersion": {
+      "type": "string",
+      "const": "1.0.0",
+      "description": "Schema version"
+    },
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "capabilities": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/capability" },
+      "minItems": 1,
+      "description": "Capabilities present in this trace"
+    },
+    "timeline": { "$ref": "#/$defs/timeline" },
+    "scalars": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/scalarSeries" },
+      "minProperties": 1,
+      "description": "Scalar metric series keyed by name"
+    },
+    "milestones": {
+      "type": ["array", "null"],
+      "items": { "$ref": "#/$defs/milestone" },
+      "description": "Training milestones"
+    },
+    "signals": {
+      "anyOf": [{ "$ref": "#/$defs/signalData" }, { "type": "null" }],
+      "description": "Advanced signal data"
+    },
+    "artifacts": {
+      "type": ["array", "null"],
+      "items": { "$ref": "#/$defs/artifactReference" },
+      "description": "Artifact references"
+    }
+  },
+
+  "$defs": {
+    "capability": {
+      "type": "string",
+      "enum": [
+        "scalars",
+        "milestones",
+        "artifacts",
+        "wallClock",
+        "curvature",
+        "spectrum",
+        "evaluators",
+        "streaming",
+        "fingerprints"
+      ]
+    },
+
+    "sourceType": {
+      "type": "string",
+      "enum": ["tensorboard", "mlflow", "wandb", "logs", "huggingface", "native", "unknown"]
+    },
+
+    "stepUnit": {
+      "type": "string",
+      "enum": ["iteration", "epoch", "samples", "tokens", "seconds"]
+    },
+
+    "milestoneType": {
+      "type": "string",
+      "enum": ["epoch", "eval", "checkpoint", "lr_step", "custom"]
+    },
+
+    "artifactType": {
+      "type": "string",
+      "enum": ["checkpoint", "model", "optimizer", "config", "other"]
+    },
+
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "label", "source", "createdUtc"],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "source": { "$ref": "#/$defs/sourceType" },
+        "sourceVersion": { "type": ["string", "null"] },
+        "createdUtc": { "type": "string", "format": "date-time" },
+        "fingerprints": {
+          "anyOf": [{ "$ref": "#/$defs/fingerprints" }, { "type": "null" }]
+        },
+        "tags": {
+          "type": ["object", "null"],
+          "additionalProperties": { "type": "string" }
+        },
+        "sourcePath": { "type": ["string", "null"] }
+      }
+    },
+
+    "fingerprints": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "code": { "type": ["string", "null"], "pattern": "^(sha256:)?[A-Fa-f0-9]{64}$" },
+        "dataset": { "type": ["string", "null"], "pattern": "^(sha256:)?[A-Fa-f0-9]{64}$" },
+        "model": { "type": ["string", "null"], "pattern": "^(sha256:)?[A-Fa-f0-9]{64}$" },
+        "seed": { "type": ["integer", "null"] },
+        "dockerImage": { "type": ["string", "null"] },
+        "environment": { "type": ["string", "null"] }
+      }
+    },
+
+    "timeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stepCount", "stepUnit"],
+      "properties": {
+        "stepCount": { "type": "integer", "minimum": 1 },
+        "stepUnit": { "$ref": "#/$defs/stepUnit" },
+        "wallClockStart": { "type": ["string", "null"], "format": "date-time" },
+        "wallClockEnd": { "type": ["string", "null"], "format": "date-time" },
+        "wallClockPerStep": {
+          "type": ["array", "null"],
+          "items": { "type": "number" },
+          "description": "Seconds from start for each step"
+        }
+      }
+    },
+
+    "scalarSeries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "values"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "values": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "wallClockSeconds": {
+          "type": ["array", "null"],
+          "items": { "type": "number" }
+        }
+      }
+    },
+
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "type"],
+      "properties": {
+        "step": { "type": "integer", "minimum": 0 },
+        "type": { "$ref": "#/$defs/milestoneType" },
+        "index": { "type": "integer", "minimum": 0, "default": 0 },
+        "path": { "type": ["string", "null"] },
+        "hash": { "type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$" },
+        "label": { "type": ["string", "null"] },
+        "metadata": { "type": ["object", "null"] }
+      }
+    },
+
+    "signalData": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "curvature": {
+          "anyOf": [{ "$ref": "#/$defs/scalarSeries" }, { "type": "null" }]
+        },
+        "eigenSpectrum": {
+          "anyOf": [{ "$ref": "#/$defs/spectrumSeries" }, { "type": "null" }]
+        },
+        "evaluatorVectors": {
+          "anyOf": [{ "$ref": "#/$defs/vectorSeries" }, { "type": "null" }]
+        },
+        "gradientNorm": {
+          "anyOf": [{ "$ref": "#/$defs/scalarSeries" }, { "type": "null" }]
+        },
+        "updateNorm": {
+          "anyOf": [{ "$ref": "#/$defs/scalarSeries" }, { "type": "null" }]
+        }
+      }
+    },
+
+    "spectrumSeries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "values"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "number" }
+          },
+          "description": "Eigenvalue vectors at each step"
+        }
+      }
+    },
+
+    "vectorSeries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps", "values"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": "number" }
+          }
+        }
+      }
+    },
+
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["step", "type", "path"],
+      "properties": {
+        "step": { "type": "integer", "minimum": 0 },
+        "type": { "$ref": "#/$defs/artifactType" },
+        "path": { "type": "string", "minLength": 1 },
+        "hash": { "type": ["string", "null"], "pattern": "^[A-Fa-f0-9]{64}$" },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "metadata": { "type": ["object", "null"] }
+      }
+    }
+  }
+}
