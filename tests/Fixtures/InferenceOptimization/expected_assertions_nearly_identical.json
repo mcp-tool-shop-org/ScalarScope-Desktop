@@ -1,0 +1,68 @@
+{
+  "fixtureSet": "InferenceOptimization_TFRT_NearlyIdentical_v1",
+  "description": "Tests suppression behavior when runs are too close to differentiate.",
+  "expected": {
+    "validation": {
+      "baselineValid": true,
+      "optimizedValid": true,
+      "noErrors": true,
+      "baselineRunId": "tfrt-near-baseline-fixture-001",
+      "optimizedRunId": "tfrt-near-optimized-fixture-001"
+    },
+    "fingerprints": {
+      "modelIdentical": true,
+      "datasetIdentical": true,
+      "codeIdentical": true,
+      "environmentIdentical": true,
+      "reason": "Identical runs with negligible difference"
+    },
+    "milestones": {
+      "baseline": {
+        "warmup_end": 5,
+        "steady_state_start": 6,
+        "steady_state_end": 19
+      },
+      "optimized": {
+        "warmup_end": 5,
+        "steady_state_start": 6,
+        "steady_state_end": 19
+      }
+    },
+    "comparisonIntent": {
+      "presetId": "tensorflowrt-runtime-v1",
+      "alignmentMode": "runtimeMilestone",
+      "primaryMilestone": "steady_state_start"
+    },
+    "expectedDeltas": {
+      "deltaTc": {
+        "shouldBePresent": false,
+        "fired": false,
+        "reason": "Same steady_state_start step (6) - no timing difference"
+      },
+      "deltaO": {
+        "shouldBePresent": false,
+        "fired": false,
+        "reason": "Both runs have zero variance in steady state"
+      },
+      "deltaF": {
+        "shouldBePresent": false,
+        "fired": false,
+        "reason": "No outliers in either run"
+      },
+      "deltaTd": {
+        "shouldBeSuppressed": true,
+        "reason": "Training descent not applicable to inference"
+      },
+      "deltaA": {
+        "shouldBeSuppressed": true,
+        "reason": "Accuracy not primary for runtime comparison"
+      }
+    },
+    "expectedOutcome": {
+      "summary": "No significant differences detected",
+      "deltasFireCount": 0,
+      "suppressedCount": 5,
+      "reason": "Runs are functionally identical - comparison should report no meaningful differences"
+    }
+  }
+}

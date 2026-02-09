@@ -1,9 +1,10 @@
 {
   "fixture": "tfrt-broken-baseline-fixture-001",
-  "description": "Golden truth for validator rejection of intentionally broken fixture.",
+  "description": "Golden truth for validator rejection of intentionally broken fixture. Note: Validator short-circuits on timeline errors, so scalar length mismatch is not checked.",
   "expectedValidation": {
     "isValid": false,
-    "errorCount": 2,
+    "errorCount": 1,
+    "shortCircuitBehavior": "Validator stops after timeline errors (other stages depend on valid timeline)",
     "errors": [
       {
         "code": "RT_TIMELINE_NON_MONOTONIC",
@@ -14,6 +15,13 @@
           "indexOfViolation": 5,
           "repeatedValue": 4
         }
+      }
+    ],
+    "errorsIfNoShortCircuit": [
+      {
+        "code": "RT_TIMELINE_NON_MONOTONIC",
+        "severity": "Error",
+        "messageContains": "not strictly increasing"
       },
       {
         "code": "RT_SCALAR_LENGTH_MISMATCH",
@@ -23,7 +31,8 @@
         "context": {
           "seriesLength": 8,
           "stepsLength": 10
-        }
+        },
+        "note": "This error would fire if timeline was valid"
       }
     ],
     "warnings": [],
