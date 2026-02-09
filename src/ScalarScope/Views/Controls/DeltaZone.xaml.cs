@@ -44,7 +44,8 @@ public partial class DeltaZone : ContentView
     public static readonly BindableProperty IsWhyPanelExpandedProperty =
         BindableProperty.Create(nameof(IsWhyPanelExpanded), typeof(bool), typeof(DeltaZone),
             defaultValue: false,
-            defaultBindingMode: BindingMode.TwoWay);
+            defaultBindingMode: BindingMode.TwoWay,
+            propertyChanged: OnIsWhyPanelExpandedChanged);
 
     public IReadOnlyList<CanonicalDelta> Deltas
     {
@@ -270,6 +271,21 @@ public partial class DeltaZone : ContentView
             // Reset selection when deltas change
             zone.SelectedDelta = null;
             zone.IsWhyPanelExpanded = false;
+        }
+    }
+    
+    /// <summary>
+    /// Phase 5.2: Debounce layout when Why? panel expands/collapses.
+    /// </summary>
+    private static void OnIsWhyPanelExpandedChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        if (bindable is DeltaZone zone)
+        {
+            // Debounce layout recalculation to prevent flicker
+            _ = LayoutDebouncer.RequestLayoutUpdateOnMainThread(() =>
+            {
+                zone.InvalidateMeasure();
+            });
         }
     }
 

@@ -50,6 +50,12 @@ public partial class InsightsTray : ContentView
         if (bindable is InsightsTray tray)
         {
             tray.chevronLabel.Text = (bool)newValue ? "▼" : "▲";
+            
+            // Phase 5.2: Debounce layout recalculation to prevent flicker
+            _ = LayoutDebouncer.RequestLayoutUpdateOnMainThread(() =>
+            {
+                tray.InvalidateMeasure();
+            });
         }
     }
 
