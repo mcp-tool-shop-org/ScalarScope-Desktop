@@ -437,12 +437,134 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Version Info -->
-            <Label Text="ScalarScope v1.0.8"
-                   FontSize="12"
-                   TextColor="{AppThemeBinding Light=#999999, Dark=#666666}"
-                   HorizontalOptions="Center"
-                   Margin="0,10,0,20" />
+            <!-- About Section -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                    Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                    StrokeShape="RoundRectangle 12"
+                    Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="About ScalarScope"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="#00d9ff"
+                           SemanticProperties.HeadingLevel="Level2" />
+
+                    <!-- Version Info -->
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="16" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="12">
+                        <Label Grid.Row="0" Grid.Column="0" 
+                               Text="Version" 
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"/>
+                        <Label Grid.Row="0" Grid.Column="1" 
+                               Text="2.0.0" 
+                               FontSize="13"
+                               FontAttributes="Bold"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"/>
+                        
+                        <Label Grid.Row="1" Grid.Column="0" 
+                               Text="DeltaSpec" 
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"/>
+                        <Label Grid.Row="1" Grid.Column="1" 
+                               Text="1.0.0" 
+                               FontSize="13"
+                               FontFamily="Consolas"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"/>
+                        
+                        <Label Grid.Row="2" Grid.Column="0" 
+                               Text="Platform" 
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"/>
+                        <Label Grid.Row="2" Grid.Column="1" 
+                               Text="Windows 10+" 
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"/>
+                        
+                        <Label Grid.Row="3" Grid.Column="0" 
+                               Text="Store ID" 
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"/>
+                        <Label Grid.Row="3" Grid.Column="1" 
+                               Text="9P3HT1PHBKQK" 
+                               FontSize="13"
+                               FontFamily="Consolas"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"/>
+                    </Grid>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Bundle Hash Explanation -->
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="What's a Bundle Hash?"
+                               FontAttributes="Bold"
+                               FontSize="13"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"/>
+                        <Label Text="When you export a comparison, ScalarScope creates a unique cryptographic hash (e.g., SHA-256). This hash acts as a fingerprint—if anyone modifies the bundle, the hash won't match, ensuring reproducibility and audit integrity."
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"
+                               LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Privacy/Telemetry Statement -->
+                    <VerticalStackLayout Spacing="8">
+                        <HorizontalStackLayout Spacing="8">
+                            <Label Text="●" FontSize="8" TextColor="#00ff88" VerticalOptions="Center"/>
+                            <Label Text="Privacy"
+                                   FontAttributes="Bold"
+                                   FontSize="13"
+                                   TextColor="#00ff88"/>
+                        </HorizontalStackLayout>
+                        <Label Text="ScalarScope collects no telemetry, sends no analytics, and stores all your data locally. Your inference runs and comparisons never leave your machine unless you explicitly export them."
+                               FontSize="12"
+                               TextColor="{AppThemeBinding Light=#666666, Dark=#888888}"
+                               LineBreakMode="WordWrap"/>
+                    </VerticalStackLayout>
+
+                    <BoxView HeightRequest="1" Color="{AppThemeBinding Light=#EEEEEE, Dark=#2a2a4e}" />
+
+                    <!-- Links -->
+                    <HorizontalStackLayout Spacing="20">
+                        <Label Text="Documentation"
+                               FontSize="12"
+                               TextColor="#00d9ff"
+                               TextDecorations="Underline">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenDocumentationCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="GitHub"
+                               FontSize="12"
+                               TextColor="#00d9ff"
+                               TextDecorations="Underline">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenGitHubCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                        <Label Text="Report Issue"
+                               FontSize="12"
+                               TextColor="#00d9ff"
+                               TextDecorations="Underline">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding OpenIssueCommand}"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Footer -->
+            <VerticalStackLayout Spacing="4" HorizontalOptions="Center" Margin="0,10,0,20">
+                <Label Text="© 2026 MCP Tool Shop"
+                       FontSize="11"
+                       TextColor="{AppThemeBinding Light=#999999, Dark=#666666}"
+                       HorizontalOptions="Center"/>
+                <Label Text="Built with scientific rigor"
+                       FontSize="11"
+                       TextColor="{AppThemeBinding Light=#BBBBBB, Dark=#444444}"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
 
         </VerticalStackLayout>
     </ScrollView>

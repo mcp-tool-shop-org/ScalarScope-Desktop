@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ScalarScope.ViewModels"
+             x:Class="ScalarScope.Views.WelcomePage"
+             x:DataType="vm:WelcomeViewModel"
+             Shell.NavBarIsVisible="False"
+             BackgroundColor="#0f0f1a">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <!-- Typography Scale -->
+            <Style x:Key="HeroTitle" TargetType="Label">
+                <Setter Property="FontSize" Value="32"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="TextColor" Value="White"/>
+            </Style>
+            <Style x:Key="HeroSubtitle" TargetType="Label">
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="TextColor" Value="#aaa"/>
+                <Setter Property="LineHeight" Value="1.4"/>
+            </Style>
+            <Style x:Key="SectionTitle" TargetType="Label">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="TextColor" Value="#666"/>
+                <Setter Property="CharacterSpacing" Value="1"/>
+            </Style>
+            <Style x:Key="BodyText" TargetType="Label">
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="TextColor" Value="#888"/>
+            </Style>
+            <Style x:Key="CaptionText" TargetType="Label">
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="TextColor" Value="#666"/>
+            </Style>
+            
+            <!-- Primary CTA -->
+            <Style x:Key="PrimaryCTA" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="#00d9ff"/>
+                <Setter Property="TextColor" Value="#0f0f1a"/>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="FontAttributes" Value="Bold"/>
+                <Setter Property="HeightRequest" Value="52"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="24,0"/>
+            </Style>
+            
+            <!-- Secondary CTA -->
+            <Style x:Key="SecondaryCTA" TargetType="Button">
+                <Setter Property="BackgroundColor" Value="Transparent"/>
+                <Setter Property="BorderColor" Value="#3a3a5e"/>
+                <Setter Property="BorderWidth" Value="1"/>
+                <Setter Property="TextColor" Value="White"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="HeightRequest" Value="48"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Padding" Value="20,0"/>
+            </Style>
+            
+            <!-- Card -->
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="BackgroundColor" Value="#16213e"/>
+                <Setter Property="Stroke" Value="#2a2a4e"/>
+                <Setter Property="StrokeThickness" Value="1"/>
+                <Setter Property="StrokeShape" Value="RoundRectangle 12"/>
+                <Setter Property="Padding" Value="20"/>
+            </Style>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,Auto" Padding="40,60,40,40">
+        <!-- Main Content -->
+        <ScrollView>
+            <VerticalStackLayout Spacing="40" MaximumWidthRequest="600" HorizontalOptions="Center">
+            
+                <!-- Hero Section -->
+                <VerticalStackLayout Spacing="16" HorizontalOptions="Center">
+                    
+                    <!-- App Icon / Vector -->
+                    <Border BackgroundColor="#1a1a2e"
+                            StrokeShape="RoundRectangle 24"
+                            Stroke="#2a2a4e"
+                            HeightRequest="80"
+                            WidthRequest="80"
+                            HorizontalOptions="Center">
+                        <Label Text="📊"
+                               FontSize="36"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"/>
+                    </Border>
+                    
+                    <!-- Title -->
+                    <Label Text="ScalarScope"
+                           Style="{StaticResource HeroTitle}"
+                           HorizontalOptions="Center"/>
+                    
+                    <!-- One-liner promise -->
+                    <Label Text="Compare inference runs with scientific rigor."
+                           Style="{StaticResource HeroSubtitle}"
+                           HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center"/>
+                    
+                    <!-- Trust badge -->
+                    <HorizontalStackLayout Spacing="8" HorizontalOptions="Center" Opacity="0.7">
+                        <Label Text="●" FontSize="8" TextColor="#00ff88" VerticalOptions="Center"/>
+                        <Label Text="Reproducible • Auditable • No telemetry"
+                               Style="{StaticResource CaptionText}"/>
+                    </HorizontalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Primary CTAs -->
+                <VerticalStackLayout Spacing="12">
+                    <Button Text="Compare Two Runs"
+                            Style="{StaticResource PrimaryCTA}"
+                            Command="{Binding NavigateToCompareCommand}"
+                            HorizontalOptions="Fill"/>
+                    
+                    <Button Text="📦  Open Review Bundle"
+                            Style="{StaticResource SecondaryCTA}"
+                            Command="{Binding OpenBundleCommand}"
+                            HorizontalOptions="Fill"/>
+                </VerticalStackLayout>
+                
+                <!-- Try Example Section -->
+                <Border Style="{StaticResource Card}" HorizontalOptions="Fill">
+                    <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                        <Label Text="NEW TO SCALARSCOPE?"
+                               Style="{StaticResource SectionTitle}"
+                               Grid.Row="0" Grid.Column="0"/>
+                        
+                        <Label Text="See how inference optimization looks in practice with our sample comparison."
+                               Style="{StaticResource BodyText}"
+                               Grid.Row="1" Grid.Column="0"
+                               Margin="0,8,0,0"/>
+                        
+                        <Button Text="Try Example"
+                                Grid.Row="0" Grid.RowSpan="2" Grid.Column="1"
+                                BackgroundColor="#2a2a4e"
+                                TextColor="#00d9ff"
+                                FontSize="13"
+                                HeightRequest="40"
+                                CornerRadius="8"
+                                VerticalOptions="Center"
+                                Command="{Binding TryExampleCommand}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Recent Activity Section -->
+                <VerticalStackLayout Spacing="12"
+                                     IsVisible="{Binding HasRecentComparisons}">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="RECENT COMPARISONS"
+                               Style="{StaticResource SectionTitle}"/>
+                        <Button Text="Clear"
+                                Grid.Column="1"
+                                BackgroundColor="Transparent"
+                                TextColor="#666"
+                                FontSize="11"
+                                HeightRequest="24"
+                                Padding="8,0"
+                                Command="{Binding ClearRecentCommand}"/>
+                    </Grid>
+                    
+                    <VerticalStackLayout BindableLayout.ItemsSource="{Binding RecentComparisons}"
+                                         Spacing="8">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="vm:RecentComparisonItem">
+                                <Border Style="{StaticResource Card}"
+                                        Padding="16">
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type vm:WelcomeViewModel}}, Path=OpenRecentCommand}"
+                                                              CommandParameter="{Binding .}"/>
+                                    </Border.GestureRecognizers>
+                                    <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                                        <!-- Icon -->
+                                        <Border Grid.Column="0"
+                                                BackgroundColor="#2a2a4e"
+                                                StrokeShape="RoundRectangle 6"
+                                                Stroke="Transparent"
+                                                HeightRequest="36"
+                                                WidthRequest="36">
+                                            <Label Text="{Binding Icon}"
+                                                   FontSize="16"
+                                                   HorizontalOptions="Center"
+                                                   VerticalOptions="Center"/>
+                                        </Border>
+                                        
+                                        <!-- Details -->
+                                        <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="2">
+                                            <Label Text="{Binding Title}"
+                                                   FontSize="13"
+                                                   TextColor="White"
+                                                   LineBreakMode="TailTruncation"/>
+                                            <Label Text="{Binding Subtitle}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   LineBreakMode="TailTruncation"/>
+                                        </VerticalStackLayout>
+                                        
+                                        <!-- Time ago -->
+                                        <Label Grid.Column="2"
+                                               Text="{Binding TimeAgo}"
+                                               Style="{StaticResource CaptionText}"
+                                               VerticalOptions="Center"/>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+                
+                <!-- Empty State (when no recent comparisons) -->
+                <Border Style="{StaticResource Card}"
+                        IsVisible="{Binding HasRecentComparisons, Converter={StaticResource InverseBoolConverter}}"
+                        Opacity="0.6">
+                    <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                        <Label Text="📋"
+                               FontSize="28"
+                               HorizontalOptions="Center"
+                               Opacity="0.5"/>
+                        <Label Text="No recent comparisons"
+                               Style="{StaticResource BodyText}"
+                               HorizontalOptions="Center"/>
+                        <Label Text="Your comparison history will appear here"
+                               Style="{StaticResource CaptionText}"
+                               HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <!-- Footer -->
+        <VerticalStackLayout Grid.Row="1" Spacing="4" HorizontalOptions="Center" Margin="0,20,0,0">
+            <Label Text="ScalarScope v2.0.0"
+                   Style="{StaticResource CaptionText}"
+                   HorizontalOptions="Center"/>
+            <Label Text="DeltaSpec 1.0.0"
+                   Style="{StaticResource CaptionText}"
+                   HorizontalOptions="Center"
+                   Opacity="0.6"/>
+        </VerticalStackLayout>
+    </Grid>
+
+</ContentPage>

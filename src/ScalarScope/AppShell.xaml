@@ -18,27 +18,22 @@
     </Shell.Resources>
 
     <TabBar>
-        <Tab Title="Overview" Icon="home.png">
-            <ShellContent ContentTemplate="{DataTemplate views:OverviewPage}" Route="overview"/>
+        <!-- Home: Clean landing experience (Phase H1) -->
+        <Tab Title="Home" Icon="home.png">
+            <ShellContent ContentTemplate="{DataTemplate views:WelcomePage}" Route="welcome"/>
         </Tab>
-        <Tab Title="Learning Path" Icon="trajectory.png">
-            <ShellContent ContentTemplate="{DataTemplate views:TrajectoryPage}" Route="trajectory"/>
-        </Tab>
-        <Tab Title="Performance" Icon="scalars.png">
-            <ShellContent ContentTemplate="{DataTemplate views:ScalarsPage}" Route="scalars"/>
-        </Tab>
-        <Tab Title="Alignment" Icon="geometry.png">
-            <ShellContent ContentTemplate="{DataTemplate views:GeometryPage}" Route="geometry"/>
-        </Tab>
-        <Tab Title="Compare Paths" Icon="compare.png">
+        
+        <!-- Compare: The star feature -->
+        <Tab Title="Compare" Icon="compare.png">
             <ShellContent ContentTemplate="{DataTemplate views:ComparisonPage}" Route="compare"/>
         </Tab>
-        <Tab Title="Failures" Icon="failures.png">
-            <ShellContent ContentTemplate="{DataTemplate views:FailuresPage}" Route="failures"/>
-        </Tab>
-        <Tab Title="Interpretation Guide" Icon="help.png">
+        
+        <!-- Guide: Interpretation help -->
+        <Tab Title="Guide" Icon="help.png">
             <ShellContent ContentTemplate="{DataTemplate views:HelpPage}" Route="help"/>
         </Tab>
+        
+        <!-- Settings: Preferences and About -->
         <Tab Title="Settings" Icon="settings.png">
             <ShellContent ContentTemplate="{DataTemplate views:SettingsPage}" Route="settings"/>
         </Tab>

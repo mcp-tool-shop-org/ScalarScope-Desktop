@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- ================================================================ -->
+    <!-- ScalarScope Design System v2.0                                   -->
+    <!-- Visual Grammar: One Product, One Voice                           -->
+    <!-- ================================================================ -->
+
+    <!-- ==================== Spacing System ==================== -->
+    <!-- Unit: 4px base -->
+    <x:Double x:Key="SpaceXS">4</x:Double>
+    <x:Double x:Key="SpaceSM">8</x:Double>
+    <x:Double x:Key="SpaceMD">12</x:Double>
+    <x:Double x:Key="SpaceLG">16</x:Double>
+    <x:Double x:Key="SpaceXL">24</x:Double>
+    <x:Double x:Key="SpaceXXL">32</x:Double>
+    <x:Double x:Key="SpaceHuge">48</x:Double>
+
+    <!-- Card/Section Padding -->
+    <Thickness x:Key="CardPadding">16</Thickness>
+    <Thickness x:Key="CardPaddingLarge">20</Thickness>
+    <Thickness x:Key="SectionGap">24</Thickness>
+    <Thickness x:Key="PagePadding">24,20</Thickness>
+
+    <!-- ==================== Color Palette ==================== -->
+    
+    <!-- Background Layers -->
+    <Color x:Key="BgBase">#0f0f1a</Color>
+    <Color x:Key="BgSurface">#1a1a2e</Color>
+    <Color x:Key="BgCard">#16213e</Color>
+    <Color x:Key="BgElevated">#1e2a48</Color>
+    <Color x:Key="BgHover">#242a4a</Color>
+    
+    <!-- Borders -->
+    <Color x:Key="BorderSubtle">#2a2a4e</Color>
+    <Color x:Key="BorderMedium">#3a3a5e</Color>
+    <Color x:Key="BorderFocus">#00d9ff</Color>
+    
+    <!-- Text -->
+    <Color x:Key="TextPrimary">White</Color>
+    <Color x:Key="TextSecondary">#aaaaaa</Color>
+    <Color x:Key="TextMuted">#888888</Color>
+    <Color x:Key="TextDisabled">#666666</Color>
+    <Color x:Key="TextLabel">#666666</Color>
+    
+    <!-- Semantic Accent Colors -->
+    <Color x:Key="AccentPrimary">#00d9ff</Color>
+    <Color x:Key="AccentSuccess">#00ff88</Color>
+    <Color x:Key="AccentWarning">#ffd93d</Color>
+    <Color x:Key="AccentError">#ff6b6b</Color>
+    <Color x:Key="AccentInfo">#74b9ff</Color>
+    <Color x:Key="AccentPurple">#c56cf0</Color>
+    
+    <!-- Delta Colors (consistent across tiles, tray, export) -->
+    <Color x:Key="DeltaTcColor">#00d9ff</Color>   <!-- Convergence -->
+    <Color x:Key="DeltaTdColor">#888888</Color>   <!-- Total duration (often suppressed) -->
+    <Color x:Key="DeltaAColor">#888888</Color>    <!-- Average (often suppressed) -->
+    <Color x:Key="DeltaLatencyColor">#ffd93d</Color>
+    <Color x:Key="DeltaThroughputColor">#00ff88</Color>
+    <Color x:Key="DeltaMemoryColor">#c56cf0</Color>
+    
+    <!-- Path Colors (A vs B) -->
+    <Color x:Key="PathAColor">#4ecdc4</Color>
+    <Color x:Key="PathBColor">#ff6b6b</Color>
+
+    <!-- ==================== Typography Scale ==================== -->
+    
+    <!-- Display -->
+    <Style x:Key="DisplayLarge" TargetType="Label">
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+    </Style>
+    
+    <!-- Headings -->
+    <Style x:Key="HeadingLarge" TargetType="Label">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+    </Style>
+    
+    <Style x:Key="HeadingMedium" TargetType="Label">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+    </Style>
+    
+    <Style x:Key="HeadingSmall" TargetType="Label">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+    </Style>
+    
+    <!-- Body -->
+    <Style x:Key="Body" TargetType="Label">
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+        <Setter Property="LineHeight" Value="1.4"/>
+    </Style>
+    
+    <Style x:Key="BodySmall" TargetType="Label">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="TextColor" Value="{StaticResource TextSecondary}"/>
+    </Style>
+    
+    <!-- Labels -->
+    <Style x:Key="LabelText" TargetType="Label">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="TextColor" Value="{StaticResource TextMuted}"/>
+    </Style>
+    
+    <Style x:Key="SectionLabel" TargetType="Label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="TextColor" Value="{StaticResource TextLabel}"/>
+        <Setter Property="CharacterSpacing" Value="1"/>
+    </Style>
+    
+    <!-- Caption -->
+    <Style x:Key="Caption" TargetType="Label">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextColor" Value="{StaticResource TextMuted}"/>
+    </Style>
+    
+    <!-- Mono (for values, codes) -->
+    <Style x:Key="MonoValue" TargetType="Label">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontFamily" Value="Consolas"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+    </Style>
+
+    <!-- ==================== Chip/Badge System ==================== -->
+    
+    <!-- Base Chip -->
+    <Style x:Key="Chip" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgCard}"/>
+        <Setter Property="Stroke" Value="{StaticResource BorderSubtle}"/>
+        <Setter Property="StrokeThickness" Value="1"/>
+        <Setter Property="StrokeShape" Value="RoundRectangle 6"/>
+        <Setter Property="Padding" Value="10,4"/>
+    </Style>
+    
+    <!-- Preset Chip -->
+    <Style x:Key="PresetChip" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="Stroke" Value="{StaticResource AccentPrimary}"/>
+    </Style>
+    
+    <!-- Param Chip -->
+    <Style x:Key="ParamChip" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="BackgroundColor" Value="#1a2a3e"/>
+    </Style>
+    
+    <!-- Confidence Chip -->
+    <Style x:Key="ConfidenceChip" TargetType="Border" BasedOn="{StaticResource Chip}">
+        <Setter Property="BackgroundColor" Value="#1a2a1a"/>
+        <Setter Property="Stroke" Value="{StaticResource AccentSuccess}"/>
+    </Style>
+    
+    <!-- Status Badge (High/Medium/Low) -->
+    <Style x:Key="StatusBadge" TargetType="Border">
+        <Setter Property="StrokeShape" Value="RoundRectangle 4"/>
+        <Setter Property="StrokeThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,3"/>
+    </Style>
+
+    <!-- ==================== Card System ==================== -->
+    
+    <Style x:Key="CardBase" TargetType="Border">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgCard}"/>
+        <Setter Property="Stroke" Value="{StaticResource BorderSubtle}"/>
+        <Setter Property="StrokeThickness" Value="1"/>
+        <Setter Property="StrokeShape" Value="RoundRectangle 12"/>
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+    
+    <Style x:Key="CardElevated" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgElevated}"/>
+    </Style>
+    
+    <Style x:Key="CardHighlight" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="Stroke" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="StrokeThickness" Value="2"/>
+    </Style>
+    
+    <Style x:Key="CardWarning" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="BackgroundColor" Value="#2a2a15"/>
+        <Setter Property="Stroke" Value="{StaticResource AccentWarning}"/>
+    </Style>
+    
+    <Style x:Key="CardError" TargetType="Border" BasedOn="{StaticResource CardBase}">
+        <Setter Property="BackgroundColor" Value="#2a1515"/>
+        <Setter Property="Stroke" Value="{StaticResource AccentError}"/>
+    </Style>
+
+    <!-- ==================== Button System ==================== -->
+    
+    <Style x:Key="ButtonPrimary" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource AccentPrimary}"/>
+        <Setter Property="TextColor" Value="{StaticResource BgBase}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontAttributes" Value="Bold"/>
+        <Setter Property="HeightRequest" Value="44"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16,0"/>
+    </Style>
+    
+    <Style x:Key="ButtonSecondary" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="BorderColor" Value="{StaticResource BorderMedium}"/>
+        <Setter Property="BorderWidth" Value="1"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="HeightRequest" Value="44"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="16,0"/>
+    </Style>
+    
+    <Style x:Key="ButtonGhost" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="Transparent"/>
+        <Setter Property="TextColor" Value="{StaticResource TextMuted}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="HeightRequest" Value="36"/>
+        <Setter Property="Padding" Value="12,0"/>
+    </Style>
+    
+    <Style x:Key="ButtonSmall" TargetType="Button">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgCard}"/>
+        <Setter Property="TextColor" Value="{StaticResource TextPrimary}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="HeightRequest" Value="32"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="12,0"/>
+    </Style>
+
+    <!-- ==================== Delta Intensity Mapping ==================== -->
+    <!-- Consistent color intensity for delta significance -->
+    
+    <!-- Delta Value Colors (based on intensity/significance) -->
+    <Color x:Key="DeltaIntensityHigh">#00d9ff</Color>
+    <Color x:Key="DeltaIntensityMedium">#74b9ff</Color>
+    <Color x:Key="DeltaIntensityLow">#666666</Color>
+    <Color x:Key="DeltaSuppressed">#444444</Color>
+    
+    <!-- ==================== Status Icons ==================== -->
+    <!-- Unicode icons for consistency -->
+    <x:String x:Key="IconImproved">↑</x:String>
+    <x:String x:Key="IconRegressed">↓</x:String>
+    <x:String x:Key="IconUnchanged">━</x:String>
+    <x:String x:Key="IconWarning">⚠</x:String>
+    <x:String x:Key="IconInfo">ℹ</x:String>
+    <x:String x:Key="IconCheck">✓</x:String>
+    <x:String x:Key="IconCross">✕</x:String>
+    <x:String x:Key="IconDelta">Δ</x:String>
+    <x:String x:Key="IconBundle">📦</x:String>
+    <x:String x:Key="IconChart">📊</x:String>
+
+    <!-- ==================== Animation Durations ==================== -->
+    <x:Int32 x:Key="AnimationFast">150</x:Int32>
+    <x:Int32 x:Key="AnimationNormal">300</x:Int32>
+    <x:Int32 x:Key="AnimationSlow">500</x:Int32>
+
+    <!-- ==================== Skeleton/Loading Styles ==================== -->
+    
+    <Style x:Key="SkeletonBase" TargetType="BoxView">
+        <Setter Property="BackgroundColor" Value="{StaticResource BgCard}"/>
+        <Setter Property="CornerRadius" Value="4"/>
+    </Style>
+    
+    <Style x:Key="SkeletonText" TargetType="BoxView" BasedOn="{StaticResource SkeletonBase}">
+        <Setter Property="HeightRequest" Value="16"/>
+        <Setter Property="HorizontalOptions" Value="Fill"/>
+    </Style>
+    
+    <Style x:Key="SkeletonCircle" TargetType="BoxView" BasedOn="{StaticResource SkeletonBase}">
+        <Setter Property="HeightRequest" Value="40"/>
+        <Setter Property="WidthRequest" Value="40"/>
+        <Setter Property="CornerRadius" Value="20"/>
+    </Style>
+
+</ResourceDictionary>
