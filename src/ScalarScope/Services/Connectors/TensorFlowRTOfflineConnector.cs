@@ -14,11 +14,26 @@ namespace ScalarScope.Services.Connectors;
 
 /// <summary>
 /// TFRT-specific error codes.
+/// All routed through Phase 6 ErrorExplanationService.
 /// </summary>
 public static partial class TfrtErrorCodes
 {
     /// <summary>No supported TFRT export found at source.</summary>
     public const string TFRT_NO_SUPPORTED_EXPORT = "TFRT_NO_SUPPORTED_EXPORT";
+    
+    /// <summary>File unreadable or malformed.</summary>
+    public const string TFRT_PARSE_FAILED = "TFRT_PARSE_FAILED";
+    
+    /// <summary>Cannot extract latency signal from source.</summary>
+    public const string TFRT_NO_LATENCY_SIGNAL = "TFRT_NO_LATENCY_SIGNAL";
+    
+    /// <summary>Parsed series have inconsistent lengths.</summary>
+    public const string TFRT_INCONSISTENT_LENGTHS = "TFRT_INCONSISTENT_LENGTHS";
+    
+    /// <summary>Cannot normalize units (ambiguous).</summary>
+    public const string TFRT_UNIT_AMBIGUOUS = "TFRT_UNIT_AMBIGUOUS";
+    
+    // Legacy codes (kept for compatibility)
     
     /// <summary>Timeline data is inconsistent (non-monotonic steps).</summary>
     public const string TFRT_TIMELINE_INCONSISTENT = "TFRT_TIMELINE_INCONSISTENT";
@@ -42,17 +57,24 @@ public static partial class TfrtErrorCodes
 
 /// <summary>
 /// Detected TFRT source type.
+/// Priority order: ProfilerTrace > ProfilerOverview > BenchmarkCsv > BenchmarkJson > RuntimeLog
 /// </summary>
 public enum TfrtSourceType
 {
-    /// <summary>TensorBoard profiler trace (trace.json.gz).</summary>
+    /// <summary>Profiler trace.json (highest fidelity).</summary>
     ProfilerTrace,
     
-    /// <summary>CSV export with metrics.</summary>
-    CsvExport,
+    /// <summary>Profiler overview.json.</summary>
+    ProfilerOverview,
     
-    /// <summary>Text log files.</summary>
-    LogFile,
+    /// <summary>Benchmark CSV export.</summary>
+    BenchmarkCsv,
+    
+    /// <summary>Benchmark JSON export.</summary>
+    BenchmarkJson,
+    
+    /// <summary>Runtime log files (last resort).</summary>
+    RuntimeLog,
     
     /// <summary>Unknown source.</summary>
     Unknown
@@ -65,7 +87,27 @@ public sealed record TfrtSource
 {
     public required TfrtSourceType Type { get; init; }
     public required string Path { get; init; }
+    
+    /// <summary>Priority for selection (higher = preferred).</summary>
     public int Priority { get; init; }
+    
+    /// <summary>Additional context files found nearby.</summary>
+    public TfrtFolderContext? Context { get; init; }
+}
+
+/// <summary>
+/// Context from the TFRT folder structure.
+/// </summary>
+public sealed record TfrtFolderContext
+{
+    /// <summary>Path to saved_model directory (if found).</summary>
+    public string? SavedModelPath { get; init; }
+    
+    /// <summary>Path to config.json (if found).</summary>
+    public string? ConfigPath { get; init; }
+    
+    /// <summary>Explicit warmup_steps from config.</summary>
+    public int? WarmupSteps { get; init; }
 }
 
 #endregion
@@ -163,6 +205,8 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
     
     /// <summary>
     /// Detect available TFRT sources at the given path.
+    /// Scans recursively for the folder structure contract.
+    /// Priority: profiler/trace.json > profiler/overview.json > benchmark.csv > benchmark.json > runtime.log
     /// </summary>
     private async Task<List<TfrtSource>> DetectSourcesAsync(string source, CancellationToken ct)
     {
@@ -177,51 +221,143 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
         
         if (isFile)
         {
-            var fileSource = ClassifyFile(source);
+            var fileSource = ClassifyFile(source, null);
             if (fileSource != null)
                 sources.Add(fileSource);
             return sources;
         }
         
+        // Detect folder context (saved_model, config.json)
+        var context = await DetectFolderContextAsync(source, ct);
+        
         // Search directory for TFRT exports
         await Task.Run(() =>
         {
-            // Priority 1: Profiler traces
-            foreach (var file in Directory.EnumerateFiles(source, "trace.json*", SearchOption.AllDirectories).Take(10))
+            // Priority 1 (100): profiler/trace.json (highest fidelity)
+            var profilerDir = Path.Combine(source, "profiler");
+            if (Directory.Exists(profilerDir))
             {
-                sources.Add(new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = file, Priority = 100 });
+                var traceFile = Path.Combine(profilerDir, "trace.json");
+                var traceGz = Path.Combine(profilerDir, "trace.json.gz");
+                
+                if (File.Exists(traceFile))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = traceFile, Priority = 100, Context = context });
+                else if (File.Exists(traceGz))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = traceGz, Priority = 100, Context = context });
+                
+                // Priority 2 (90): profiler/overview.json
+                var overviewFile = Path.Combine(profilerDir, "overview.json");
+                if (File.Exists(overviewFile))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.ProfilerOverview, Path = overviewFile, Priority = 90, Context = context });
             }
             
-            // Priority 2: CSV exports
+            // Also search for trace.json recursively (fallback)
+            foreach (var file in Directory.EnumerateFiles(source, "trace.json*", SearchOption.AllDirectories).Take(5))
+            {
+                if (!sources.Any(s => s.Path == file))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = file, Priority = 95, Context = context });
+            }
+            
+            // Priority 3 (50): benchmark.csv
+            var benchmarkCsv = Path.Combine(source, "benchmark.csv");
+            if (File.Exists(benchmarkCsv) && IsTfrtCsv(benchmarkCsv))
+                sources.Add(new TfrtSource { Type = TfrtSourceType.BenchmarkCsv, Path = benchmarkCsv, Priority = 50, Context = context });
+            
+            // Also search for any CSV with TFRT metrics
             foreach (var file in Directory.EnumerateFiles(source, "*.csv", SearchOption.AllDirectories).Take(10))
             {
-                if (IsTfrtCsv(file))
-                    sources.Add(new TfrtSource { Type = TfrtSourceType.CsvExport, Path = file, Priority = 50 });
+                if (!sources.Any(s => s.Path == file) && IsTfrtCsv(file))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.BenchmarkCsv, Path = file, Priority = 45, Context = context });
             }
             
-            // Priority 3: Log files
+            // Priority 4 (40): benchmark.json
+            var benchmarkJson = Path.Combine(source, "benchmark.json");
+            if (File.Exists(benchmarkJson))
+                sources.Add(new TfrtSource { Type = TfrtSourceType.BenchmarkJson, Path = benchmarkJson, Priority = 40, Context = context });
+            
+            // Priority 5 (10): runtime.log (last resort)
+            var runtimeLog = Path.Combine(source, "runtime.log");
+            if (File.Exists(runtimeLog) && IsTfrtLog(runtimeLog))
+                sources.Add(new TfrtSource { Type = TfrtSourceType.RuntimeLog, Path = runtimeLog, Priority = 10, Context = context });
+            
+            // Also search for any log with TFRT patterns
             foreach (var file in Directory.EnumerateFiles(source, "*.log", SearchOption.AllDirectories).Take(10))
             {
-                if (IsTfrtLog(file))
-                    sources.Add(new TfrtSource { Type = TfrtSourceType.LogFile, Path = file, Priority = 10 });
+                if (!sources.Any(s => s.Path == file) && IsTfrtLog(file))
+                    sources.Add(new TfrtSource { Type = TfrtSourceType.RuntimeLog, Path = file, Priority = 5, Context = context });
             }
         }, ct);
         
         return sources;
     }
     
-    private TfrtSource? ClassifyFile(string path)
+    /// <summary>
+    /// Detect folder context (saved_model, config.json, warmup_steps).
+    /// </summary>
+    private static async Task<TfrtFolderContext?> DetectFolderContextAsync(string source, CancellationToken ct)
+    {
+        string? savedModelPath = null;
+        string? configPath = null;
+        int? warmupSteps = null;
+        
+        await Task.Run(() =>
+        {
+            // Look for saved_model directory
+            var savedModelDir = Path.Combine(source, "saved_model");
+            if (Directory.Exists(savedModelDir))
+                savedModelPath = savedModelDir;
+            
+            // Look for config.json
+            var configFile = Path.Combine(source, "config.json");
+            if (File.Exists(configFile))
+            {
+                configPath = configFile;
+                
+                // Try to extract warmup_steps
+                try
+                {
+                    var configText = File.ReadAllText(configFile);
+                    using var doc = JsonDocument.Parse(configText);
+                    
+                    if (doc.RootElement.TryGetProperty("warmup_steps", out var warmupProp) ||
+                        doc.RootElement.TryGetProperty("warmup_iterations", out warmupProp))
+                    {
+                        warmupSteps = warmupProp.GetInt32();
+                    }
+                }
+                catch { }
+            }
+        }, ct);
+        
+        if (savedModelPath == null && configPath == null && warmupSteps == null)
+            return null;
+        
+        return new TfrtFolderContext
+        {
+            SavedModelPath = savedModelPath,
+            ConfigPath = configPath,
+            WarmupSteps = warmupSteps
+        };
+    }
+    
+    private TfrtSource? ClassifyFile(string path, TfrtFolderContext? context)
     {
         var name = Path.GetFileName(path).ToLowerInvariant();
         
         if (name.StartsWith("trace.json"))
-            return new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = path, Priority = 100 };
+            return new TfrtSource { Type = TfrtSourceType.ProfilerTrace, Path = path, Priority = 100, Context = context };
         
-        if (name.EndsWith(".csv") && IsTfrtCsv(path))
-            return new TfrtSource { Type = TfrtSourceType.CsvExport, Path = path, Priority = 50 };
+        if (name == "overview.json")
+            return new TfrtSource { Type = TfrtSourceType.ProfilerOverview, Path = path, Priority = 90, Context = context };
+        
+        if (name == "benchmark.csv" || (name.EndsWith(".csv") && IsTfrtCsv(path)))
+            return new TfrtSource { Type = TfrtSourceType.BenchmarkCsv, Path = path, Priority = 50, Context = context };
+        
+        if (name == "benchmark.json" && name.EndsWith(".json"))
+            return new TfrtSource { Type = TfrtSourceType.BenchmarkJson, Path = path, Priority = 40, Context = context };
         
         if (name.EndsWith(".log") && IsTfrtLog(path))
-            return new TfrtSource { Type = TfrtSourceType.LogFile, Path = path, Priority = 10 };
+            return new TfrtSource { Type = TfrtSourceType.RuntimeLog, Path = path, Priority = 10, Context = context };
         
         return null;
     }
@@ -234,10 +370,12 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
             var header = reader.ReadLine();
             if (header == null) return false;
             
-            // Look for TFRT-specific columns
-            return header.Contains("latency", StringComparison.OrdinalIgnoreCase) ||
-                   header.Contains("throughput", StringComparison.OrdinalIgnoreCase) ||
-                   header.Contains("memory", StringComparison.OrdinalIgnoreCase);
+            // Required: latency_ms OR equivalent
+            // Optional: throughput, memory_mb, iteration/step
+            var headerLower = header.ToLowerInvariant();
+            return headerLower.Contains("latency") ||
+                   headerLower.Contains("throughput") ||
+                   headerLower.Contains("memory");
         }
         catch
         {
@@ -258,7 +396,8 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
                 // Look for TFRT-specific patterns
                 if (line.Contains("TensorRT", StringComparison.OrdinalIgnoreCase) ||
                     line.Contains("latency_ms", StringComparison.OrdinalIgnoreCase) ||
-                    line.Contains("TF-TRT", StringComparison.OrdinalIgnoreCase))
+                    line.Contains("TF-TRT", StringComparison.OrdinalIgnoreCase) ||
+                    line.Contains("batch size", StringComparison.OrdinalIgnoreCase))
                     return true;
             }
         }
@@ -273,14 +412,45 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
     
     private async Task<TfrtRawData> ParseSourceAsync(TfrtSource source, CancellationToken ct)
     {
-        return source.Type switch
+        var raw = source.Type switch
         {
             TfrtSourceType.ProfilerTrace => await ParseProfilerTraceAsync(source.Path, ct),
-            TfrtSourceType.CsvExport => await ParseCsvExportAsync(source.Path, ct),
-            TfrtSourceType.LogFile => await ParseLogFileAsync(source.Path, ct),
+            TfrtSourceType.ProfilerOverview => await ParseProfilerOverviewAsync(source.Path, ct),
+            TfrtSourceType.BenchmarkCsv => await ParseCsvExportAsync(source.Path, ct),
+            TfrtSourceType.BenchmarkJson => await ParseBenchmarkJsonAsync(source.Path, ct),
+            TfrtSourceType.RuntimeLog => await ParseLogFileAsync(source.Path, ct),
             _ => throw new InvalidOperationException(
                 $"[{TfrtErrorCodes.TFRT_NO_SUPPORTED_EXPORT}] Unknown source type: {source.Type}")
         };
+        
+        // Set context from folder structure
+        raw.WarmupStepsFromConfig = source.Context?.WarmupSteps;
+        raw.SavedModelPath = source.Context?.SavedModelPath;
+        
+        // Validate: must have latency signal
+        if (raw.LatencyMs.Count == 0)
+        {
+            // For logs, this is a warning → expect lower quality
+            if (source.Type == TfrtSourceType.RuntimeLog)
+            {
+                // Log-only: expect warnings in validation
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    $"[{TfrtErrorCodes.TFRT_NO_LATENCY_SIGNAL}] Cannot extract latency signal from {source.Type}");
+            }
+        }
+        
+        // Validate: series lengths must match
+        var stepCount = raw.Steps.Count;
+        if (raw.LatencyMs.Count > 0 && raw.LatencyMs.Count != stepCount)
+        {
+            throw new InvalidOperationException(
+                $"[{TfrtErrorCodes.TFRT_INCONSISTENT_LENGTHS}] Latency length ({raw.LatencyMs.Count}) != steps ({stepCount})");
+        }
+        
+        return raw;
     }
     
     /// <summary>
@@ -367,11 +537,139 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
     }
     
     /// <summary>
+    /// Parse profiler overview.json file.
+    /// </summary>
+    private async Task<TfrtRawData> ParseProfilerOverviewAsync(string path, CancellationToken ct)
+    {
+        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.ProfilerOverview };
+        
+        try
+        {
+            var json = await File.ReadAllTextAsync(path, ct);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            
+            // Overview typically has summary stats, not per-iteration
+            // Try to extract available metrics
+            int step = 0;
+            
+            if (root.TryGetProperty("inference_stats", out var stats) ||
+                root.TryGetProperty("run_stats", out stats))
+            {
+                if (stats.TryGetProperty("avg_latency_ms", out var avgLat))
+                {
+                    raw.LatencyMs.Add(avgLat.GetDouble());
+                    raw.Steps.Add(step++);
+                }
+                
+                if (stats.TryGetProperty("throughput", out var thr))
+                {
+                    raw.ThroughputItemsPerSec.Add(thr.GetDouble());
+                }
+                
+                if (stats.TryGetProperty("peak_memory_bytes", out var mem))
+                {
+                    raw.MemoryBytes.Add(mem.GetInt64());
+                }
+            }
+            
+            // Try to get per-iteration data if available
+            if (root.TryGetProperty("iterations", out var iterations))
+            {
+                foreach (var iter in iterations.EnumerateArray())
+                {
+                    if (iter.TryGetProperty("latency_ms", out var lat))
+                    {
+                        raw.LatencyMs.Add(lat.GetDouble());
+                        raw.Steps.Add(raw.Steps.Count);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"[{TfrtErrorCodes.TFRT_PARSE_FAILED}] Failed to parse overview: {ex.Message}", ex);
+        }
+        
+        return raw;
+    }
+    
+    /// <summary>
+    /// Parse benchmark.json file.
+    /// </summary>
+    private async Task<TfrtRawData> ParseBenchmarkJsonAsync(string path, CancellationToken ct)
+    {
+        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.BenchmarkJson };
+        
+        try
+        {
+            var json = await File.ReadAllTextAsync(path, ct);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            
+            // Look for iterations/results array
+            JsonElement results;
+            if (root.TryGetProperty("results", out results) ||
+                root.TryGetProperty("iterations", out results) ||
+                root.TryGetProperty("benchmarks", out results))
+            {
+                int step = 0;
+                foreach (var item in results.EnumerateArray())
+                {
+                    // Latency
+                    if (item.TryGetProperty("latency_ms", out var lat) ||
+                        item.TryGetProperty("latency", out lat))
+                    {
+                        raw.LatencyMs.Add(lat.GetDouble());
+                    }
+                    
+                    // Throughput
+                    if (item.TryGetProperty("throughput", out var thr) ||
+                        item.TryGetProperty("items_per_sec", out thr))
+                    {
+                        raw.ThroughputItemsPerSec.Add(thr.GetDouble());
+                    }
+                    
+                    // Memory
+                    if (item.TryGetProperty("memory_mb", out var memMb))
+                    {
+                        raw.MemoryBytes.Add((long)(memMb.GetDouble() * 1_000_000));
+                    }
+                    else if (item.TryGetProperty("memory_bytes", out var mem))
+                    {
+                        raw.MemoryBytes.Add(mem.GetInt64());
+                    }
+                    
+                    // Step
+                    if (item.TryGetProperty("step", out var stepVal) ||
+                        item.TryGetProperty("iteration", out stepVal))
+                    {
+                        raw.Steps.Add(stepVal.GetInt32());
+                    }
+                    else
+                    {
+                        raw.Steps.Add(step);
+                    }
+                    step++;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                $"[{TfrtErrorCodes.TFRT_PARSE_FAILED}] Failed to parse benchmark JSON: {ex.Message}", ex);
+        }
+        
+        return raw;
+    }
+    
+    /// <summary>
     /// Parse CSV export.
     /// </summary>
     private async Task<TfrtRawData> ParseCsvExportAsync(string path, CancellationToken ct)
     {
-        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.CsvExport };
+        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.BenchmarkCsv };
         
         try
         {
@@ -468,11 +766,11 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
     }
     
     /// <summary>
-    /// Parse log file.
+    /// Parse log file (last resort - expect warnings).
     /// </summary>
     private async Task<TfrtRawData> ParseLogFileAsync(string path, CancellationToken ct)
     {
-        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.LogFile };
+        var raw = new TfrtRawData { SourcePath = path, SourceType = TfrtSourceType.RuntimeLog };
         
         // Regex patterns for common TFRT log formats
         var latencyRegex = LatencyPattern();
@@ -648,21 +946,44 @@ public sealed partial class TensorFlowRTOfflineConnector : IRunConnector
     {
         var milestones = new List<RuntimeMilestone>();
         
-        // Detect warmup end from latency
-        var latencySeries = scalars.GetByName("latency_ms");
-        if (latencySeries != null)
+        int? warmupEnd = null;
+        
+        // Priority 1: explicit warmup_steps from config.json
+        if (raw.WarmupStepsFromConfig.HasValue)
         {
-            var warmupEnd = SteadyStateDetector.DetectWarmupEnd(latencySeries.Values);
-            if (warmupEnd.HasValue)
+            warmupEnd = raw.WarmupStepsFromConfig.Value;
+            milestones.Add(new RuntimeMilestone
             {
-                milestones.Add(new RuntimeMilestone
+                Type = RuntimeMilestoneType.WarmupEnd,
+                Step = warmupEnd.Value,
+                Label = "Warmup Complete (from config)"
+            });
+        }
+        else
+        {
+            // Priority 2: auto-detect from latency stabilization heuristic
+            var latencySeries = scalars.GetByName("latency_ms");
+            if (latencySeries != null)
+            {
+                warmupEnd = SteadyStateDetector.DetectWarmupEnd(latencySeries.Values);
+                if (warmupEnd.HasValue)
                 {
-                    Type = RuntimeMilestoneType.WarmupEnd,
-                    Step = warmupEnd.Value,
-                    Label = "Warmup Complete"
-                });
-                
-                // Detect steady state
+                    milestones.Add(new RuntimeMilestone
+                    {
+                        Type = RuntimeMilestoneType.WarmupEnd,
+                        Step = warmupEnd.Value,
+                        Label = "Warmup Complete"
+                    });
+                }
+            }
+        }
+        
+        // Detect steady state if we have warmup end
+        if (warmupEnd.HasValue)
+        {
+            var latencySeries = scalars.GetByName("latency_ms");
+            if (latencySeries != null)
+            {
                 var steadyState = SteadyStateDetector.DetectSteadyState(
                     latencySeries.Values, warmupEnd.Value);
                 
@@ -872,6 +1193,14 @@ internal sealed class TfrtRawData
     public List<double> ThroughputItemsPerSec { get; } = [];
     public List<long> MemoryBytes { get; } = [];
     public List<double> WallTimeSeconds { get; } = [];
+    
+    // CPU/GPU load (optional)
+    public List<double> CpuPercent { get; } = [];
+    public List<double> GpuPercent { get; } = [];
+    
+    // Folder context
+    public int? WarmupStepsFromConfig { get; set; }
+    public string? SavedModelPath { get; set; }
 }
 
 #endregion
