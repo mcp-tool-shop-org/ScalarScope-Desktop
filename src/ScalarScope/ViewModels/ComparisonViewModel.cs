@@ -264,9 +264,13 @@ public partial class ComparisonViewModel : ObservableObject
     /// <summary>
     /// Load demo runs directly without file picker.
     /// Called by the demo flow to initialize comparison view.
+    /// Phase 5.2: Includes transition smoothing.
     /// </summary>
-    public void LoadDemoRuns(GeometryRun pathA, GeometryRun pathB)
+    public async void LoadDemoRuns(GeometryRun pathA, GeometryRun pathB)
     {
+        // Phase 5.2: Preserve camera state for continuity
+        TransitionService.PreserveCameraState(1f, 0, 0);
+        
         // Reset any existing state
         if (Player.IsPlaying)
         {
@@ -296,6 +300,13 @@ public partial class ComparisonViewModel : ObservableObject
         // Reset player to start
         Player.JumpToTimeCommand.Execute(0.0);
         NotifyComputedPropertiesChanged();
+        
+        // Phase 5.2: Smooth transition if coming from demo state
+        if (DemoStateService.Instance.IsDemo)
+        {
+            await TransitionService.StartDemoToRealTransition();
+            DemoStateService.Instance.TransitionToRealData();
+        }
     }
 
     private void OnDemoCompleted()
