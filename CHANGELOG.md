@@ -7,6 +7,75 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.0.0] - 2026-02-09
+
+### Added - Phase H: Humanizing & UI/UX Finish
+
+#### Gate H1: Welcome Experience
+- **WelcomePage**: New landing page with first-60-seconds experience
+- **Hero Section**: App icon, title, one-liner promise ("Compare inference runs with scientific rigor")
+- **Trust Badge**: "Reproducible • Auditable • No telemetry"
+- **Primary CTAs**: "Compare Two Runs" and "Open Review Bundle" buttons
+- **Try Example Section**: Onboarding card for new users
+- **Recent Comparisons**: Quick resume list with timestamp and metric summary
+
+#### Gate H2: Design System
+- **DesignSystem.xaml**: Unified visual grammar resource dictionary
+- **Typography Scale**: Hero (32pt), Section (15pt), Body (14pt), Caption (11pt)
+- **Spacing Rhythm**: 4/8/12/16/24/32/40px consistent spacing tokens
+- **Status Chips**: Semantic colors (success/warning/error/neutral) with consistent styling
+- **Card Patterns**: Subtle borders, corner radius, and hover states
+
+#### Gate H3: Navigation Simplification
+- **Reduced Tab Count**: 5 tabs → 4 (Home, Compare, Guide, Settings)
+- **Merged Views**: Consolidated redundant pages for cleaner flow
+- **Tab Bar Styling**: Unified colors and selection states
+
+#### Gate H4: Settings & About Enhancement
+- **Version Display**: Show version with commit hash (2.0.0+7887384)
+- **Privacy Statement**: Added inline privacy explanation
+- **Bundle Hash Explanation**: Help users understand cryptographic integrity
+- **Quick Links**: Documentation, GitHub, Report Issue commands
+
+#### Gate H5: Marketplace Presentation
+- **STORE_LISTING.md**: Complete Microsoft Store presentation pack
+- **Screenshots Guide**: 5 required screenshots with descriptions and alt text
+- **Feature Bullets**: Optimized for Store discovery
+- **Pre-Flight Checklist**: Submission readiness validation
+
+### Added - Prep Phase: Publishing
+
+#### Gate P1: Package Identity Lock
+- **Version 2.0.0.0**: Synchronized across manifest and csproj
+- **InformationalVersion**: Includes commit hash for traceability
+- **Updated Description**: Reflects inference optimization focus
+
+#### Gate P2: Dependencies Included
+- **SelfContained=true**: Bundles full .NET 9 runtime
+- **WindowsAppSDKSelfContained=true**: Bundles Windows App SDK
+- **78MB Package**: Works on clean Windows 10 without prerequisites
+
+#### Gate P3: Signing & MSIXUpload
+- **Unsigned Package**: For Store upload (Store signs during ingestion)
+- **SHA256 Hash**: 0292A6189C522DCEE7EA69F59A0E114ECC0747F23E3B2C5506E1DD11094FB5FE
+
+#### Gate P4: Store Compliance
+- **PRIVACY.md**: Privacy policy (local-only, no data collection)
+- **Accessibility**: AutomationProperties on all interactive controls
+- **Minimal Capabilities**: runFullTrust only (justified for MAUI desktop)
+
+#### Gate P5: Dry Run
+- **44/44 Tests Passing**: Fixture and determinism tests green
+- **Final Artifact**: ScalarScope_v2.0.0.msixupload (78.42 MB)
+
+### Technical
+- `WelcomePage.xaml/.cs`: New landing experience with recent comparisons
+- `WelcomeViewModel.cs`: Recent comparison tracking and navigation
+- `DesignSystem.xaml`: Centralized styles, colors, typography
+- `AppShell.xaml`: Simplified 4-tab navigation
+- `SettingsPage.xaml`: Expanded About section with privacy and links
+- `SettingsViewModel.cs`: OpenDocumentation, OpenGitHub, OpenIssue commands
+
 ## [1.4.0] - 2026-02-09
 
 ### Added - Phase 5: UI Polish & Release Hardening

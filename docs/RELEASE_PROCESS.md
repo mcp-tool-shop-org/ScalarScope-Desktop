@@ -16,7 +16,11 @@ MAJOR.MINOR.PATCH[-PRERELEASE]
 - `alpha.N` - Alpha release (e.g., `1.0.0-alpha.1`)
 
 ### Current Version
-- **1.0.1.1** - Release for Microsoft Store
+- **2.0.0** - Major release for Microsoft Store
+  - New Welcome experience (Phase H)
+  - Unified design system
+  - Simplified navigation (4 tabs)
+  - Self-contained MSIX (78 MB)
 
 ## Release Checklist
 

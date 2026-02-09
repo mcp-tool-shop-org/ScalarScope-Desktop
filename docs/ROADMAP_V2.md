@@ -128,6 +128,35 @@
 
 ---
 
+## Phase H: Humanizing & UI/UX Finish (v2.0) ✅
+*First impressions and daily delight*
+
+### H1: Welcome Experience ✅
+- [x] **WelcomePage**: Clean landing with hero, CTAs, trust badge
+- [x] **Recent Comparisons**: Quick resume with timestamps
+- [x] **Try Example**: Onboarding card for new users
+
+### H2: Design System ✅
+- [x] **DesignSystem.xaml**: Unified visual grammar
+- [x] **Typography Scale**: Hero → Caption hierarchy
+- [x] **Spacing Rhythm**: Consistent 4px-based tokens
+- [x] **Status Chips**: Semantic color-coded badges
+
+### H3: Navigation Simplification ✅
+- [x] **4-Tab Layout**: Home | Compare | Guide | Settings
+- [x] **Merged Views**: Consolidated redundant pages
+
+### H4: Settings & About ✅
+- [x] **Version Display**: With commit hash
+- [x] **Privacy Statement**: Inline explanation
+- [x] **Quick Links**: Docs, GitHub, Issues
+
+### H5: Marketplace Presentation ✅
+- [x] **STORE_LISTING.md**: Complete presentation pack
+- [x] **Pre-Flight Checklist**: Submission readiness
+
+---
+
 ## Design Principles
 
 1. **Every pixel earned**: No visual element without scientific meaning
@@ -151,4 +180,4 @@ These four changes alone will transform the visual quality and set the stage for
 
 ---
 
-*Last updated: 2026-02-08*
+*Last updated: 2026-02-09 (v2.0.0 released!)*

@@ -15,16 +15,14 @@
 | `Ctrl+E` | Quick screenshot (export) |
 | `1-6` | Switch tabs |
 
-## Tabs
+## Tabs (v2.0)
 
 | Tab | Purpose |
-|-----|---------|
-| **Overview** | Load runs, see summary, export options |
-| **Trajectory** | 2D state space with flow field |
-| **Scalars** | Token dimensions as rotating rings |
-| **Geometry** | Eigenvalue spectrum over time |
-| **Compare** | Side-by-side Path A vs Path B |
-| **Failures** | Timeline of failure events |
+|-----|--------|
+| **Home** | Welcome page, recent comparisons, quick actions |
+| **Compare** | Side-by-side Path A vs Path B, delta analysis |
+| **Guide** | Interpretation help, delta glossary |
+| **Settings** | Preferences, About, privacy info |
 
 ## Visual Vocabulary
 
