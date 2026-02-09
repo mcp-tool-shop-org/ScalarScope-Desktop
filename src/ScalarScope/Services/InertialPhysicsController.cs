@@ -166,8 +166,9 @@ public class InertialPhysicsController
     /// <summary>
     /// Smooth zoom to target level with animation.
     /// </summary>
-    public void ZoomTo(float targetZoom, float centerX, float centerY, float durationMs = 300)
+    public void ZoomTo(float targetZoom, float centerX, float centerY, float durationMs = -1)
     {
+        if (durationMs < 0) durationMs = MotionTokens.DurationStandard;
         _targetZoom = Math.Clamp(targetZoom, MinZoom, MaxZoom);
         _ = AnimateZoomAsync(centerX, centerY, durationMs);
     }
@@ -194,8 +195,9 @@ public class InertialPhysicsController
     /// <summary>
     /// Reset pan and zoom to defaults with animation.
     /// </summary>
-    public async Task ResetAsync(float durationMs = 300)
+    public async Task ResetAsync(float durationMs = -1)
     {
+        if (durationMs < 0) durationMs = MotionTokens.DurationStandard;
         StopAnimation();
         _animationCts = new CancellationTokenSource();
 
@@ -240,8 +242,9 @@ public class InertialPhysicsController
     /// <summary>
     /// Animate pan to a specific position.
     /// </summary>
-    public async Task PanToAsync(float x, float y, float durationMs = 300)
+    public async Task PanToAsync(float x, float y, float durationMs = -1)
     {
+        if (durationMs < 0) durationMs = MotionTokens.DurationDeliberate;
         StopAnimation();
         _animationCts = new CancellationTokenSource();
 
