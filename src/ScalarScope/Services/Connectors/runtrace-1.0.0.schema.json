@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/runtrace/runtrace-1.0.0.schema.json",
+  "title": "ScalarScope RunTrace v1.0.0",
+  "description": "Universal representation for training, inference, and evaluation runs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "runType",
+    "framework",
+    "createdUtc",
+    "metadata",
+    "timeline",
+    "scalars",
+    "milestones",
+    "capabilities"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "string", "const": "1.0.0" },
+
+    "runId": { "type": "string", "minLength": 1 },
+    "runType": { "type": "string", "enum": ["training", "inference", "evaluation"] },
+    "framework": { 
+      "type": "string", 
+      "enum": ["tensorflowrt", "tensorflow", "pytorch", "jax", "mlflow", "wandb", "tensorboard", "unknown"] 
+    },
+
+    "createdUtc": { "type": "string", "format": "date-time" },
+    "label": { "type": ["string", "null"] },
+
+    "metadata": { "$ref": "#/$defs/metadata" },
+    "timeline": { "$ref": "#/$defs/timeline" },
+
+    "scalars": { "$ref": "#/$defs/scalars" },
+    "milestones": { "$ref": "#/$defs/milestones" },
+
+    "artifacts": {
+      "type": ["array", "null"],
+      "items": { "$ref": "#/$defs/artifact" }
+    },
+
+    "capabilities": { "$ref": "#/$defs/capabilities" },
+
+    "provenance": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "sourceVersion": { "type": ["string", "null"] },
+        "ingestedUtc": { "type": ["string", "null"], "format": "date-time" },
+        "connectorId": { "type": ["string", "null"] },
+        "connectorVersion": { "type": ["string", "null"] }
+      }
+    }
+  },
+
+  "$defs": {
+    "fingerprint": {
+      "type": "string",
+      "pattern": "^[A-Fa-f0-9]{64}$"
+    },
+
+    "metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "modelFingerprint",
+        "datasetFingerprint",
+        "codeFingerprint",
+        "environmentFingerprint",
+        "seed"
+      ],
+      "properties": {
+        "modelFingerprint": { "$ref": "#/$defs/fingerprint" },
+        "datasetFingerprint": { "$ref": "#/$defs/fingerprint" },
+        "codeFingerprint": { "$ref": "#/$defs/fingerprint" },
+        "environmentFingerprint": { "$ref": "#/$defs/fingerprint" },
+
+        "seed": { "type": ["integer", "null"] },
+
+        "tags": {
+          "type": ["array", "null"],
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+
+        "notes": { "type": ["string", "null"] },
+
+        "frameworkDetails": {
+          "type": ["object", "null"],
+          "additionalProperties": true
+        }
+      }
+    },
+
+    "timeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["steps"],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "integer", "minimum": 0 }
+        },
+        "wallTimeSeconds": {
+          "type": ["array", "null"],
+          "items": { "type": "number", "minimum": 0.0 }
+        },
+        "epoch": {
+          "type": ["array", "null"],
+          "items": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+
+    "scalarSeries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "unit", "values"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "unit": {
+          "type": "string",
+          "enum": [
+            "none",
+            "loss",
+            "accuracy",
+            "percent",
+            "seconds",
+            "milliseconds",
+            "microseconds",
+            "items_per_second",
+            "bytes",
+            "megabytes",
+            "gigabytes",
+            "count"
+          ]
+        },
+        "values": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": ["number", "null"] }
+        },
+        "description": { "type": ["string", "null"] },
+        "sourceKey": { "type": ["string", "null"] },
+        "aggregation": {
+          "type": ["string", "null"],
+          "enum": ["none", "mean", "median", "p50", "p90", "p95", "p99", null]
+        }
+      }
+    },
+
+    "scalars": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["series"],
+      "properties": {
+        "series": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/scalarSeries" }
+        }
+      }
+    },
+
+    "milestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "step"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "epoch_start", 
+            "epoch_end", 
+            "eval", 
+            "checkpoint", 
+            "warmup_end", 
+            "steady_state_start", 
+            "steady_state_end", 
+            "custom"
+          ]
+        },
+        "step": { "type": "integer", "minimum": 0 },
+        "label": { "type": ["string", "null"] },
+        "meta": { "type": ["object", "null"], "additionalProperties": true }
+      }
+    },
+
+    "milestones": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["list"],
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/milestone" }
+        }
+      }
+    },
+
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name", "sha256"],
+      "properties": {
+        "type": { "type": "string", "enum": ["model", "checkpoint", "log", "profile", "other"] },
+        "name": { "type": "string", "minLength": 1 },
+        "path": { "type": ["string", "null"] },
+        "sha256": { "$ref": "#/$defs/fingerprint" },
+        "bytes": { "type": ["integer", "null"], "minimum": 0 },
+        "contentType": { "type": ["string", "null"] }
+      }
+    },
+
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "hasLoss",
+        "hasAccuracy",
+        "hasLatency",
+        "hasThroughput",
+        "hasMemory",
+        "hasCheckpoints",
+        "hasProfiler",
+        "hasEvaluatorVectors",
+        "hasEigenSpectrum"
+      ],
+      "properties": {
+        "hasLoss": { "type": "boolean" },
+        "hasAccuracy": { "type": "boolean" },
+        "hasLatency": { "type": "boolean" },
+        "hasThroughput": { "type": "boolean" },
+        "hasMemory": { "type": "boolean" },
+        "hasCheckpoints": { "type": "boolean" },
+        "hasProfiler": { "type": "boolean" },
+        "hasEvaluatorVectors": { "type": "boolean" },
+        "hasEigenSpectrum": { "type": "boolean" }
+      }
+    }
+  }
+}
