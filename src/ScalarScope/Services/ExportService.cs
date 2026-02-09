@@ -1170,7 +1170,7 @@ public class ExportService
     }
     
     /// <summary>
-    /// Phase 5.4: Draw subtle ScalarScope watermark.
+    /// Phase 5.4/5.5: Draw ScalarScope watermark with version info.
     /// </summary>
     private void DrawWatermark(SKCanvas canvas, int width, int height)
     {
@@ -1181,8 +1181,9 @@ public class ExportService
             IsAntialias = true
         };
         
-        var text = "ScalarScope";
-        canvas.DrawText(text, width - 80, height - 15, SKTextAlign.Left, font, paint);
+        // Phase 5.5: Include version in watermark
+        var text = VersionInfo.GetWatermarkText(includeCommit: false);
+        canvas.DrawText(text, width - 100, height - 15, SKTextAlign.Left, font, paint);
     }
 
     private void DrawGrid(SKCanvas canvas, int width, int height, SKPoint center, float scale, SKColor gridColor)

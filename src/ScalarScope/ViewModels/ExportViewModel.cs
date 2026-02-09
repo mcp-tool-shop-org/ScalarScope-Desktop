@@ -559,7 +559,8 @@ public partial class ExportViewModel : ObservableObject
             Width = Width,
             Height = Height,
             Title = Run?.Metadata?.Condition ?? "ScalarScope Export",
-            Description = $"Training trajectory visualization - t={CurrentTime:P0}",
+            // Phase 5.5: Include version in SVG metadata
+            Description = $"Training trajectory visualization - t={CurrentTime:P0} | {VersionInfo.GetExportFooter()}",
             UseCatmullRomSplines = SvgUseCatmullRom,
             EnableGlow = SvgEnableGlow,
             IncludeGrid = SvgIncludeGrid,

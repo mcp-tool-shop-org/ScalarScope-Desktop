@@ -209,10 +209,10 @@ public static class SocialCardService
         };
         canvas.DrawLine(100, height - 80, width - 100, height - 80, linePaint);
         
-        // Branding
+        // Branding with version
         using var brandFont = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 20);
         using var brandPaint = new SKPaint { Color = SKColor.Parse("#00d9ff"), IsAntialias = true };
-        canvas.DrawText("ScalarScope", 100, height - 40, SKTextAlign.Left, brandFont, brandPaint);
+        canvas.DrawText(VersionInfo.GetWatermarkText(), 100, height - 40, SKTextAlign.Left, brandFont, brandPaint);
         
         // Timestamp/attribution
         using var timestampFont = new SKFont(SKTypeface.Default, 12);
