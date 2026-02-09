@@ -84,18 +84,15 @@ public static class DeterminismService
         int leftTimestepCount,
         int rightTimestepCount)
     {
-        var sb = new StringBuilder();
-        sb.Append(leftRunId ?? "null");
-        sb.Append('|');
-        sb.Append(rightRunId ?? "null");
-        sb.Append('|');
-        sb.Append(alignmentMode);
-        sb.Append('|');
-        sb.Append(leftTimestepCount);
-        sb.Append('|');
-        sb.Append(rightTimestepCount);
+        // Phase 6.1: Use normalized inputs for consistent fingerprinting
+        var normalized = InputNormalizer.NormalizeComparisonInput(
+            leftRunId,
+            rightRunId,
+            leftTimestepCount,
+            rightTimestepCount,
+            alignmentMode);
         
-        var fingerprint = ComputeHashString(sb.ToString());
+        var fingerprint = ComputeHashString(normalized.CanonicalForm);
         LastFingerprint = fingerprint;
         return fingerprint;
     }
