@@ -278,6 +278,29 @@ public static class MotionTokens
     }
 
     /// <summary>
+    /// Check if glow effects should be replaced with solid outlines (reduced motion).
+    /// </summary>
+    public static bool ShouldUseOutlineInsteadOfGlow()
+    {
+        if (AccessibilityService.Instance?.ReducedMotion != true)
+            return false;
+            
+        // In reduced motion, replace all glow/pulse effects with solid outlines
+        return true;
+    }
+
+    /// <summary>
+    /// Check if pulse/blink effects should be replaced with static borders.
+    /// </summary>
+    public static bool ShouldUseStaticBorderInsteadOfPulse()
+    {
+        if (AccessibilityService.Instance?.ReducedMotion != true)
+            return false;
+            
+        return true;
+    }
+
+    /// <summary>
     /// Get the reduced motion substitution for an animation.
     /// </summary>
     public static ReducedMotionBehavior GetReducedBehavior(string animationKey)

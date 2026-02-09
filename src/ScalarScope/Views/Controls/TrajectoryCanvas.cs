@@ -628,6 +628,13 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawTrajectoryGlow(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity, double maxCurvature)
     {
+        // In reduced motion mode, replace glow with solid outline
+        if (Services.MotionTokens.ShouldUseOutlineInsteadOfGlow())
+        {
+            DrawTrajectoryOutline(canvas, points, maxVelocity, maxCurvature);
+            return;
+        }
+        
         using var glowPaint = new SKPaint
         {
             Style = SKPaintStyle.Stroke,
@@ -656,6 +663,34 @@ public class TrajectoryCanvas : SKCanvasView
                 var p2 = ToScreen(points[i].State2D);
                 canvas.DrawLine(p1, p2, glowPaint);
             }
+        }
+    }
+    
+    /// <summary>
+    /// Reduced motion alternative: solid outline instead of glow.
+    /// </summary>
+    private void DrawTrajectoryOutline(SKCanvas canvas, List<TrajectoryTimestep> points, double maxVelocity, double maxCurvature)
+    {
+        using var outlinePaint = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            IsAntialias = true,
+            StrokeCap = SKStrokeCap.Round,
+            StrokeJoin = SKStrokeJoin.Round,
+            StrokeWidth = 6f // Fixed width outline
+        };
+
+        for (int i = 1; i < points.Count; i++)
+        {
+            var t = (float)i / points.Count;
+            var opacity = GetTrailOpacity(t, points.Count);
+            
+            var color = GetTrajectoryColor(points[i], i, points.Count, maxVelocity, maxCurvature);
+            outlinePaint.Color = color.WithAlpha((byte)(60 * opacity)); // Subtle outline
+
+            var p1 = ToScreen(points[i - 1].State2D);
+            var p2 = ToScreen(points[i].State2D);
+            canvas.DrawLine(p1, p2, outlinePaint);
         }
     }
 
@@ -1124,14 +1159,29 @@ public class TrajectoryCanvas : SKCanvasView
 
         var pos = ToScreen(state2D);
 
-        using var glowPaint = new SKPaint
+        // In reduced motion mode, use solid ring instead of glow
+        if (Services.MotionTokens.ShouldUseOutlineInsteadOfGlow())
         {
-            Color = SKColors.White.WithAlpha(100),
-            Style = SKPaintStyle.Fill,
-            IsAntialias = true,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 10)
-        };
-        canvas.DrawCircle(pos, 15, glowPaint);
+            using var ringPaint = new SKPaint
+            {
+                Color = SKColors.White.WithAlpha(150),
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 2,
+                IsAntialias = true
+            };
+            canvas.DrawCircle(pos, 12, ringPaint);
+        }
+        else
+        {
+            using var glowPaint = new SKPaint
+            {
+                Color = SKColors.White.WithAlpha(100),
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true,
+                MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 10)
+            };
+            canvas.DrawCircle(pos, 15, glowPaint);
+        }
 
         using var paint = new SKPaint
         {
