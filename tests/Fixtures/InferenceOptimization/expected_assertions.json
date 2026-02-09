@@ -1,0 +1,122 @@
+{
+  "fixtureSet": "InferenceOptimization_TFRT_v1",
+  "description": "Golden truth assertions for before/after inference optimization comparison tests.",
+  "expected": {
+    "validation": {
+      "baselineValid": true,
+      "optimizedValid": true,
+      "noErrors": true,
+      "baselineRunId": "tfrt-baseline-fixture-001",
+      "optimizedRunId": "tfrt-optimized-fixture-001"
+    },
+    "capabilities": {
+      "baseline": {
+        "hasLatency": true,
+        "hasThroughput": true,
+        "hasMemory": true,
+        "hasLoss": false,
+        "hasAccuracy": false
+      },
+      "optimized": {
+        "hasLatency": true,
+        "hasThroughput": true,
+        "hasMemory": true,
+        "hasLoss": false,
+        "hasAccuracy": false
+      }
+    },
+    "milestones": {
+      "baseline": {
+        "warmup_end": 12,
+        "steady_state_start": 13,
+        "steady_state_end": 19
+      },
+      "optimized": {
+        "warmup_end": 6,
+        "steady_state_start": 7,
+        "steady_state_end": 19
+      }
+    },
+    "fingerprints": {
+      "datasetMustMatch": true,
+      "codeMustMatch": true,
+      "environmentMustMatch": true,
+      "modelMayDiffer": true,
+      "baseline": {
+        "model": "1111111111111111111111111111111111111111111111111111111111111111",
+        "dataset": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "code": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "environment": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "optimized": {
+        "model": "2222222222222222222222222222222222222222222222222222222222222222",
+        "dataset": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "code": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "environment": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      }
+    },
+    "comparisonIntent": {
+      "presetId": "tensorflowrt-runtime-v1",
+      "alignmentMode": "runtimeMilestone",
+      "primaryMilestone": "steady_state_start",
+      "fallbackMilestone": "warmup_end",
+      "labelA": "Baseline",
+      "labelB": "Optimized"
+    },
+    "expectedDeltas": {
+      "deltaTc": {
+        "shouldBePresent": true,
+        "fired": true,
+        "direction": "optimized_stabilizes_earlier",
+        "minDeltaSteps": 3,
+        "notes": "Optimized reaches steady_state_start at step 7 vs baseline at step 13"
+      },
+      "deltaO": {
+        "shouldBePresent": true,
+        "fired": false,
+        "reason": "Both runs are stable in steady state; optimized has zero variance"
+      },
+      "deltaF": {
+        "shouldBePresent": true,
+        "fired": false,
+        "reason": "No outliers in either run"
+      },
+      "deltaTd": {
+        "shouldBeSuppressed": true,
+        "reason": "Training descent not applicable to inference workloads"
+      },
+      "deltaA": {
+        "shouldBeSuppressed": true,
+        "reason": "Accuracy tracking not primary for runtime comparison"
+      }
+    },
+    "steadyStateMetrics": {
+      "baseline": {
+        "latencyMean": 30.0,
+        "latencyStdDev": 0.0,
+        "throughputMean": 33.3
+      },
+      "optimized": {
+        "latencyMean": 24.0,
+        "latencyStdDev": 0.0,
+        "throughputMean": 41.7
+      },
+      "improvement": {
+        "latencyReduction": "20%",
+        "throughputIncrease": "25%"
+      }
+    },
+    "bundleExport": {
+      "shouldSucceed": true,
+      "mustInclude": [
+        "DeltaSpecVersion",
+        "bundleHash",
+        "comparisonId",
+        "fingerprintSummary",
+        "alignmentResult"
+      ],
+      "reviewModeEnabled": true,
+      "recomputeDisabled": true
+    }
+  }
+}

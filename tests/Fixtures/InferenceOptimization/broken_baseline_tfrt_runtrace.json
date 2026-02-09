@@ -1,0 +1,62 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "tfrt-broken-baseline-fixture-001",
+  "runType": "inference",
+  "framework": "tensorflowrt",
+  "createdUtc": "2026-02-09T00:00:00Z",
+  "label": "Broken Baseline",
+  "metadata": {
+    "modelFingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "datasetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "codeFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environmentFingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "seed": 12345,
+    "tags": ["fixture", "tfrt", "broken"],
+    "notes": "Intentionally invalid fixture for validator testing. Violates: non-monotonic steps, scalar length mismatch.",
+    "frameworkDetails": {
+      "device": "GPU:Mock",
+      "batchSize": 1,
+      "inputShape": "[1,224,224,3]",
+      "tfrtVersion": "mock-1.0"
+    }
+  },
+  "timeline": {
+    "steps": [0, 1, 2, 3, 4, 4, 5, 6, 7, 8]
+  },
+  "scalars": {
+    "series": [
+      {
+        "name": "latency_ms",
+        "unit": "milliseconds",
+        "sourceKey": "tfrt/latency_ms",
+        "aggregation": "none",
+        "description": "Latency values intentionally mismatched (8 values for 10 steps).",
+        "values": [50, 45, 42, 40, 38, 37, 36, 35]
+      }
+    ]
+  },
+  "milestones": {
+    "list": [
+      { "type": "warmup_end", "step": 3, "label": "Warmup ends" }
+    ]
+  },
+  "artifacts": [],
+  "capabilities": {
+    "hasLoss": false,
+    "hasAccuracy": false,
+    "hasLatency": true,
+    "hasThroughput": false,
+    "hasMemory": false,
+    "hasCheckpoints": false,
+    "hasProfiler": false,
+    "hasEvaluatorVectors": false,
+    "hasEigenSpectrum": false
+  },
+  "provenance": {
+    "source": "TensorFlowRTOfflineConnector",
+    "sourceVersion": "mock-1.0",
+    "ingestedUtc": "2026-02-09T00:00:00Z",
+    "connectorId": "tensorflowrt-offline",
+    "connectorVersion": "1.0.0"
+  }
+}

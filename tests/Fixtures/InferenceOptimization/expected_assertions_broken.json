@@ -1,0 +1,64 @@
+{
+  "fixture": "tfrt-broken-baseline-fixture-001",
+  "description": "Golden truth for validator rejection of intentionally broken fixture.",
+  "expectedValidation": {
+    "isValid": false,
+    "errorCount": 2,
+    "errors": [
+      {
+        "code": "RT_TIMELINE_NON_MONOTONIC",
+        "severity": "Error",
+        "messageContains": "not strictly increasing",
+        "pathContains": "timeline.steps",
+        "context": {
+          "indexOfViolation": 5,
+          "repeatedValue": 4
+        }
+      },
+      {
+        "code": "RT_SCALAR_LENGTH_MISMATCH",
+        "severity": "Error",
+        "messageContains": "length",
+        "pathContains": "scalars.latency_ms",
+        "context": {
+          "seriesLength": 8,
+          "stepsLength": 10
+        }
+      }
+    ],
+    "warnings": [],
+    "infos": []
+  },
+  "expectedBehavior": {
+    "comparisonBlocked": true,
+    "deltasComputed": false,
+    "bundleExportDisabled": true,
+    "errorExplanationShown": true,
+    "presetApplicationBlocked": true
+  },
+  "expectedUserMessage": {
+    "title": "We couldn't analyze this run",
+    "bullets": [
+      "Timeline steps repeat at index 5",
+      "Latency signal length does not match timeline"
+    ],
+    "actionableAdvice": [
+      "Check that your TFRT export includes one latency value per iteration",
+      "Ensure iteration indices are strictly increasing"
+    ]
+  },
+  "testCases": {
+    "validatorRejectsTrace": {
+      "input": "broken_baseline_tfrt_runtrace.json",
+      "expectedResult": "validation fails with 2 errors"
+    },
+    "comparisonRefused": {
+      "input": ["broken_baseline_tfrt_runtrace.json", "optimized_tfrt_runtrace.json"],
+      "expectedResult": "comparison blocked before delta computation"
+    },
+    "errorCodesStable": {
+      "assertCodes": ["RT_TIMELINE_NON_MONOTONIC", "RT_SCALAR_LENGTH_MISMATCH"],
+      "reason": "Error codes must not change for backwards compatibility"
+    }
+  }
+}

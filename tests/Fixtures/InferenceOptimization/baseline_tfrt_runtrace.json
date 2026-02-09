@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "1.0.0",
+  "runId": "tfrt-baseline-fixture-001",
+  "runType": "inference",
+  "framework": "tensorflowrt",
+  "createdUtc": "2026-02-09T00:00:00Z",
+  "label": "Baseline",
+  "metadata": {
+    "modelFingerprint": "1111111111111111111111111111111111111111111111111111111111111111",
+    "datasetFingerprint": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "codeFingerprint": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "environmentFingerprint": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "seed": 12345,
+    "tags": ["fixture", "tfrt", "baseline"],
+    "notes": "Golden fixture: baseline inference run with longer warmup and higher steady latency.",
+    "frameworkDetails": {
+      "device": "GPU:Mock",
+      "batchSize": 1,
+      "inputShape": "[1,224,224,3]",
+      "tfrtVersion": "mock-1.0"
+    }
+  },
+  "timeline": {
+    "steps": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    "wallTimeSeconds": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+  },
+  "scalars": {
+    "series": [
+      {
+        "name": "latency_ms",
+        "unit": "milliseconds",
+        "sourceKey": "tfrt/latency_ms",
+        "aggregation": "none",
+        "description": "End-to-end inference latency per iteration.",
+        "values": [50, 45, 42, 40, 38, 37, 36, 35, 34, 33, 32, 31, 30, 30, 30, 30, 30, 30, 30, 30]
+      },
+      {
+        "name": "throughput_items_per_sec",
+        "unit": "items_per_second",
+        "sourceKey": "tfrt/throughput",
+        "aggregation": "none",
+        "description": "Throughput derived from per-iteration time.",
+        "values": [20.0, 22.2, 23.8, 25.0, 26.3, 27.0, 27.8, 28.6, 29.4, 30.3, 31.3, 32.3, 33.3, 33.3, 33.3, 33.3, 33.3, 33.3, 33.3, 33.3]
+      },
+      {
+        "name": "memory_mb",
+        "unit": "megabytes",
+        "sourceKey": "tfrt/memory_mb",
+        "aggregation": "none",
+        "description": "Peak memory during inference iteration (mock).",
+        "values": [520, 520, 521, 521, 522, 522, 523, 523, 524, 524, 525, 525, 526, 526, 526, 526, 526, 526, 526, 526]
+      }
+    ]
+  },
+  "milestones": {
+    "list": [
+      { "type": "warmup_end", "step": 12, "label": "Warmup ends" },
+      { "type": "steady_state_start", "step": 13, "label": "Steady state begins" },
+      { "type": "steady_state_end", "step": 19, "label": "Steady state ends" }
+    ]
+  },
+  "artifacts": [
+    {
+      "type": "profile",
+      "name": "trace.json",
+      "path": "profiler/trace.json",
+      "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "bytes": 123456,
+      "contentType": "application/json"
+    }
+  ],
+  "capabilities": {
+    "hasLoss": false,
+    "hasAccuracy": false,
+    "hasLatency": true,
+    "hasThroughput": true,
+    "hasMemory": true,
+    "hasCheckpoints": false,
+    "hasProfiler": true,
+    "hasEvaluatorVectors": false,
+    "hasEigenSpectrum": false
+  },
+  "provenance": {
+    "source": "TensorFlowRTOfflineConnector",
+    "sourceVersion": "mock-1.0",
+    "ingestedUtc": "2026-02-09T00:00:00Z",
+    "connectorId": "tensorflowrt-offline",
+    "connectorVersion": "1.0.0"
+  }
+}
