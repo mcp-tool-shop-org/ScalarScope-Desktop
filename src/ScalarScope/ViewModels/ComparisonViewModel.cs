@@ -102,6 +102,46 @@ public partial class ComparisonViewModel : ObservableObject
     [ObservableProperty]
     private bool _isCompareMode;
 
+    // Phase 5.2: State preservation for mode continuity
+    private double _preservedTime;
+    private string? _preservedHighlightedDeltaId;
+    private string? _preservedLeftRunName;
+    private string? _preservedRightRunName;
+
+    /// <summary>
+    /// Phase 5.2: Preserve current focus state before mode transition.
+    /// </summary>
+    public void PreserveFocusState()
+    {
+        _preservedTime = Player.Time;
+        _preservedHighlightedDeltaId = HighlightedDeltaId;
+        _preservedLeftRunName = LeftRunName;
+        _preservedRightRunName = RightRunName;
+    }
+
+    /// <summary>
+    /// Phase 5.2: Restore focus state after mode transition.
+    /// Run labels persist; last focus region preserved.
+    /// </summary>
+    public void RestoreFocusState()
+    {
+        // Restore playback position if valid
+        if (_preservedTime > 0 && _preservedTime <= Player.Duration)
+        {
+            Player.JumpToTimeCommand.Execute(_preservedTime);
+        }
+        
+        // Restore highlighted delta if still valid
+        if (!string.IsNullOrEmpty(_preservedHighlightedDeltaId))
+        {
+            var stillExists = CanonicalDeltas?.Any(d => d.Id == _preservedHighlightedDeltaId) ?? false;
+            if (stillExists)
+            {
+                HighlightedDeltaId = _preservedHighlightedDeltaId;
+            }
+        }
+    }
+
     // Collection of runs for overlay view
     public List<GeometryRun> OverlayRuns => [.. (new[] { LeftRun, RightRun }).OfType<GeometryRun>()];
 
@@ -465,6 +505,10 @@ public partial class ComparisonViewModel : ObservableObject
 
     private void UpdateComparisonState()
     {
+        // Phase 5.2: Preserve focus state before mode change
+        var wasCompareMode = IsCompareMode;
+        PreserveFocusState();
+        
         HasBothRuns = HasLeftRun && HasRightRun;
         IsCompareMode = HasBothRuns;
 
@@ -479,7 +523,8 @@ public partial class ComparisonViewModel : ObservableObject
             var anchors = TemporalAlignmentService.GetAnchors(LeftRun, RightRun, SelectedAlignment);
             AlignmentDescription = anchors.AnchorDescription;
             
-            Player.JumpToTimeCommand.Execute(0.0);
+            // Phase 5.2: Restore focus state after mode transition
+            RestoreFocusState();
         }
         else
         {
