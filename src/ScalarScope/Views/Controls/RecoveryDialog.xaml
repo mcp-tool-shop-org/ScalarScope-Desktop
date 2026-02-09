@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Phase 6.3.5: Recovery dialog for restoring previous sessions -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.RecoveryDialog">
+    
+    <Border x:Name="DialogContainer"
+            IsVisible="False"
+            BackgroundColor="#1A1A1A"
+            StrokeThickness="1"
+            Stroke="#3A3A3A"
+            Padding="20"
+            MaximumWidthRequest="500">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="12" />
+        </Border.StrokeShape>
+        
+        <VerticalStackLayout Spacing="16">
+            <!-- Header -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Frame Grid.Column="0" 
+                       BackgroundColor="#2A3A2A" 
+                       BorderColor="Transparent"
+                       CornerRadius="20"
+                       Padding="8"
+                       WidthRequest="40"
+                       HeightRequest="40"
+                       VerticalOptions="Center">
+                    <Label Text="⟲" 
+                           FontSize="20" 
+                           TextColor="#6BCB77"
+                           HorizontalOptions="Center"
+                           VerticalOptions="Center" />
+                </Frame>
+                
+                <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="12,0" VerticalOptions="Center">
+                    <Label Text="Recover Previous Session" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White" />
+                    <Label x:Name="SubtitleLabel"
+                           Text="Found 1 session that can be restored" 
+                           FontSize="12"
+                           TextColor="#888888" />
+                </VerticalStackLayout>
+                
+                <Button Grid.Column="2"
+                        Text="✕"
+                        BackgroundColor="Transparent"
+                        TextColor="#888888"
+                        WidthRequest="32"
+                        HeightRequest="32"
+                        CornerRadius="16"
+                        Padding="0"
+                        FontSize="16"
+                        Clicked="OnCloseClicked" />
+            </Grid>
+            
+            <!-- Session list -->
+            <ScrollView MaximumHeightRequest="300">
+                <VerticalStackLayout x:Name="SessionsContainer" Spacing="8">
+                    <!-- Sessions added dynamically -->
+                </VerticalStackLayout>
+            </ScrollView>
+            
+            <!-- No sessions message -->
+            <Label x:Name="NoSessionsLabel"
+                   Text="No sessions available for recovery."
+                   FontSize="14"
+                   TextColor="#666666"
+                   HorizontalOptions="Center"
+                   IsVisible="False" />
+            
+            <!-- Actions -->
+            <Grid ColumnDefinitions="*,Auto,Auto" Margin="0,8,0,0">
+                <Button x:Name="ClearAllButton"
+                        Grid.Column="0"
+                        Text="Clear All"
+                        BackgroundColor="Transparent"
+                        TextColor="#666666"
+                        HorizontalOptions="Start"
+                        HeightRequest="36"
+                        Padding="12,0"
+                        FontSize="12"
+                        Clicked="OnClearAllClicked" />
+                
+                <Button Grid.Column="1"
+                        Text="Start Fresh"
+                        BackgroundColor="#2A2A2A"
+                        TextColor="#AAAAAA"
+                        BorderWidth="0"
+                        CornerRadius="6"
+                        HeightRequest="36"
+                        Padding="16,0"
+                        FontSize="13"
+                        Margin="0,0,8,0"
+                        Clicked="OnStartFreshClicked" />
+                
+                <Button x:Name="RestoreButton"
+                        Grid.Column="2"
+                        Text="Restore Selected"
+                        BackgroundColor="#2A4A2A"
+                        TextColor="#6BCB77"
+                        BorderWidth="0"
+                        CornerRadius="6"
+                        HeightRequest="36"
+                        Padding="16,0"
+                        FontSize="13"
+                        IsEnabled="False"
+                        Clicked="OnRestoreClicked" />
+            </Grid>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>
