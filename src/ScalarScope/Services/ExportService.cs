@@ -1096,6 +1096,93 @@ public class ExportService
         {
             DrawEigenSpectrum(canvas, run, time, width, height);
         }
+        
+        // Phase 5.4: Draw shareability overlays
+        if (options.IncludeLegend)
+        {
+            DrawLegend(canvas, width, height, accentColor);
+        }
+        
+        if (options.IncludeWatermark)
+        {
+            DrawWatermark(canvas, width, height);
+        }
+    }
+    
+    /// <summary>
+    /// Phase 5.4: Draw legend explaining visual elements.
+    /// </summary>
+    private void DrawLegend(SKCanvas canvas, int width, int height, SKColor accentColor)
+    {
+        var legendX = 20f;
+        var legendY = height - 100f;
+        var lineHeight = 20f;
+        
+        using var boxPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#1a1a2e").WithAlpha(220),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        
+        using var borderPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#2a2a4e"),
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1,
+            IsAntialias = true
+        };
+        
+        // Draw legend box
+        var legendRect = new SKRect(legendX - 10, legendY - 10, legendX + 180, height - 10);
+        canvas.DrawRoundRect(legendRect, 6, 6, boxPaint);
+        canvas.DrawRoundRect(legendRect, 6, 6, borderPaint);
+        
+        using var textFont = new SKFont(SKTypeface.Default, 11);
+        using var textPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#aaa"),
+            IsAntialias = true
+        };
+        
+        using var symbolPaint = new SKPaint
+        {
+            Color = accentColor,
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        
+        // Legend items
+        var items = new[]
+        {
+            ("━", "Trajectory"),
+            ("●", "Current position"),
+            ("→", "Professor vectors"),
+            ("▰", "Eigenvalue spectrum")
+        };
+        
+        for (int i = 0; i < items.Length; i++)
+        {
+            var y = legendY + i * lineHeight;
+            canvas.DrawText(items[i].Item1, legendX, y, SKTextAlign.Left, textFont, symbolPaint);
+            canvas.DrawText(items[i].Item2, legendX + 25, y, SKTextAlign.Left, textFont, textPaint);
+        }
+    }
+    
+    /// <summary>
+    /// Phase 5.4: Draw subtle ScalarScope watermark.
+    /// </summary>
+    private void DrawWatermark(SKCanvas canvas, int width, int height)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Normal), 10);
+        using var paint = new SKPaint
+        {
+            Color = SKColor.Parse("#666").WithAlpha(128),
+            IsAntialias = true
+        };
+        
+        var text = "ScalarScope";
+        canvas.DrawText(text, width - 80, height - 15, SKTextAlign.Left, font, paint);
     }
 
     private void DrawGrid(SKCanvas canvas, int width, int height, SKPoint center, float scale, SKColor gridColor)
