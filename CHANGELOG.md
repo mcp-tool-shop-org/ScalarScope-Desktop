@@ -7,6 +7,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-02-09
+
+### Added - Phase 5: UI Polish & Release Hardening
+
+#### Gate 5.1: Idle Calm
+- **Demo State Service**: Orchestrates idle animations across components
+- **Pulse Breathing**: Subtle glow animations reduced during active comparison
+- **Respiration Hook**: Animation intensity responds to user activity
+
+#### Gate 5.2: State Continuity & Transitions
+- **Focus Preservation**: Single→Compare mode switch preserves scroll/focus state
+- **Choreographed Navigation**: "Show me" commands animate smoothly to anchors
+- **Loading Skeletons**: Unified PlotScaffold and DeltaList loading states
+- **No-Flicker Policy**: LayoutDebouncer prevents rapid layout thrashing
+
+#### Gate 5.3: Confidence ↔ Intensity
+- **Confidence Tokens**: Tiered visual weight (High/Medium/Low/Negligible)
+- **Glow Modulation**: Highlight intensity correlates with confidence level
+- **Confidence Badges**: Color-coded badges (HIGH/MED/LOW/???) on deltas
+- **Tooltip Prefixes**: "High confidence:", "Medium confidence:" in explanations
+- **Accessibility Labels**: SemanticProperties and AutomationProperties
+
+#### Gate 5.4: Shareability Polish
+- **Screenshot Ready Options**: IncludeWatermark, IncludeLegend, IncludeConfidenceBadges
+- **Copy Cards**: Plain-text, Markdown, and summary card formats for deltas
+- **Export Branding**: Legend and watermark drawing in exports
+- **Plain-Language Export**: Non-technical executive summaries for stakeholders
+- **Social Card Templates**: Twitter (1200x628), LinkedIn (1200x627), Slide (1920x1080)
+
+#### Gate 5.5: Release Hardening
+- **Version Watermark**: VersionInfo service embeds version in all exports
+- **CI Validation**: Enhanced pipeline with version tracking and build summaries
+- **Error Boundary**: Graceful error handling with user-friendly messages
+- **Performance Profiler**: Gate thresholds for frame time, delta calc, exports
+
+### Technical
+- `DemoStateService`: Singleton for coordinating idle animations
+- `ConfidenceTokens`: Maps confidence values to visual weight
+- `LayoutDebouncer`/`AxisRangeInterpolator`: Smooth layout transitions
+- `DeltaCopyService`: Multi-format copy card generation
+- `SocialCardService`: Social media-optimized image export
+- `VersionInfo`: Assembly version metadata access
+- `ErrorBoundary`: Safe execution wrappers with retry/timeout
+- `PerformanceProfiler`: Timing metrics with percentile support
+
 ## [1.3.0] - 2026-02-08
 
 ### Added
