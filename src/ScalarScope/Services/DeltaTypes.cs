@@ -218,6 +218,15 @@ public record DeltaComputationResult
     public required AlignmentMap Alignment { get; init; }
     public required List<CanonicalDelta> Deltas { get; init; }
     public string? ComparativeSummary { get; init; }
+    
+    /// <summary>Phase 6.1: Hash of delta outputs for reproducibility verification.</summary>
+    public string? DeltaHash { get; init; }
+    
+    /// <summary>Phase 6.1: Input fingerprint for determinism tracking.</summary>
+    public string? InputFingerprint { get; init; }
+    
+    /// <summary>Phase 6.1: Reproducibility metadata for exports.</summary>
+    public ReproducibilityMetadata? Reproducibility { get; init; }
 }
 
 /// <summary>

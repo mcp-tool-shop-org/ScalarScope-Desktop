@@ -32,11 +32,20 @@ public static class CanonicalDeltaService
         var deltas = ComputeDeltas(leftRun, rightRun, alignment, currentTime, config, alignmentMap);
         var summary = GenerateAutoSummary(deltas);
 
+        // Phase 6.1: Compute delta hash for reproducibility verification
+        var deltaHash = DeterminismService.ComputeDeltaHash(
+            deltas.Select(d => new { d.Id, d.Status, d.Confidence, d.Explanation }));
+        var inputFingerprint = DeterminismService.LastFingerprint;
+        var reproducibility = DeterminismService.GetReproducibilityMetadata();
+
         return new DeltaComputationResult
         {
             Alignment = alignmentMap,
             Deltas = deltas,
-            ComparativeSummary = summary
+            ComparativeSummary = summary,
+            DeltaHash = deltaHash,
+            InputFingerprint = inputFingerprint,
+            Reproducibility = reproducibility
         };
     }
 
