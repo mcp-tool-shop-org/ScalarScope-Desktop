@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.BundleIntegrityPanel"
+             x:Name="panelRoot">
+    
+    <!-- Phase 7.2.3: Bundle Integrity Panel
+         Displays bundle hash and verification status.
+         Used for verifying imported bundles and showing export hashes.
+    -->
+    
+    <Border BackgroundColor="#12121f"
+            StrokeThickness="1"
+            Stroke="#2a2a4e"
+            Padding="12"
+            StrokeShape="RoundRectangle 6">
+        <VerticalStackLayout Spacing="10">
+            
+            <!-- Header -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Label Grid.Column="0"
+                       Text="🔒"
+                       TextColor="{Binding StatusColor, Source={x:Reference panelRoot}}"
+                       FontSize="16"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="1"
+                       Text="Bundle Integrity"
+                       TextColor="#ddd"
+                       FontSize="13"
+                       FontAttributes="Bold"
+                       Margin="8,0,0,0"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="2"
+                       Text="{Binding StatusText, Source={x:Reference panelRoot}}"
+                       TextColor="{Binding StatusColor, Source={x:Reference panelRoot}}"
+                       FontSize="11"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+            </Grid>
+            
+            <!-- Bundle Hash -->
+            <Grid ColumnDefinitions="Auto,*,Auto" IsVisible="{Binding HasBundleHash, Source={x:Reference panelRoot}}">
+                <Label Grid.Column="0"
+                       Text="Hash:"
+                       TextColor="#888"
+                       FontSize="11"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="1"
+                       x:Name="hashLabel"
+                       Text="{Binding DisplayHash, Source={x:Reference panelRoot}}"
+                       TextColor="#00d9ff"
+                       FontSize="10"
+                       FontFamily="Consolas"
+                       Margin="8,0"
+                       VerticalOptions="Center"
+                       LineBreakMode="TailTruncation"/>
+                <Button Grid.Column="2"
+                        Text="📋"
+                        TextColor="#888"
+                        BackgroundColor="Transparent"
+                        FontSize="10"
+                        Padding="4,2"
+                        ToolTipProperties.Text="Copy full hash"
+                        Clicked="OnCopyHashClicked"/>
+            </Grid>
+            
+            <!-- File Count -->
+            <HorizontalStackLayout Spacing="8" IsVisible="{Binding HasVerification, Source={x:Reference panelRoot}}">
+                <Label Text="Files verified:"
+                       TextColor="#888"
+                       FontSize="11"/>
+                <Label Text="{Binding FileCountText, Source={x:Reference panelRoot}}"
+                       TextColor="#aaa"
+                       FontSize="11"/>
+            </HorizontalStackLayout>
+            
+            <!-- Issues List (if any) -->
+            <VerticalStackLayout x:Name="issuesContainer"
+                                 Spacing="4"
+                                 IsVisible="{Binding HasIssues, Source={x:Reference panelRoot}}">
+                <Label Text="Issues:" TextColor="#F59E0B" FontSize="11" FontAttributes="Bold"/>
+            </VerticalStackLayout>
+            
+            <!-- Verify Button -->
+            <Button x:Name="verifyButton"
+                    Text="Verify Integrity"
+                    TextColor="#000"
+                    BackgroundColor="#00d9ff"
+                    FontSize="11"
+                    Padding="12,8"
+                    CornerRadius="4"
+                    IsVisible="{Binding ShowVerifyButton, Source={x:Reference panelRoot}}"
+                    Clicked="OnVerifyClicked"/>
+            
+            <!-- Timestamp -->
+            <Label Text="{Binding TimestampText, Source={x:Reference panelRoot}}"
+                   TextColor="#666"
+                   FontSize="10"
+                   HorizontalOptions="End"
+                   IsVisible="{Binding HasTimestamp, Source={x:Reference panelRoot}}"/>
+        </VerticalStackLayout>
+    </Border>
+</ContentView>
