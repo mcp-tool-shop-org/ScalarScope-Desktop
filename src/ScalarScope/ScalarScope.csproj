@@ -21,22 +21,25 @@
 		<!-- App Identifier -->
 		<ApplicationId>org.mcptoolshop.scalarscope</ApplicationId>
 
-		<!-- Versions - Phase 5 Release -->
-		<ApplicationDisplayVersion>1.4.0</ApplicationDisplayVersion>
-		<ApplicationVersion>12</ApplicationVersion>
-		<Version>1.4.0.0</Version>
+		<!-- Versions - v2.0.0 Store Release -->
+		<ApplicationDisplayVersion>2.0.0</ApplicationDisplayVersion>
+		<ApplicationVersion>20</ApplicationVersion>
+		<Version>2.0.0.0</Version>
+		<InformationalVersion>2.0.0+7887384</InformationalVersion>
 
 		<!-- Package metadata -->
 		<Authors>ScalarScope Project (mcp-tool-shop-org)</Authors>
 		<Company>mcp-tool-shop-org</Company>
 		<Product>ScalarScope</Product>
-		<Description>Visualization tool for machine learning training dynamics. Provides time-synchronized playback, side-by-side comparison, annotation overlays, and export functionality for analyzing learned critic trajectories.</Description>
+		<Description>Compare inference optimization runs with scientific rigor. Measure convergence, latency, and throughput deltas. Export reproducible review bundles with cryptographic integrity.</Description>
 		<Copyright>Copyright © 2025-2026 ScalarScope Project</Copyright>
 		<PackageTags>visualization;machine-learning;training;skiasharp;maui</PackageTags>
 
 		<!-- Windows packaging for Microsoft Store -->
 		<WindowsPackageType>MSIX</WindowsPackageType>
 		<WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+		<SelfContained>true</SelfContained>
+		<RuntimeIdentifier Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">win-x64</RuntimeIdentifier>
 		
 		<!-- Disable ReadyToRun for CI compatibility - RID constraints cause issues in GitHub Actions -->
 		<PublishReadyToRun>false</PublishReadyToRun>

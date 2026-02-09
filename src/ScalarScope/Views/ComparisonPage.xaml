@@ -50,7 +50,9 @@
                             TextColor="#0f0f1a"
                             FontSize="11"
                             Padding="10,5"
-                            HeightRequest="32"/>
+                            HeightRequest="32"
+                            AutomationProperties.Name="Load Path A"
+                            AutomationProperties.HelpText="Load the baseline run for comparison"/>
                 </Grid>
             </Border>
 
@@ -87,7 +89,9 @@
                         Padding="8,3"
                         HeightRequest="26"
                         CornerRadius="4"
-                        IsVisible="{Binding IsDemoMode, Converter={StaticResource InverseBoolConverter}}"/>
+                        IsVisible="{Binding IsDemoMode, Converter={StaticResource InverseBoolConverter}}"
+                        AutomationProperties.Name="Open Bundle"
+                        AutomationProperties.HelpText="Open a previously exported comparison bundle file"/>
             </VerticalStackLayout>
 
             <!-- Right Run Loader -->
@@ -115,7 +119,9 @@
                             TextColor="White"
                             FontSize="11"
                             Padding="10,5"
-                            HeightRequest="32"/>
+                            HeightRequest="32"
+                            AutomationProperties.Name="Load Path B"
+                            AutomationProperties.HelpText="Load the correlated run for comparison"/>
                 </Grid>
             </Border>
         </Grid>

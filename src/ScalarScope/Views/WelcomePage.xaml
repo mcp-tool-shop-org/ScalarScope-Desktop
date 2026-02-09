@@ -114,12 +114,16 @@
                     <Button Text="Compare Two Runs"
                             Style="{StaticResource PrimaryCTA}"
                             Command="{Binding NavigateToCompareCommand}"
-                            HorizontalOptions="Fill"/>
+                            HorizontalOptions="Fill"
+                            AutomationProperties.Name="Compare Two Runs"
+                            AutomationProperties.HelpText="Navigate to the comparison page to load and compare two inference runs"/>
                     
                     <Button Text="📦  Open Review Bundle"
                             Style="{StaticResource SecondaryCTA}"
                             Command="{Binding OpenBundleCommand}"
-                            HorizontalOptions="Fill"/>
+                            HorizontalOptions="Fill"
+                            AutomationProperties.Name="Open Review Bundle"
+                            AutomationProperties.HelpText="Open a previously exported comparison bundle file"/>
                 </VerticalStackLayout>
                 
                 <!-- Try Example Section -->
