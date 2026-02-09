@@ -1,17 +1,20 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:ScalarScope.Views.Controls"
              x:Class="ScalarScope.Views.Controls.DeltaZone"
              x:Name="deltaZoneRoot">
     
     <!-- Delta Zone: Summarizes differences, not raw values.
          Phase 3: Make Comparison the Star
+         Phase 4: Added "Why?" panel for teaching
          
          Design principles:
          - Visually quieter than paths, but readable
          - Ordered by explanatory power (causal salience)
          - Supports hover-to-highlight source
          - Empty state: "No meaningful divergence observed"
+         - "Why?" panel explains delta justification (Phase 4)
     -->
     
     <Border BackgroundColor="#12121f"
@@ -19,19 +22,44 @@
             Stroke="#2a2a4e"
             Padding="12,10"
             StrokeShape="RoundRectangle 8">
-        <Grid RowDefinitions="Auto,Auto,*">
-            <!-- Header -->
-            <HorizontalStackLayout Grid.Row="0" Spacing="8">
-                <Label Text="⟷" TextColor="#ffd93d" FontSize="14"/>
-                <Label Text="Differences" 
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+            <!-- Header with Why? and Copy buttons -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                <Label Grid.Column="0" Text="⟷" TextColor="#ffd93d" FontSize="14"/>
+                <Label Grid.Column="1" 
+                       Text="Differences" 
                        TextColor="#ffd93d" 
                        FontSize="13" 
-                       FontAttributes="Bold"/>
-                <Label Text="{Binding DeltaCount, Source={x:Reference deltaZoneRoot}, StringFormat='({0})'}"
+                       FontAttributes="Bold"
+                       Margin="8,0,0,0"/>
+                <Label Grid.Column="2"
+                       Text="{Binding DeltaCount, Source={x:Reference deltaZoneRoot}, StringFormat='({0})'}"
                        TextColor="#666"
                        FontSize="11"
-                       VerticalOptions="Center"/>
-            </HorizontalStackLayout>
+                       VerticalOptions="Center"
+                       Margin="6,0,0,0"/>
+                <Button Grid.Column="3"
+                        x:Name="copyButton"
+                        Text="📋"
+                        ToolTipProperties.Text="Copy comparison summary"
+                        FontSize="11"
+                        TextColor="#888"
+                        BackgroundColor="Transparent"
+                        Padding="6,4"
+                        CornerRadius="4"
+                        IsVisible="{Binding HasDeltas, Source={x:Reference deltaZoneRoot}}"
+                        Clicked="OnCopySummaryClicked"/>
+                <Button Grid.Column="4"
+                        x:Name="whyButton"
+                        Text="Why?"
+                        FontSize="10"
+                        TextColor="#00d9ff"
+                        BackgroundColor="#1a1a3e"
+                        Padding="8,4"
+                        CornerRadius="4"
+                        IsVisible="{Binding HasDeltas, Source={x:Reference deltaZoneRoot}}"
+                        Clicked="OnWhyClicked"/>
+            </Grid>
             
             <!-- Alignment indicator -->
             <HorizontalStackLayout Grid.Row="1" Spacing="6" Margin="0,6,0,8">
@@ -56,6 +84,14 @@
                 <!-- Delta items (generated in code-behind) -->
                 <VerticalStackLayout x:Name="deltaItemsContainer" Spacing="6"/>
             </VerticalStackLayout>
+            
+            <!-- Why? panel (Phase 4) -->
+            <controls:DeltaWhyPanel Grid.Row="3"
+                                    x:Name="whyPanel"
+                                    Delta="{Binding SelectedDelta, Source={x:Reference deltaZoneRoot}}"
+                                    AccentColor="{Binding SelectedDeltaColor, Source={x:Reference deltaZoneRoot}}"
+                                    IsExpanded="{Binding IsWhyPanelExpanded, Source={x:Reference deltaZoneRoot}}"
+                                    Margin="0,8,0,0"/>
         </Grid>
     </Border>
 </ContentView>

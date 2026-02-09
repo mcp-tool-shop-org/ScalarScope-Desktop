@@ -2,17 +2,193 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="ScalarScope.Views.HelpPage"
-             Title="Help"
+             Title="Interpretation Guide"
              BackgroundColor="{AppThemeBinding Light=#F5F5F5, Dark=#0f0f1a}">
 
     <ScrollView>
         <VerticalStackLayout Padding="24" Spacing="24">
 
             <!-- Header -->
-            <Label Text="How to Read ScalarScope"
+            <Label Text="Interpretation Guide"
                    FontSize="28"
                    FontAttributes="Bold"
                    TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" />
+
+            <!-- Search/Filter Bar -->
+            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   StrokeShape="RoundRectangle 8"
+                   Padding="12">
+                <SearchBar x:Name="searchBar"
+                          Placeholder="Search deltas, metrics, visualizations..."
+                          PlaceholderColor="{AppThemeBinding Light=#999999, Dark=#666666}"
+                          TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}"
+                          BackgroundColor="Transparent"
+                          SearchCommand="{x:Null}"
+                          TextChanged="OnSearchTextChanged" />
+            </Border>
+
+            <!-- Delta Glossary - Primary Section -->
+            <Border x:Name="deltaGlossarySection"
+                   BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   Stroke="#ff6b6b"
+                   StrokeShape="RoundRectangle 12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Delta Glossary (δ-spec v3.2.0)"
+                           FontSize="20"
+                           FontAttributes="Bold"
+                           TextColor="#ff6b6b" />
+                    <Label Text="Each delta below explains what fired and why. Click 'See in context' to view an example."
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
+                           FontSize="13" />
+
+                    <!-- ΔF (Failure Rate) -->
+                    <Border x:Name="deltaFSection"
+                           BackgroundColor="{AppThemeBinding Light=#FFF5F5, Dark=#2a1a1a}"
+                           Stroke="#ff6b6b"
+                           StrokeShape="RoundRectangle 8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="ΔF" FontSize="18" FontAttributes="Bold" TextColor="#ff6b6b" VerticalOptions="Center" />
+                                <Label Text="Failure Rate Delta" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="When it fires: σ(FA - FB) ≥ 0.05 (failure rates differ by ≥5%)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="What it means: One training path produces significantly more failed outputs than the other. A lower failure rate indicates more reliable convergence."
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}" />
+                            <Label Text="Guardrail: Confidence depends on sample size. Small n may cause noisy estimates."
+                                   TextColor="#ffd93d" FontSize="12" FontAttributes="Italic" />
+                            <Button Text="See in context →"
+                                    Clicked="OnSeeInContextClicked"
+                                    CommandParameter="failure"
+                                    BackgroundColor="#ff6b6b"
+                                    TextColor="White"
+                                    CornerRadius="6"
+                                    HeightRequest="32"
+                                    Padding="12,0"
+                                    HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ΔTc (Convergence Time) -->
+                    <Border x:Name="deltaTcSection"
+                           BackgroundColor="{AppThemeBinding Light=#F5F5FF, Dark=#1a1a2e}"
+                           Stroke="#4ecdc4"
+                           StrokeShape="RoundRectangle 8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="ΔTc" FontSize="18" FontAttributes="Bold" TextColor="#4ecdc4" VerticalOptions="Center" />
+                                <Label Text="Convergence Time Delta" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="When it fires: |TcA - TcB| ≥ 10% of max(TcA, TcB)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="What it means: Training paths reach stable loss at different rates. Faster convergence isn't always better—it may indicate premature convergence to a suboptimal minimum."
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}" />
+                            <Label Text="Guardrail: Consider ΔTc alongside final loss values. Fast + bad loss = concerning."
+                                   TextColor="#ffd93d" FontSize="12" FontAttributes="Italic" />
+                            <Button Text="See in context →"
+                                    Clicked="OnSeeInContextClicked"
+                                    CommandParameter="convergence"
+                                    BackgroundColor="#4ecdc4"
+                                    TextColor="#0f0f1a"
+                                    CornerRadius="6"
+                                    HeightRequest="32"
+                                    Padding="12,0"
+                                    HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ΔTd (Dominance Time) -->
+                    <Border x:Name="deltaTdSection"
+                           BackgroundColor="{AppThemeBinding Light=#FFF8F0, Dark=#2a2a1a}"
+                           Stroke="#ff9f43"
+                           StrokeShape="RoundRectangle 8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="ΔTd" FontSize="18" FontAttributes="Bold" TextColor="#ff9f43" VerticalOptions="Center" />
+                                <Label Text="Dominance Time Delta" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="When it fires: |TdA - TdB| ≥ 15% of max(TdA, TdB) where Td = epoch when λ₁/Σλ ≥ 0.7"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="What it means: Paths develop eigenvalue dominance at different rates. Earlier dominance suggests faster emergence of a shared evaluative axis."
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}" />
+                            <Label Text="⚠️ Guardrail: Dominance ≠ collapse. High λ₁ with good generalization is fine. High λ₁ with rising validation loss = mode collapse."
+                                   TextColor="#ff6b6b" FontSize="12" FontAttributes="Bold" />
+                            <Button Text="See in context →"
+                                    Clicked="OnSeeInContextClicked"
+                                    CommandParameter="dominance"
+                                    BackgroundColor="#ff9f43"
+                                    TextColor="#0f0f1a"
+                                    CornerRadius="6"
+                                    HeightRequest="32"
+                                    Padding="12,0"
+                                    HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ΔĀ (Aligned Direction) -->
+                    <Border x:Name="deltaASection"
+                           BackgroundColor="{AppThemeBinding Light=#F5FFF5, Dark=#1a2e1a}"
+                           Stroke="#4ecdc4"
+                           StrokeShape="RoundRectangle 8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="ΔĀ" FontSize="18" FontAttributes="Bold" TextColor="#4ecdc4" VerticalOptions="Center" />
+                                <Label Text="Alignment Delta" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="When it fires: |cosθ(v₁A, v₁B)| ≥ 0.85 (converged to similar principal direction)"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="What it means: Both paths found a similar 'quality axis' despite different training dynamics. High alignment suggests a robust latent structure in the evaluator ensemble."
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}" />
+                            <Label Text="⚠️ Guardrail: Agreement ≠ correctness. Both paths could converge to the same wrong answer if evaluators share systematic bias."
+                                   TextColor="#ff6b6b" FontSize="12" FontAttributes="Bold" />
+                            <Button Text="See in context →"
+                                    Clicked="OnSeeInContextClicked"
+                                    CommandParameter="alignment"
+                                    BackgroundColor="#4ecdc4"
+                                    TextColor="#0f0f1a"
+                                    CornerRadius="6"
+                                    HeightRequest="32"
+                                    Padding="12,0"
+                                    HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+
+                    <!-- ΔO (Oscillation Index) -->
+                    <Border x:Name="deltaOSection"
+                           BackgroundColor="{AppThemeBinding Light=#F8F0FF, Dark=#2a1a2e}"
+                           Stroke="#c56cf0"
+                           StrokeShape="RoundRectangle 8"
+                           Padding="16">
+                        <VerticalStackLayout Spacing="10">
+                            <HorizontalStackLayout Spacing="10">
+                                <Label Text="ΔO" FontSize="18" FontAttributes="Bold" TextColor="#c56cf0" VerticalOptions="Center" />
+                                <Label Text="Oscillation Index Delta" FontSize="16" FontAttributes="Bold" TextColor="{AppThemeBinding Light=#333333, Dark=#FFFFFF}" VerticalOptions="Center" />
+                            </HorizontalStackLayout>
+                            <Label Text="When it fires: |OA - OB| ≥ 0.15 where O = stddev of angular velocity over window"
+                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+                            <Label Text="What it means: Training stability differs—one path shows more 'thrashing' in parameter space. High oscillation may indicate conflicting gradient signals from evaluators."
+                                   TextColor="{AppThemeBinding Light=#333333, Dark=#CCCCCC}" />
+                            <Label Text="⚠️ Guardrail: Instability ≠ failure. Some exploration is healthy. Only concerning if oscillation persists without loss improvement."
+                                   TextColor="#ff6b6b" FontSize="12" FontAttributes="Bold" />
+                            <Button Text="See in context →"
+                                    Clicked="OnSeeInContextClicked"
+                                    CommandParameter="oscillation"
+                                    BackgroundColor="#c56cf0"
+                                    TextColor="White"
+                                    CornerRadius="6"
+                                    HeightRequest="32"
+                                    Padding="12,0"
+                                    HorizontalOptions="Start" />
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+            </Border>
 
             <!-- What You Just Saw (shows after demo completion) -->
             <Border x:Name="demoRecapFrame"
@@ -78,91 +254,114 @@
                 </VerticalStackLayout>
             </Border>
 
-            <!-- Interpretation Guide (NEW - Primary Section) -->
-            <Border BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+            <!-- Visual Patterns Guide -->
+            <Border x:Name="visualPatternsSection"
+                   BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
                    Stroke="#00d9ff"
                    StrokeShape="RoundRectangle 12"
                    Padding="20">
                 <VerticalStackLayout Spacing="16">
-                    <Label Text="Understanding the Visualizations"
+                    <Label Text="Visual Patterns &amp; What They Mean"
                            FontSize="18"
                            FontAttributes="Bold"
                            TextColor="#00d9ff" />
 
                     <!-- Trajectory Shapes -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                    <Border x:Name="trajectorySection"
+                           BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
                            Stroke="Transparent"
                            StrokeShape="RoundRectangle 8"
                            Padding="16">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Trajectory Shapes"
+                            <Label Text="Trajectory Shapes → ΔF, ΔTc"
                                    FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light=#333333, Dark=#4ecdc4}" />
-                            <Label Text="• Smooth convergence → Learning is stable, evaluators agree"
+                            <Label Text="• Smooth convergence → Low ΔF likely (stable learning)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Spiraling path → Oscillation between competing objectives"
+                            <Label Text="• Spiraling path → Check ΔO (oscillation between objectives)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Sharp turns → Phase transitions or revision events"
+                            <Label Text="• Sharp turns → Phase transitions, may affect ΔTc"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Stagnation → Learning plateau, possible local minimum"
+                            <Label Text="• Stagnation → Possible ΔTc fire if paths differ in plateau timing"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Eigenvalue Dominance -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                    <Border x:Name="eigenvalueSection"
+                           BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
                            Stroke="Transparent"
                            StrokeShape="RoundRectangle 8"
                            Padding="16">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Eigenvalue Dominance"
+                            <Label Text="Eigenvalue Dominance → ΔTd, ΔĀ"
                                    FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light=#333333, Dark=#ff9f43}" />
-                            <Label Text="• Single dominant λ₁ (>70%) → Evaluators share latent structure"
+                            <Label Text="• Single dominant λ₁ (>70%) → ΔTd fires if timing differs"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Distributed eigenvalues → Orthogonal evaluator criteria"
+                            <Label Text="• Distributed eigenvalues → ΔTd unlikely (no clear dominance)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Collapsing spectrum → Convergent learning (Path B)"
+                            <Label Text="• Collapsing spectrum → Watch for ΔĀ (alignment emerging)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Stable spectrum → Pluralistic learning (Path A)"
+                            <Label Text="• Rising λ₁ + validation loss → Mode collapse risk (guardrail!)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
                         </VerticalStackLayout>
                     </Border>
 
                     <!-- Scalar Rings -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
+                    <Border x:Name="scalarRingsSection"
+                           BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
                            Stroke="Transparent"
                            StrokeShape="RoundRectangle 8"
                            Padding="16">
                         <VerticalStackLayout Spacing="8">
-                            <Label Text="Scalar Rings (Vortex View)"
+                            <Label Text="Scalar Rings (Vortex View) → ΔO"
                                    FontAttributes="Bold"
                                    TextColor="{AppThemeBinding Light=#333333, Dark=#c56cf0}" />
-                            <Label Text="• Phase-locked rings → All dimensions improving together"
+                            <Label Text="• Phase-locked rings → Low ΔO (dimensions improving together)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="• Drifting phases → Tradeoffs between quality dimensions"
+                            <Label Text="• Drifting phases → Higher ΔO may fire (tradeoffs occurring)"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
                             <Label Text="• Expanding radius → Metric improvement over time"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                        </VerticalStackLayout>
-                    </Border>
-
-                    <!-- Why Comparison Matters -->
-                    <Border BackgroundColor="{AppThemeBinding Light=#F8F8F8, Dark=#0f0f1a}"
-                           Stroke="Transparent"
-                           StrokeShape="RoundRectangle 8"
-                           Padding="16">
-                        <VerticalStackLayout Spacing="8">
-                            <Label Text="Why Comparison Matters"
-                                   FontAttributes="Bold"
-                                   TextColor="{AppThemeBinding Light=#333333, Dark=#ffd93d}" />
-                            <Label Text="Path A (Orthogonal): Evaluators measure different qualities. Model learns to satisfy each independently. Maintains diversity but may not converge."
+                            <Label Text="• Jittery rotation → Instability signal, check ΔO + ΔF"
                                    TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
-                            <Label Text="Path B (Correlated): Evaluators share underlying structure. Model finds unified representation. Converges but may miss orthogonal qualities."
-                                   TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}"
-                                   Margin="0,8,0,0" />
                         </VerticalStackLayout>
                     </Border>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Delta Hierarchy Guide -->
+            <Border x:Name="deltaHierarchySection"
+                   BackgroundColor="{AppThemeBinding Light=#FFFFFF, Dark=#1a1a2e}"
+                   Stroke="{AppThemeBinding Light=#DDDDDD, Dark=#2a2a4e}"
+                   StrokeShape="RoundRectangle 12"
+                   Padding="20">
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Reading Delta Priority"
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="{AppThemeBinding Light=#333333, Dark=#ffd93d}" />
+                    <Label Text="When multiple deltas fire, read them in this order (most fundamental → derived):"
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#AAAAAA}" />
+
+                    <VerticalStackLayout Spacing="8" Padding="10,0">
+                        <Label Text="1️⃣ ΔF (Failure Rate) — Did one path fail more?"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#ff6b6b}" FontAttributes="Bold" />
+                        <Label Text="2️⃣ ΔTc (Convergence Time) — Did they converge at different speeds?"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#4ecdc4}" FontAttributes="Bold" />
+                        <Label Text="3️⃣ ΔTd (Dominance Time) — Did eigenvalue dominance emerge differently?"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#ff9f43}" FontAttributes="Bold" />
+                        <Label Text="4️⃣ ΔĀ (Alignment) — Did they find the same quality axis?"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#4ecdc4}" FontAttributes="Bold" />
+                        <Label Text="5️⃣ ΔO (Oscillation) — Was one path more stable?"
+                               TextColor="{AppThemeBinding Light=#333333, Dark=#c56cf0}" FontAttributes="Bold" />
+                    </VerticalStackLayout>
+
+                    <Label Text="💡 Tip: ΔF issues explain ΔTc; ΔTc explains ΔTd; ΔTd explains ΔĀ. Read upstream first."
+                           TextColor="{AppThemeBinding Light=#666666, Dark=#ffd93d}"
+                           FontSize="13"
+                           FontAttributes="Italic" />
                 </VerticalStackLayout>
             </Border>
 

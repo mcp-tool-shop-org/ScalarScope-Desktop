@@ -198,12 +198,22 @@
         </HorizontalStackLayout>
 
         <!-- Delta Zone (Phase 3: Canonical Delta Display) -->
-        <controls:DeltaZone Grid.Row="4"
-                            Deltas="{Binding CanonicalDeltas}"
-                            AlignmentDescription="{Binding AlignmentDescription}"
-                            HighlightedDeltaId="{Binding HighlightedDeltaId}"
-                            Margin="10,5"
-                            IsVisible="{Binding HasBothRuns}"/>
+        <Grid Grid.Row="4" ColumnDefinitions="3*,*" Margin="10,5" IsVisible="{Binding HasBothRuns}">
+            <VerticalStackLayout Grid.Column="0" Spacing="6">
+                <!-- First-occurrence hints (Phase 4) -->
+                <controls:DeltaHints Deltas="{Binding CanonicalDeltas}"/>
+                
+                <controls:DeltaZone x:Name="deltaZone"
+                                    Deltas="{Binding CanonicalDeltas}"
+                                    AlignmentDescription="{Binding AlignmentDescription}"
+                                    HighlightedDeltaId="{Binding HighlightedDeltaId}"/>
+            </VerticalStackLayout>
+            
+            <!-- Insights Tray (Phase 4: Teaching) -->
+            <controls:InsightsTray Grid.Column="1"
+                                   x:Name="insightsTray"
+                                   Margin="8,0,0,0"/>
+        </Grid>
 
         <!-- Interpretation Strip (Verdict) -->
         <Border Grid.Row="5"

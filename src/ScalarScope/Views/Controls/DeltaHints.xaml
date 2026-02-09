@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:ScalarScope.Views.Controls"
+             x:Class="ScalarScope.Views.Controls.DeltaHints"
+             x:Name="deltaHintsRoot">
+    
+    <!-- Phase 4: First-Occurrence Visual Grammar Hints
+         Shows contextual hints near the relevant UI element on first encounter.
+         Each hint is ≤12 words and dismissible forever.
+    -->
+    
+    <VerticalStackLayout Spacing="6">
+        <!-- ΔF: Failure marker hint -->
+        <controls:InlineHint 
+            HintId="hint.delta.failure.first"
+            HintText="⚠ Failure marker indicates training collapse or divergence"
+            AccentColor="#ff6b6b"
+            IsVisible="{Binding ShowFailureHint, Source={x:Reference deltaHintsRoot}}"/>
+        
+        <!-- ΔTc: Convergence marker hint -->
+        <controls:InlineHint 
+            HintId="hint.delta.convergence.first"
+            HintText="◆ Convergence marker shows when training stabilized"
+            AccentColor="#4ecdc4"
+            IsVisible="{Binding ShowConvergenceHint, Source={x:Reference deltaHintsRoot}}"/>
+        
+        <!-- ΔTd: Dominance band hint -->
+        <controls:InlineHint 
+            HintId="hint.delta.emergence.first"
+            HintText="◈ Dominance band marks when shared structure emerged"
+            AccentColor="#a29bfe"
+            IsVisible="{Binding ShowEmergenceHint, Source={x:Reference deltaHintsRoot}}"/>
+        
+        <!-- ΔĀ: Drift segment hint -->
+        <controls:InlineHint 
+            HintId="hint.delta.alignment.first"
+            HintText="↔ Drift segment highlights evaluator agreement difference"
+            AccentColor="#ffd93d"
+            IsVisible="{Binding ShowAlignmentHint, Source={x:Reference deltaHintsRoot}}"/>
+        
+        <!-- ΔO: Instability episode hint -->
+        <controls:InlineHint 
+            HintId="hint.delta.stability.first"
+            HintText="〰 Oscillation episode shows sustained instability period"
+            AccentColor="#74b9ff"
+            IsVisible="{Binding ShowStabilityHint, Source={x:Reference deltaHintsRoot}}"/>
+    </VerticalStackLayout>
+</ContentView>

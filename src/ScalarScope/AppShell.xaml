@@ -36,7 +36,7 @@
         <Tab Title="Failures" Icon="failures.png">
             <ShellContent ContentTemplate="{DataTemplate views:FailuresPage}" Route="failures"/>
         </Tab>
-        <Tab Title="Help" Icon="help.png">
+        <Tab Title="Interpretation Guide" Icon="help.png">
             <ShellContent ContentTemplate="{DataTemplate views:HelpPage}" Route="help"/>
         </Tab>
         <Tab Title="Settings" Icon="settings.png">

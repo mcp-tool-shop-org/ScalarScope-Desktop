@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.InsightsTray"
+             x:Name="insightsTrayRoot">
+    
+    <!-- Phase 4: Insights Tray
+         Shows all teaching signals (training events + deltas) from the session.
+         Users can review what the system taught them.
+    -->
+    
+    <Grid RowDefinitions="Auto,*">
+        <!-- Toggle button (always visible) -->
+        <Border Grid.Row="0"
+                BackgroundColor="#1a1a2e"
+                StrokeThickness="1"
+                Stroke="#2a2a4e"
+                Padding="8,6"
+                StrokeShape="RoundRectangle 6,6,0,0">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Label Grid.Column="0"
+                       Text="💡"
+                       FontSize="14"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="1"
+                       Text="Insights"
+                       TextColor="#00d9ff"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"
+                       Margin="6,0,0,0"/>
+                <HorizontalStackLayout Grid.Column="2" Spacing="6">
+                    <!-- Badge showing count -->
+                    <Border BackgroundColor="#3a3a6e"
+                            StrokeThickness="0"
+                            Padding="6,2"
+                            StrokeShape="RoundRectangle 8"
+                            IsVisible="{Binding HasInsights, Source={x:Reference insightsTrayRoot}}">
+                        <Label Text="{Binding InsightCount, Source={x:Reference insightsTrayRoot}}"
+                               TextColor="#00d9ff"
+                               FontSize="10"/>
+                    </Border>
+                    <!-- Expand/collapse chevron -->
+                    <Label x:Name="chevronLabel"
+                           Text="▲"
+                           TextColor="#666"
+                           FontSize="10"
+                           VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+                <Grid.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnToggleTapped"/>
+                </Grid.GestureRecognizers>
+            </Grid>
+        </Border>
+        
+        <!-- Tray content (expandable) -->
+        <Border Grid.Row="1"
+                x:Name="trayContent"
+                BackgroundColor="#12121f"
+                StrokeThickness="1"
+                Stroke="#2a2a4e"
+                Padding="8"
+                StrokeShape="RoundRectangle 0,0,6,6"
+                IsVisible="{Binding IsExpanded, Source={x:Reference insightsTrayRoot}}"
+                MaximumHeightRequest="300">
+            <Grid RowDefinitions="Auto,*">
+                <!-- Filter chips -->
+                <HorizontalStackLayout Grid.Row="0" Spacing="6" Margin="0,0,0,8">
+                    <Button x:Name="filterAllBtn"
+                            Text="All"
+                            FontSize="10"
+                            Padding="8,4"
+                            CornerRadius="4"
+                            Clicked="OnFilterAll"/>
+                    <Button x:Name="filterDeltasBtn"
+                            Text="Deltas"
+                            FontSize="10"
+                            Padding="8,4"
+                            CornerRadius="4"
+                            Clicked="OnFilterDeltas"/>
+                    <Button x:Name="filterEventsBtn"
+                            Text="Events"
+                            FontSize="10"
+                            Padding="8,4"
+                            CornerRadius="4"
+                            Clicked="OnFilterEvents"/>
+                </HorizontalStackLayout>
+                
+                <!-- Insights list -->
+                <ScrollView Grid.Row="1">
+                    <VerticalStackLayout x:Name="insightsContainer" Spacing="6">
+                        <!-- Empty state -->
+                        <Label x:Name="emptyLabel"
+                               Text="No insights yet. Navigate the comparison to learn."
+                               TextColor="#555"
+                               FontSize="11"
+                               FontAttributes="Italic"
+                               HorizontalOptions="Center"
+                               Margin="0,20"/>
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Grid>
+        </Border>
+    </Grid>
+</ContentView>

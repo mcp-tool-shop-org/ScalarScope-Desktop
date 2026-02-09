@@ -6,6 +6,7 @@ namespace ScalarScope.Services;
 /// Phase 2: Contextual explanation service.
 /// Triggers educational tooltips based on training events.
 /// Each tooltip type shows only once per session.
+/// Phase 4: Also publishes to InsightFeedService for unified teaching.
 /// </summary>
 public class ContextualExplanationService
 {
@@ -202,6 +203,9 @@ public class ContextualExplanationService
     {
         _shownExplanations.Add(explanation.Type);
         OnExplanationTriggered?.Invoke(explanation);
+        
+        // Phase 4: Also publish to InsightFeedService
+        InsightFeedService.Instance.PublishTrainingEvent(explanation);
     }
 }
 

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.DeltaWhyPanel"
+             x:Name="whyPanelRoot">
+    
+    <!-- Phase 4: "Why did this fire?" panel for DeltaZone.
+         Shows delta justification inline, not modal.
+         Includes: trigger type, condition summary, parameters, confidence, guardrail.
+    -->
+    
+    <Border BackgroundColor="#1a1a2e"
+            StrokeThickness="1"
+            Stroke="{Binding AccentColor, Source={x:Reference whyPanelRoot}}"
+            Padding="12,10"
+            StrokeShape="RoundRectangle 6"
+            IsVisible="{Binding IsExpanded, Source={x:Reference whyPanelRoot}}">
+        <VerticalStackLayout Spacing="10">
+            
+            <!-- Header with delta name -->
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <Label Grid.Column="0"
+                       Text="{Binding DeltaName, Source={x:Reference whyPanelRoot}}"
+                       TextColor="{Binding AccentColor, Source={x:Reference whyPanelRoot}}"
+                       FontSize="12"
+                       FontAttributes="Bold"/>
+                <Label Grid.Column="1"
+                       Text="{Binding TriggerType, Source={x:Reference whyPanelRoot}, StringFormat=' ({0})'}"
+                       TextColor="#888"
+                       FontSize="11"
+                       IsVisible="{Binding HasTriggerType, Source={x:Reference whyPanelRoot}}"/>
+                <Button Grid.Column="2"
+                        Text="×"
+                        FontSize="12"
+                        TextColor="#888"
+                        BackgroundColor="Transparent"
+                        Padding="4,2"
+                        Clicked="OnCloseClicked"/>
+            </Grid>
+            
+            <!-- Why fired explanation -->
+            <VerticalStackLayout Spacing="4">
+                <Label Text="Why this fired:" TextColor="#666" FontSize="10"/>
+                <Label Text="{Binding WhyFired, Source={x:Reference whyPanelRoot}}"
+                       TextColor="#ccc"
+                       FontSize="11"
+                       LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+            
+            <!-- Confidence (if available) -->
+            <HorizontalStackLayout Spacing="8" 
+                                   IsVisible="{Binding HasConfidence, Source={x:Reference whyPanelRoot}}">
+                <Label Text="Confidence:" TextColor="#666" FontSize="10"/>
+                <ProgressBar Progress="{Binding Confidence, Source={x:Reference whyPanelRoot}}"
+                             WidthRequest="80"
+                             HeightRequest="6"
+                             ProgressColor="{Binding AccentColor, Source={x:Reference whyPanelRoot}}"
+                             VerticalOptions="Center"/>
+                <Label Text="{Binding Confidence, Source={x:Reference whyPanelRoot}, StringFormat='{0:P0}'}"
+                       TextColor="#888"
+                       FontSize="10"/>
+            </HorizontalStackLayout>
+            
+            <!-- Key parameters -->
+            <VerticalStackLayout Spacing="4"
+                                 IsVisible="{Binding HasParameters, Source={x:Reference whyPanelRoot}}">
+                <Label Text="Parameters:" TextColor="#666" FontSize="10"/>
+                <FlexLayout x:Name="parametersContainer"
+                            Wrap="Wrap"
+                            JustifyContent="Start"
+                            AlignItems="Start"/>
+            </VerticalStackLayout>
+            
+            <!-- Guardrail (misinterpretation warning) -->
+            <Border BackgroundColor="#2a1a1a"
+                    StrokeThickness="0"
+                    Padding="8,6"
+                    StrokeShape="RoundRectangle 4"
+                    IsVisible="{Binding HasGuardrail, Source={x:Reference whyPanelRoot}}">
+                <HorizontalStackLayout Spacing="6">
+                    <Label Text="⚠" FontSize="11"/>
+                    <Label Text="{Binding Guardrail, Source={x:Reference whyPanelRoot}}"
+                           TextColor="#ff9f43"
+                           FontSize="10"
+                           FontAttributes="Italic"/>
+                </HorizontalStackLayout>
+            </Border>
+            
+            <!-- Action buttons -->
+            <HorizontalStackLayout Spacing="10" HorizontalOptions="End">
+                <Button Text="📋 Copy finding"
+                        FontSize="10"
+                        TextColor="#00d9ff"
+                        BackgroundColor="#252550"
+                        Padding="10,6"
+                        CornerRadius="4"
+                        Clicked="OnCopyFindingClicked"/>
+                <Button Text="👁 Show me"
+                        FontSize="10"
+                        TextColor="#fff"
+                        BackgroundColor="#3a3a6e"
+                        Padding="10,6"
+                        CornerRadius="4"
+                        Clicked="OnShowMeClicked"/>
+            </HorizontalStackLayout>
+            
+        </VerticalStackLayout>
+    </Border>
+</ContentView>
