@@ -341,6 +341,7 @@ public partial class DeltaZone : ContentView
                 new ColumnDefinition { Width = GridLength.Star },
                 new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Auto },
+                new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Auto }
             },
             RowDefinitions =
@@ -434,6 +435,30 @@ public partial class DeltaZone : ContentView
         Grid.SetColumn(infoButton, 3);
         Grid.SetRowSpan(infoButton, 2);
         grid.Children.Add(infoButton);
+        
+        // Phase 5.4: Copy button for sharing
+        var copyButton = new Button
+        {
+            Text = "📋",
+            FontSize = 10,
+            TextColor = Color.FromArgb("#666"),
+            BackgroundColor = Colors.Transparent,
+            Padding = new Thickness(4, 2),
+            WidthRequest = 24,
+            HeightRequest = 24,
+            VerticalOptions = LayoutOptions.Center
+        };
+        copyButton.Clicked += async (s, e) =>
+        {
+            await DeltaCopyService.CopyToClipboardAsync(delta);
+            // Brief visual feedback
+            copyButton.Text = "✓";
+            await Task.Delay(1000);
+            copyButton.Text = "📋";
+        };
+        Grid.SetColumn(copyButton, 4);
+        Grid.SetRowSpan(copyButton, 2);
+        grid.Children.Add(copyButton);
 
         // Visual anchor indicator (clickable)
         var anchorLabel = new Label
@@ -443,7 +468,7 @@ public partial class DeltaZone : ContentView
             FontSize = 9,
             VerticalOptions = LayoutOptions.Center
         };
-        Grid.SetColumn(anchorLabel, 4);
+        Grid.SetColumn(anchorLabel, 5);
         Grid.SetRowSpan(anchorLabel, 2);
         grid.Children.Add(anchorLabel);
 
