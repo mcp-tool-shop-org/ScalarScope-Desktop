@@ -1,3 +1,5 @@
+using ScalarScope.Services;
+
 namespace ScalarScope.Views.Controls;
 
 /// <summary>
@@ -97,11 +99,12 @@ public partial class AdvancedSection : ContentView
                 _expandedStates[section.SectionId] = section.IsExpanded;
             }
 
-            // Animate (simple opacity for now)
-            if (section.IsExpanded)
+            // Animate (using centralized motion tokens)
+            if (section.IsExpanded && MotionTokens.ShouldAnimate("section.expand"))
             {
                 section.contentBorder.Opacity = 0;
-                section.contentBorder.FadeTo(1, 150, Easing.CubicOut);
+                var duration = MotionTokens.GetDuration("section.expand");
+                section.contentBorder.FadeTo(1, (uint)duration, MotionTokens.EaseEnter);
             }
         }
     }

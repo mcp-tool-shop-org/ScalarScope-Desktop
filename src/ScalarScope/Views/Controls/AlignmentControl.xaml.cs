@@ -106,8 +106,12 @@ public partial class AlignmentControl : ContentView
 
     private async Task AnimateTransition()
     {
-        // Smooth animation for alignment change
-        await this.FadeTo(0.7, 100, Easing.CubicOut);
-        await this.FadeTo(1.0, 150, Easing.CubicIn);
+        // Smooth animation for alignment change (using centralized motion tokens)
+        if (!MotionTokens.ShouldAnimate("button.press"))
+            return;
+            
+        var duration = MotionTokens.GetDuration("button.press");
+        await this.FadeTo(0.7, (uint)duration, MotionTokens.EaseEnter);
+        await this.FadeTo(1.0, (uint)(duration * 1.5), MotionTokens.EaseExit);
     }
 }

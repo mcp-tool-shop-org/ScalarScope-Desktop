@@ -29,10 +29,11 @@ public partial class ContextualTooltip : ContentView
             messageLabel.Text = explanation.Message;
             hintLabel.Text = explanation.VisualHint;
             
-            // Show with fade-in
+            // Show with fade-in (using centralized motion tokens)
             Opacity = 0;
             IsVisible = true;
-            this.FadeTo(1, 200, Easing.CubicOut);
+            var duration = MotionTokens.GetDuration("tooltip.show");
+            this.FadeTo(1, (uint)duration, MotionTokens.EaseEnter);
             
             // Auto-dismiss after 15 seconds if not interacted with
             Task.Delay(15000).ContinueWith(_ =>
@@ -55,7 +56,8 @@ public partial class ContextualTooltip : ContentView
 
     private async void Dismiss()
     {
-        await this.FadeTo(0, 150, Easing.CubicIn);
+        var duration = MotionTokens.GetDuration("tooltip.hide");
+        await this.FadeTo(0, (uint)duration, MotionTokens.EaseExit);
         IsVisible = false;
         _currentExplanation = null;
     }
