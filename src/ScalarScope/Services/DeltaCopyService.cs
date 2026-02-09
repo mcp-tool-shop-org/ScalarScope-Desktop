@@ -77,6 +77,137 @@ public static class DeltaCopyService
     }
     
     /// <summary>
+    /// Phase 5.4: Generate plain-language executive summary.
+    /// Non-technical stakeholders can understand this.
+    /// </summary>
+    public static string GeneratePlainLanguageSummary(IEnumerable<CanonicalDelta> deltas, string? leftRunName = null, string? rightRunName = null)
+    {
+        var deltaList = deltas.Where(d => d.Status == DeltaStatus.Present).ToList();
+        var pathA = leftRunName ?? "Path A";
+        var pathB = rightRunName ?? "Path B";
+        
+        if (deltaList.Count == 0)
+        {
+            return $"**Bottom Line:** {pathA} and {pathB} performed similarly. " +
+                   "No significant differences were detected in timing, stability, or outcome.";
+        }
+        
+        var sb = new StringBuilder();
+        sb.AppendLine("## What We Found");
+        sb.AppendLine();
+        
+        // Group by confidence for priority ordering
+        var highConfidence = deltaList.Where(d => d.Confidence >= 0.99).ToList();
+        var mediumConfidence = deltaList.Where(d => d.Confidence >= 0.95 && d.Confidence < 0.99).ToList();
+        var lowConfidence = deltaList.Where(d => d.Confidence < 0.95).ToList();
+        
+        // Summary opening
+        sb.AppendLine($"Comparing **{pathA}** and **{pathB}**, we found {deltaList.Count} notable difference{(deltaList.Count > 1 ? "s" : "")}:");
+        sb.AppendLine();
+        
+        // High confidence findings (definite)
+        if (highConfidence.Any())
+        {
+            sb.AppendLine("### Clear Findings (High Confidence)");
+            foreach (var delta in highConfidence)
+            {
+                sb.AppendLine($"- {TranslateToPlainLanguage(delta, pathA, pathB)}");
+            }
+            sb.AppendLine();
+        }
+        
+        // Medium confidence findings (likely)
+        if (mediumConfidence.Any())
+        {
+            sb.AppendLine("### Likely Findings (Moderate Confidence)");
+            foreach (var delta in mediumConfidence)
+            {
+                sb.AppendLine($"- {TranslateToPlainLanguage(delta, pathA, pathB)}");
+            }
+            sb.AppendLine();
+        }
+        
+        // Low confidence findings (possible)
+        if (lowConfidence.Any())
+        {
+            sb.AppendLine("### Possible Findings (Lower Confidence)");
+            foreach (var delta in lowConfidence)
+            {
+                sb.AppendLine($"- {TranslateToPlainLanguage(delta, pathA, pathB)}");
+            }
+            sb.AppendLine();
+        }
+        
+        // Bottom line
+        sb.AppendLine("---");
+        sb.AppendLine("**Bottom Line:** " + GenerateBottomLine(deltaList, pathA, pathB));
+        
+        return sb.ToString();
+    }
+    
+    private static string TranslateToPlainLanguage(CanonicalDelta delta, string pathA, string pathB)
+    {
+        var winner = delta.Delta > 0 ? pathB : pathA;
+        var loser = delta.Delta > 0 ? pathA : pathB;
+        
+        return delta.Id switch
+        {
+            "delta_tc" => delta.Delta > 0
+                ? $"{loser} converged {Math.Abs((int)(delta.Delta * 100))} steps faster than {winner}"
+                : $"{winner} converged {Math.Abs((int)(delta.Delta * 100))} steps faster than {loser}",
+                
+            "delta_td" => delta.Delta > 0
+                ? $"{winner} showed stronger emergence of shared structure"
+                : $"{loser} showed stronger emergence of shared structure",
+                
+            "delta_a" => delta.Delta > 0
+                ? $"{winner} had better final alignment (professors agreed more)"
+                : $"{loser} had better final alignment (professors agreed more)",
+                
+            "delta_o" => delta.Delta > 0
+                ? $"{winner} was less stable during training (more oscillation)"
+                : $"{loser} was less stable during training (more oscillation)",
+                
+            "delta_f" => $"Only {winner} completed without failure",
+                
+            _ => delta.Explanation
+        };
+    }
+    
+    private static string GenerateBottomLine(List<CanonicalDelta> deltas, string pathA, string pathB)
+    {
+        // Check for failure delta
+        var failure = deltas.FirstOrDefault(d => d.Id == "delta_f");
+        if (failure != null)
+        {
+            var failedPath = failure.FailedA == true ? pathA : pathB;
+            var successPath = failure.FailedA == true ? pathB : pathA;
+            return $"{successPath} completed successfully while {failedPath} failed. " +
+                   "The successful approach should be preferred.";
+        }
+        
+        // Check dominance (emergence) delta
+        var dominance = deltas.FirstOrDefault(d => d.Id == "delta_td");
+        var convergence = deltas.FirstOrDefault(d => d.Id == "delta_tc");
+        
+        if (dominance != null && dominance.Confidence >= 0.95)
+        {
+            var better = dominance.Delta > 0 ? pathB : pathA;
+            return $"{better} showed clearer emergence of shared evaluative structure, " +
+                   "suggesting better generalization potential.";
+        }
+        
+        if (convergence != null && convergence.Confidence >= 0.95)
+        {
+            var faster = convergence.Delta > 0 ? pathA : pathB;
+            return $"{faster} converged faster, which may indicate more efficient learning.";
+        }
+        
+        return "The differences detected are relatively minor. " +
+               "Either approach appears viable, but review individual findings for specific trade-offs.";
+    }
+    
+    /// <summary>
     /// Generate a summary card for multiple deltas.
     /// </summary>
     public static string GenerateSummaryCard(IEnumerable<CanonicalDelta> deltas)
