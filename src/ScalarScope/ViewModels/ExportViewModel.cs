@@ -122,6 +122,15 @@ public partial class ExportViewModel : ObservableObject
     [ObservableProperty]
     private bool _includeConfidenceBadges = true;
     
+    // Phase 5.4.5: Social card settings
+    [ObservableProperty]
+    private int _socialCardFormatIndex;
+    
+    public string[] SocialCardFormats { get; } = ["Twitter (1200x628)", "LinkedIn (1200x627)", "Slide (1920x1080)"];
+    
+    [ObservableProperty]
+    private IEnumerable<CanonicalDelta>? _comparisonDeltas;
+    
     /// <summary>
     /// Phase 5.4: Check if export is screenshot-ready (all visibility options enabled).
     /// </summary>
@@ -442,6 +451,62 @@ public partial class ExportViewModel : ObservableObject
             await _exportService.ExportStillAsync(Run, CurrentTime, outputPath, options);
 
             ExportStatus = $"Quick save: {Path.GetFileName(outputPath)}";
+        }
+        catch (Exception ex)
+        {
+            ExportStatus = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsExporting = false;
+        }
+    }
+
+    /// <summary>
+    /// Phase 5.4.5: Export social card image for sharing on Twitter/LinkedIn.
+    /// </summary>
+    [RelayCommand]
+    private async Task ExportSocialCardAsync()
+    {
+        if (!IsComparison || LeftRun == null || RightRun == null || ComparisonDeltas == null)
+        {
+            ExportStatus = "Social cards require a comparison with deltas";
+            return;
+        }
+
+        var documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        var scalarScopeExports = Path.Combine(documentsPath, "ScalarScope Exports");
+        Directory.CreateDirectory(scalarScopeExports);
+
+        var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+        var formatSuffix = SocialCardFormatIndex switch
+        {
+            1 => "linkedin",
+            2 => "slide",
+            _ => "twitter"
+        };
+        var outputPath = Path.Combine(scalarScopeExports, $"scalarscope_social_{formatSuffix}_{timestamp}.png");
+
+        try
+        {
+            IsExporting = true;
+            ExportStatus = "Generating social card...";
+
+            var format = SocialCardFormatIndex switch
+            {
+                1 => SocialCardFormat.LinkedIn,
+                2 => SocialCardFormat.Slide,
+                _ => SocialCardFormat.Twitter
+            };
+
+            await SocialCardService.SaveToFileAsync(
+                ComparisonDeltas,
+                LeftRun.Metadata?.RunId ?? "Left",
+                RightRun.Metadata?.RunId ?? "Right",
+                outputPath,
+                format);
+
+            ExportStatus = $"Social card saved: {Path.GetFileName(outputPath)}";
         }
         catch (Exception ex)
         {
