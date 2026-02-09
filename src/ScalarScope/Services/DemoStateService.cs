@@ -25,8 +25,20 @@ public class DemoStateService : IDisposable
     /// <summary>
     /// Demo animation speed multiplier (slower than real data).
     /// Phase 1: Demo motion is slower to feel calm and illustrative.
+    /// Phase 5.1: Further slowed when idle to avoid competing with deltas.
     /// </summary>
     public const float DemoPlaybackSpeed = 0.6f;
+    
+    /// <summary>
+    /// Additional slowdown when in idle/background state.
+    /// Phase 5.1: Idle visuals slow down to not compete with delta display.
+    /// </summary>
+    public const float IdleSlowdownFactor = 0.5f;
+    
+    /// <summary>
+    /// Current idle state (true when Compare Paths has active deltas visible).
+    /// </summary>
+    public bool IsIdleCalmed { get; private set; }
     
     /// <summary>
     /// Demo saturation multiplier (reduced for reference state).
@@ -116,6 +128,17 @@ public class DemoStateService : IDisposable
         IsDemo = true;
     }
 
+    /// <summary>
+    /// Set idle calming state based on delta visibility.
+    /// Phase 5.1: When deltas are visible, slow down ambient animations
+    /// to avoid competing for attention.
+    /// </summary>
+    /// <param name="hasDeltasVisible">True if delta zone has active deltas.</param>
+    public void SetIdleCalming(bool hasDeltasVisible)
+    {
+        IsIdleCalmed = hasDeltasVisible;
+    }
+
     public void Dispose()
     {
         StopAnimationLoop();
@@ -148,7 +171,9 @@ public class DemoStateService : IDisposable
     private void OnAnimationTick(object? sender, EventArgs e)
     {
         // Update animation time (loop every 10 seconds for calm demo pace)
-        _animationTime += 0.016 * DemoPlaybackSpeed / 10.0;
+        // Phase 5.1: Apply additional slowdown when in idle state
+        var speedMultiplier = IsIdleCalmed ? IdleSlowdownFactor : 1.0f;
+        _animationTime += 0.016 * DemoPlaybackSpeed * speedMultiplier / 10.0;
         if (_animationTime > 1.0) _animationTime -= 1.0;
 
         OnAnimationFrame?.Invoke();

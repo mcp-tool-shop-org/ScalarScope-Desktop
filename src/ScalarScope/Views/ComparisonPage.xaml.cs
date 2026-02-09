@@ -53,12 +53,16 @@ public partial class ComparisonPage : ContentPage
         // InsightsTray "Show me" navigates to insight source
         insightsTray.ShowMeRequested += OnInsightShowMeRequested;
         
-        // Subscribe to deltas changes to publish insights
+        // Subscribe to deltas changes to publish insights and set idle calming
         ViewModel.PropertyChanged += (s, e) =>
         {
             if (e.PropertyName == nameof(ViewModel.CanonicalDeltas))
             {
                 PublishDeltaInsights();
+                
+                // Phase 5.1: Slow down demo animations when deltas are visible
+                var hasDeltasVisible = ViewModel.CanonicalDeltas?.Any(d => d.Status == DeltaStatus.Present) ?? false;
+                DemoStateService.Instance.SetIdleCalming(hasDeltasVisible);
             }
         };
     }
