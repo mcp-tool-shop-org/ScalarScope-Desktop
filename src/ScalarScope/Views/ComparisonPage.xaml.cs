@@ -115,6 +115,20 @@ public partial class ComparisonPage : ContentPage
                 ViewModel.ExitReviewMode();
             }
         };
+        
+        // Wire up review mode banner exit
+        reviewModeBanner.ExitRequested += OnExitReviewModeRequested;
+    }
+
+    /// <summary>
+    /// Phase 7.2: Handle exit review mode request.
+    /// </summary>
+    private void OnExitReviewModeRequested(object? sender, EventArgs e)
+    {
+        ViewModel.ExitReviewMode();
+        
+        // Clear insights tray bundle mode
+        insightsTray.ClearBundleInsights();
     }
 
     private void OnHighlightDeltaRequested(HelpPage sender, string deltaType)

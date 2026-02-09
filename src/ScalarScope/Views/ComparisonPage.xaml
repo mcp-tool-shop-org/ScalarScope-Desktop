@@ -8,12 +8,19 @@
              Title="Compare Paths"
              BackgroundColor="#0f0f1a">
 
-    <Grid RowDefinitions="Auto,Auto,2*,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,2*,Auto,Auto,Auto,*,Auto">
         <!-- Demo Annotation Banner (shows during guided demo) -->
         <controls:DemoAnnotationBanner Grid.Row="0" x:Name="demoBanner"/>
+        
+        <!-- Review Mode Banner (shows when viewing a bundle) -->
+        <controls:ReviewModeBanner Grid.Row="1" 
+                                   x:Name="reviewModeBanner"
+                                   Bundle="{Binding ReviewBundle}"
+                                   Margin="10,5"
+                                   IsVisible="{Binding IsReviewMode}"/>
 
         <!-- Header with load buttons -->
-        <Grid Grid.Row="1"
+        <Grid Grid.Row="2"
               ColumnDefinitions="*,Auto,*"
               Padding="10"
               BackgroundColor="#1a1a2e">
@@ -38,6 +45,7 @@
                     <Button Grid.Column="1"
                             Text="Load"
                             Command="{Binding LoadLeftRunCommand}"
+                            IsEnabled="{Binding IsReviewMode, Converter={StaticResource InverseBoolConverter}}"
                             BackgroundColor="#4ecdc4"
                             TextColor="#0f0f1a"
                             FontSize="11"
@@ -102,6 +110,7 @@
                     <Button Grid.Column="1"
                             Text="Load"
                             Command="{Binding LoadRightRunCommand}"
+                            IsEnabled="{Binding IsReviewMode, Converter={StaticResource InverseBoolConverter}}"
                             BackgroundColor="#ff6b6b"
                             TextColor="White"
                             FontSize="11"
@@ -112,7 +121,7 @@
         </Grid>
 
         <!-- Side-by-Side Canvases (normal mode) -->
-        <Grid Grid.Row="2" ColumnDefinitions="*,2,*"
+        <Grid Grid.Row="3" ColumnDefinitions="*,2,*"
               IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
             <!-- Left Canvas -->
             <controls:ComparisonTrajectoryCanvas Grid.Column="0"
@@ -138,7 +147,7 @@
         </Grid>
 
         <!-- Overlay Canvas (overlay mode) -->
-        <controls:OverlayComparisonCanvas Grid.Row="2"
+        <controls:OverlayComparisonCanvas Grid.Row="3"
                                           Runs="{Binding OverlayRuns}"
                                           CurrentTime="{Binding Player.Time}"
                                           ShowDeviation="{Binding ShowDeviation}"
@@ -147,7 +156,7 @@
                                           IsVisible="{Binding IsOverlayMode}"/>
 
         <!-- Toggle Bar -->
-        <HorizontalStackLayout Grid.Row="3"
+        <HorizontalStackLayout Grid.Row="4"
                                Spacing="15"
                                Padding="15,8"
                                BackgroundColor="#1a1a2e"
@@ -212,7 +221,7 @@
         </HorizontalStackLayout>
 
         <!-- Delta Zone (Phase 3: Canonical Delta Display) -->
-        <Grid Grid.Row="4" ColumnDefinitions="3*,*" Margin="10,5" IsVisible="{Binding HasBothRuns}">
+        <Grid Grid.Row="5" ColumnDefinitions="3*,*" Margin="10,5" IsVisible="{Binding HasBothRuns}">
             <VerticalStackLayout Grid.Column="0" Spacing="6">
                 <!-- First-occurrence hints (Phase 4) -->
                 <controls:DeltaHints Deltas="{Binding CanonicalDeltas}"/>
@@ -230,7 +239,7 @@
         </Grid>
 
         <!-- Interpretation Strip (Verdict) -->
-        <Border Grid.Row="5"
+        <Border Grid.Row="6"
                 BackgroundColor="#16213e"
                 StrokeThickness="0"
                 Padding="15,10"
@@ -267,7 +276,7 @@
         </Border>
 
         <!-- Analytics Panel -->
-        <controls:ComparisonAnalyticsPanel Grid.Row="6"
+        <controls:ComparisonAnalyticsPanel Grid.Row="7"
                                            LeftRun="{Binding LeftRun}"
                                            RightRun="{Binding RightRun}"
                                            CurrentTime="{Binding Player.Time}"
@@ -275,7 +284,7 @@
                                            IsVisible="{Binding IsToggled, Source={x:Reference analyticsSwitch}}"/>
 
         <!-- No runs message -->
-        <VerticalStackLayout Grid.Row="6"
+        <VerticalStackLayout Grid.Row="7"
                              HorizontalOptions="Center"
                              VerticalOptions="Center"
                              IsVisible="{Binding HasBothRuns, Converter={StaticResource InverseBoolConverter}}">
@@ -293,7 +302,7 @@
         </VerticalStackLayout>
 
         <!-- Playback Control -->
-        <controls:PlaybackControl Grid.Row="7"
+        <controls:PlaybackControl Grid.Row="8"
                                   BindingContext="{Binding Player}"/>
     </Grid>
 </ContentPage>

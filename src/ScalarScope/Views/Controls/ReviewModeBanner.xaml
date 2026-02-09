@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Phase 7.2.5: Review Mode Banner
+     Shows when viewing a bundle, indicates read-only mode
+     Provides Exit Review Mode action -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.ReviewModeBanner"
+             x:Name="thisControl"
+             IsVisible="{Binding IsVisible, Source={x:Reference thisControl}}">
+    
+    <Border BackgroundColor="#1a2f4a"
+            StrokeThickness="0"
+            Padding="12,8"
+            StrokeShape="RoundRectangle 6">
+        <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="12">
+            
+            <!-- Icon -->
+            <Label Grid.Column="0"
+                   Text="📦"
+                   FontSize="16"
+                   VerticalOptions="Center"/>
+            
+            <!-- Main Message -->
+            <VerticalStackLayout Grid.Column="1" 
+                                 VerticalOptions="Center"
+                                 Spacing="2">
+                <Label x:Name="titleLabel"
+                       Text="Review Mode"
+                       FontSize="12"
+                       FontAttributes="Bold"
+                       TextColor="#74b9ff"/>
+                <Label x:Name="subtitleLabel"
+                       Text="Viewing saved bundle • Changes disabled"
+                       FontSize="10"
+                       TextColor="#888"/>
+            </VerticalStackLayout>
+            
+            <!-- Bundle Info -->
+            <HorizontalStackLayout Grid.Column="2"
+                                   Spacing="8"
+                                   VerticalOptions="Center">
+                <!-- Hash Badge -->
+                <Border BackgroundColor="#252550"
+                        StrokeThickness="0"
+                        Padding="6,3"
+                        StrokeShape="RoundRectangle 4">
+                    <HorizontalStackLayout Spacing="4">
+                        <Label Text="🔐"
+                               FontSize="9"/>
+                        <Label x:Name="hashLabel"
+                               Text="abc123..."
+                               FontSize="9"
+                               FontFamily="Consolas"
+                               TextColor="#888"/>
+                    </HorizontalStackLayout>
+                </Border>
+                
+                <!-- Profile Badge -->
+                <Border x:Name="profileBadge"
+                        BackgroundColor="#2a503a"
+                        StrokeThickness="0"
+                        Padding="6,3"
+                        StrokeShape="RoundRectangle 4">
+                    <Label x:Name="profileLabel"
+                           Text="Share"
+                           FontSize="9"
+                           TextColor="#4ecdc4"/>
+                </Border>
+            </HorizontalStackLayout>
+            
+            <!-- Exit Button -->
+            <Button Grid.Column="3"
+                    x:Name="exitButton"
+                    Text="Exit Review Mode"
+                    Clicked="OnExitClicked"
+                    BackgroundColor="Transparent"
+                    BorderColor="#ff6b6b"
+                    BorderWidth="1"
+                    TextColor="#ff6b6b"
+                    FontSize="10"
+                    Padding="10,4"
+                    HeightRequest="28"
+                    CornerRadius="4"/>
+        </Grid>
+    </Border>
+</ContentView>
