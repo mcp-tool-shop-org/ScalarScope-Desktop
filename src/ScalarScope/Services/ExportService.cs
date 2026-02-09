@@ -72,6 +72,9 @@ public class ExportService
         ExportOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        // Phase 5.5: Track export performance
+        using var _ = PerformanceProfiler.BeginScope("ExportStill");
+        
         var validation = ValidateForExport(run);
         if (!validation.IsValid)
             return ExportResult.Failure(validation.ErrorMessage!);

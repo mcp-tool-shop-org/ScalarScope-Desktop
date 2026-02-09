@@ -204,8 +204,12 @@ public partial class ComparisonViewModel : ObservableObject
     /// </summary>
     private void UpdateCanonicalDeltas()
     {
-        CanonicalDeltas = CanonicalDeltaService.ComputeDeltas(
-            LeftRun, RightRun, SelectedAlignment, Player.Time);
+        // Phase 5.5: Track delta computation performance
+        using (PerformanceProfiler.BeginScope("DeltaComputation"))
+        {
+            CanonicalDeltas = CanonicalDeltaService.ComputeDeltas(
+                LeftRun, RightRun, SelectedAlignment, Player.Time);
+        }
         
         AutoSummary = CanonicalDeltaService.GenerateAutoSummary(CanonicalDeltas);
     }
