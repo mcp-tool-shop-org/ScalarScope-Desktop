@@ -466,9 +466,10 @@
             </VerticalStackLayout>
         </Border>
 
-        <!-- Loading Overlay with shimmer animation -->
+        <!-- Phase 5.2: Loading Overlay with structural skeleton (plot scaffold) -->
         <controls:LoadingOverlay IsLoading="{Binding IsLoading}"
                                  Message="{Binding LoadingMessage}"
+                                 SkeletonType="PlotScaffold"
                                  IsVisible="{Binding IsLoading}"/>
     </Grid>
 </ContentPage>
