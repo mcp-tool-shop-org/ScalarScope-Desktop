@@ -65,6 +65,14 @@ public static class CanonicalDeltaService
         var leftSteps = leftRun.Trajectory?.Timesteps?.Count ?? 100;
         var rightSteps = rightRun.Trajectory?.Timesteps?.Count ?? 100;
 
+        // Phase 6.1: Compute input fingerprint for determinism verification
+        DeterminismService.ComputeInputFingerprint(
+            leftRun.Metadata?.RunId,
+            rightRun.Metadata?.RunId,
+            (int)alignment,
+            leftSteps,
+            rightSteps);
+
         // Order by causal salience (most impactful first)
         
         // Δ1. Failure / Collapse Presence (highest priority - did something break?)
