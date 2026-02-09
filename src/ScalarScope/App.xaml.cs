@@ -42,6 +42,9 @@ public partial class App : Application
             Height = 900
         };
 
+        // Initialize demo state service for living empty states
+        DemoStateService.Instance.Initialize();
+
         // Subscribe to window lifecycle for session state
         window.Destroying += OnWindowDestroying;
 

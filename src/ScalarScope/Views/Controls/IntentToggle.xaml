@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.IntentToggle"
+             x:Name="root">
+
+    <VerticalStackLayout Spacing="2">
+        <!-- Intent Question (Primary) -->
+        <HorizontalStackLayout Spacing="6">
+            <Switch x:Name="toggleSwitch"
+                    IsToggled="{Binding IsToggled, Source={x:Reference root}, Mode=TwoWay}"
+                    OnColor="{Binding AccentColor, Source={x:Reference root}}"
+                    VerticalOptions="Center"/>
+            <Label Text="{Binding IntentLabel, Source={x:Reference root}}"
+                   TextColor="{Binding AccentColor, Source={x:Reference root}}"
+                   FontSize="12"
+                   FontAttributes="Bold"
+                   VerticalOptions="Center"/>
+        </HorizontalStackLayout>
+        
+        <!-- What Changes Explanation -->
+        <Label Text="{Binding Explanation, Source={x:Reference root}}"
+               TextColor="#777"
+               FontSize="10"
+               Margin="42,0,0,0"/>
+        
+        <!-- Technical Term (De-emphasized) -->
+        <Label Text="{Binding TechnicalTerm, Source={x:Reference root}}"
+               TextColor="#444"
+               FontSize="9"
+               FontAttributes="Italic"
+               Margin="42,0,0,0"
+               IsVisible="{Binding ShowTechnical, Source={x:Reference root}}"/>
+    </VerticalStackLayout>
+</ContentView>

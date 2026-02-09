@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.DeltaZone"
+             x:Name="deltaZoneRoot">
+    
+    <!-- Delta Zone: Summarizes differences, not raw values.
+         Phase 3: Make Comparison the Star
+         
+         Design principles:
+         - Visually quieter than paths, but readable
+         - Ordered by explanatory power (causal salience)
+         - Supports hover-to-highlight source
+         - Empty state: "No meaningful divergence observed"
+    -->
+    
+    <Border BackgroundColor="#12121f"
+            StrokeThickness="1"
+            Stroke="#2a2a4e"
+            Padding="12,10"
+            StrokeShape="RoundRectangle 8">
+        <Grid RowDefinitions="Auto,Auto,*">
+            <!-- Header -->
+            <HorizontalStackLayout Grid.Row="0" Spacing="8">
+                <Label Text="⟷" TextColor="#ffd93d" FontSize="14"/>
+                <Label Text="Differences" 
+                       TextColor="#ffd93d" 
+                       FontSize="13" 
+                       FontAttributes="Bold"/>
+                <Label Text="{Binding DeltaCount, Source={x:Reference deltaZoneRoot}, StringFormat='({0})'}"
+                       TextColor="#666"
+                       FontSize="11"
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+            
+            <!-- Alignment indicator -->
+            <HorizontalStackLayout Grid.Row="1" Spacing="6" Margin="0,6,0,8">
+                <Label Text="Aligned:" TextColor="#555" FontSize="10"/>
+                <Label Text="{Binding AlignmentDescription, Source={x:Reference deltaZoneRoot}}"
+                       TextColor="#888"
+                       FontSize="10"
+                       LineBreakMode="TailTruncation"/>
+            </HorizontalStackLayout>
+            
+            <!-- Delta List or Empty State -->
+            <VerticalStackLayout Grid.Row="2" Spacing="8">
+                <!-- Empty state -->
+                <Label Text="No meaningful divergence observed"
+                       TextColor="#555"
+                       FontSize="11"
+                       FontAttributes="Italic"
+                       HorizontalOptions="Center"
+                       Margin="0,15"
+                       IsVisible="{Binding HasNoDeltas, Source={x:Reference deltaZoneRoot}}"/>
+                
+                <!-- Delta items (generated in code-behind) -->
+                <VerticalStackLayout x:Name="deltaItemsContainer" Spacing="6"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>

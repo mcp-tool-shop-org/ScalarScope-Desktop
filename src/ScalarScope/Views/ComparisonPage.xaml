@@ -5,10 +5,10 @@
              xmlns:vm="clr-namespace:ScalarScope.ViewModels"
              x:Class="ScalarScope.Views.ComparisonPage"
              x:DataType="vm:ComparisonViewModel"
-             Title="Compare"
+             Title="Compare Paths"
              BackgroundColor="#0f0f1a">
 
-    <Grid RowDefinitions="Auto,Auto,2*,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,2*,Auto,Auto,Auto,*,Auto">
         <!-- Demo Annotation Banner (shows during guided demo) -->
         <controls:DemoAnnotationBanner Grid.Row="0" x:Name="demoBanner"/>
 
@@ -139,33 +139,56 @@
                                BackgroundColor="#1a1a2e"
                                HorizontalOptions="Center">
             <!-- Overlay Mode Toggle -->
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Overlay" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
-                <Switch IsToggled="{Binding IsOverlayMode}" OnColor="#00d2d3" Scale="0.8"/>
-            </HorizontalStackLayout>
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Stack" TextColor="#00d2d3" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                    <Switch IsToggled="{Binding IsOverlayMode}" OnColor="#00d2d3" Scale="0.8"/>
+                </HorizontalStackLayout>
+                <Label Text="Layer paths on top of each other" TextColor="#555" FontSize="9"/>
+            </VerticalStackLayout>
             <BoxView WidthRequest="1" Color="#2a2a4e"/>
             
             <!-- Sub-toggles for overlay mode -->
-            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode}">
-                <Label Text="Deviation" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
-                <Switch IsToggled="{Binding ShowDeviation}" OnColor="#ff6b6b" Scale="0.8"/>
-            </HorizontalStackLayout>
-            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode}">
-                <Label Text="Bands" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
-                <Switch IsToggled="{Binding ShowStatisticalBands}" OnColor="#74b9ff" Scale="0.8"/>
-            </HorizontalStackLayout>
+            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsOverlayMode}">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Gaps" TextColor="#ff6b6b" FontSize="10" VerticalOptions="Center"/>
+                    <Switch IsToggled="{Binding ShowDeviation}" OnColor="#ff6b6b" Scale="0.7"/>
+                </HorizontalStackLayout>
+                <Label Text="Highlight where paths diverge" TextColor="#555" FontSize="9"/>
+            </VerticalStackLayout>
+            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsOverlayMode}">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Range" TextColor="#74b9ff" FontSize="10" VerticalOptions="Center"/>
+                    <Switch IsToggled="{Binding ShowStatisticalBands}" OnColor="#74b9ff" Scale="0.7"/>
+                </HorizontalStackLayout>
+                <Label Text="Show confidence bands" TextColor="#555" FontSize="9"/>
+            </VerticalStackLayout>
             <BoxView WidthRequest="1" Color="#2a2a4e" IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}"/>
 
             <!-- Annotations toggle (side-by-side mode only) -->
-            <HorizontalStackLayout Spacing="5" IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
-                <Label Text="Annotations" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
-                <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#a29bfe" Scale="0.8"/>
-            </HorizontalStackLayout>
+            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Labels" TextColor="#a29bfe" FontSize="11" VerticalOptions="Center"/>
+                    <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#a29bfe" Scale="0.8"/>
+                </HorizontalStackLayout>
+                <Label Text="Add text annotations" TextColor="#555" FontSize="9"/>
+            </VerticalStackLayout>
             <BoxView WidthRequest="1" Color="#2a2a4e"/>
-            <HorizontalStackLayout Spacing="5">
-                <Label Text="Analytics" TextColor="#888" FontSize="11" VerticalOptions="Center"/>
-                <Switch x:Name="analyticsSwitch" IsToggled="True" OnColor="#ffd93d" Scale="0.8"/>
-            </HorizontalStackLayout>
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Details" TextColor="#ffd93d" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                    <Switch x:Name="analyticsSwitch" IsToggled="True" OnColor="#ffd93d" Scale="0.8"/>
+                </HorizontalStackLayout>
+                <Label Text="Show quantitative comparison" TextColor="#555" FontSize="9"/>
+            </VerticalStackLayout>
+            <BoxView WidthRequest="1" Color="#2a2a4e"/>
+            
+            <!-- Alignment Control (Phase 3) -->
+            <controls:AlignmentControl 
+                VerticalOptions="Center"
+                SelectedAlignment="{Binding SelectedAlignment}"
+                IsVisible="{Binding HasBothRuns}"/>
+            
             <BoxView WidthRequest="1" Color="#2a2a4e"/>
             <Label x:Name="deltaLabel"
                    TextColor="#ffd93d"
@@ -174,8 +197,16 @@
                    VerticalOptions="Center"/>
         </HorizontalStackLayout>
 
+        <!-- Delta Zone (Phase 3: Canonical Delta Display) -->
+        <controls:DeltaZone Grid.Row="4"
+                            Deltas="{Binding CanonicalDeltas}"
+                            AlignmentDescription="{Binding AlignmentDescription}"
+                            HighlightedDeltaId="{Binding HighlightedDeltaId}"
+                            Margin="10,5"
+                            IsVisible="{Binding HasBothRuns}"/>
+
         <!-- Interpretation Strip (Verdict) -->
-        <Border Grid.Row="4"
+        <Border Grid.Row="5"
                 BackgroundColor="#16213e"
                 StrokeThickness="0"
                 Padding="15,10"
@@ -212,7 +243,7 @@
         </Border>
 
         <!-- Analytics Panel -->
-        <controls:ComparisonAnalyticsPanel Grid.Row="5"
+        <controls:ComparisonAnalyticsPanel Grid.Row="6"
                                            LeftRun="{Binding LeftRun}"
                                            RightRun="{Binding RightRun}"
                                            CurrentTime="{Binding Player.Time}"
@@ -220,7 +251,7 @@
                                            IsVisible="{Binding IsToggled, Source={x:Reference analyticsSwitch}}"/>
 
         <!-- No runs message -->
-        <VerticalStackLayout Grid.Row="5"
+        <VerticalStackLayout Grid.Row="6"
                              HorizontalOptions="Center"
                              VerticalOptions="Center"
                              IsVisible="{Binding HasBothRuns, Converter={StaticResource InverseBoolConverter}}">
@@ -238,7 +269,7 @@
         </VerticalStackLayout>
 
         <!-- Playback Control -->
-        <controls:PlaybackControl Grid.Row="6"
+        <controls:PlaybackControl Grid.Row="7"
                                   BindingContext="{Binding Player}"/>
     </Grid>
 </ContentPage>

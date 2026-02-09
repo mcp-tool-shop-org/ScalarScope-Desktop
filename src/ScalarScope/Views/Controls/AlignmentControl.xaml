@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.AlignmentControl"
+             x:Name="alignmentRoot">
+    
+    <!-- Temporal Alignment Controls
+         Phase 3: Make Comparison the Star
+         
+         Comparison without alignment is noise.
+         Explicit alignment control, clearly visible.
+    -->
+    
+    <Border BackgroundColor="#16213e"
+            StrokeThickness="0"
+            Padding="10,6"
+            StrokeShape="RoundRectangle 6">
+        <HorizontalStackLayout Spacing="10">
+            <Label Text="Align by:"
+                   TextColor="#888"
+                   FontSize="10"
+                   VerticalOptions="Center"/>
+            
+            <!-- Alignment options as segmented buttons -->
+            <HorizontalStackLayout Spacing="4">
+                <!-- By Step (default) -->
+                <Border x:Name="byStepBtn"
+                        StrokeThickness="1"
+                        Stroke="#4ecdc4"
+                        BackgroundColor="#4ecdc4"
+                        Padding="8,4"
+                        StrokeShape="RoundRectangle 4">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnByStepTapped"/>
+                    </Border.GestureRecognizers>
+                    <Label x:Name="byStepLabel" Text="Step" TextColor="#0f0f1a" FontSize="10" FontAttributes="Bold"/>
+                </Border>
+                
+                <!-- By Convergence -->
+                <Border x:Name="byConvergenceBtn"
+                        StrokeThickness="1"
+                        Stroke="#4ecdc4"
+                        BackgroundColor="Transparent"
+                        Padding="8,4"
+                        StrokeShape="RoundRectangle 4">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnByConvergenceTapped"/>
+                    </Border.GestureRecognizers>
+                    <Label x:Name="byConvergenceLabel" Text="Convergence" TextColor="#4ecdc4" FontSize="10"/>
+                </Border>
+                
+                <!-- By First Change -->
+                <Border x:Name="byInstabilityBtn"
+                        StrokeThickness="1"
+                        Stroke="#4ecdc4"
+                        BackgroundColor="Transparent"
+                        Padding="8,4"
+                        StrokeShape="RoundRectangle 4">
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnByInstabilityTapped"/>
+                    </Border.GestureRecognizers>
+                    <Label x:Name="byInstabilityLabel" Text="First Change" TextColor="#4ecdc4" FontSize="10"/>
+                </Border>
+            </HorizontalStackLayout>
+            
+            <!-- Alignment description -->
+            <Label x:Name="alignmentDescriptionLabel"
+                   Text="Aligned by training step"
+                   TextColor="#555"
+                   FontSize="9"
+                   VerticalOptions="Center"
+                   MaximumWidthRequest="200"
+                   LineBreakMode="TailTruncation"/>
+        </HorizontalStackLayout>
+    </Border>
+</ContentView>

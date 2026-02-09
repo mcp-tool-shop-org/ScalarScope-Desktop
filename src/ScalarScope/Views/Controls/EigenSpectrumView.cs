@@ -34,9 +34,25 @@ public class EigenSpectrumView : SKCanvasView
         SKColor.Parse("#c56cf0"),
     ];
 
+    // Phase 1: Demo state fields
+    private IList<double>? _currentEigenvalues;
+    private bool _isRenderingDemo;
+
     public EigenSpectrumView()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (Session?.Run is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnSessionChanged(BindableObject bindable, object oldValue, object newValue)
@@ -67,20 +83,38 @@ public class EigenSpectrumView : SKCanvasView
 
         canvas.Clear(BackgroundColor);
 
-        if (Session?.Run is null || Session.CurrentEigenvalues is null)
+        // Phase 1: Use demo eigenvalues when no session data available
+        _isRenderingDemo = false;
+        if (Session?.Run is not null && Session.CurrentEigenvalues is not null)
+        {
+            _currentEigenvalues = Session.CurrentEigenvalues.Values;
+        }
+        else
+        {
+            // Use demo eigenvalues
+            _currentEigenvalues = DemoStateService.Instance.GetAnimatedEigenvalues();
+            _isRenderingDemo = true;
+        }
+
+        if (_currentEigenvalues is null || _currentEigenvalues.Count == 0)
         {
             DrawNoDataMessage(canvas, info);
             return;
         }
 
         // Invariant checks for eigenvalues
-        var eigenvalues = Session.CurrentEigenvalues.Values;
-        InvariantGuard.AssertEigenvaluesSorted(eigenvalues, "EigenSpectrumView");
-        InvariantGuard.AssertEigenvaluesNonNegative(eigenvalues, "EigenSpectrumView");
+        InvariantGuard.AssertEigenvaluesSorted(_currentEigenvalues, "EigenSpectrumView");
+        InvariantGuard.AssertEigenvaluesNonNegative(_currentEigenvalues, "EigenSpectrumView");
 
         DrawEigenBars(canvas, info);
         DrawEffectiveDimensionality(canvas, info);
         DrawInterpretation(canvas, info);
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
+        }
     }
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
@@ -96,7 +130,7 @@ public class EigenSpectrumView : SKCanvasView
 
     private void DrawEigenBars(SKCanvas canvas, SKImageInfo info)
     {
-        var eigenvalues = Session!.CurrentEigenvalues!.Values;
+        var eigenvalues = _currentEigenvalues!;
         if (eigenvalues.Count == 0) return;
 
         var maxEigen = eigenvalues.Max();
@@ -152,7 +186,7 @@ public class EigenSpectrumView : SKCanvasView
 
     private void DrawEffectiveDimensionality(SKCanvas canvas, SKImageInfo info)
     {
-        var eigenvalues = Session!.CurrentEigenvalues!.Values;
+        var eigenvalues = _currentEigenvalues!;
         if (eigenvalues.Count == 0) return;
 
         var total = eigenvalues.Sum();
@@ -188,7 +222,7 @@ public class EigenSpectrumView : SKCanvasView
 
     private void DrawInterpretation(SKCanvas canvas, SKImageInfo info)
     {
-        var eigenvalues = Session!.CurrentEigenvalues!.Values;
+        var eigenvalues = _currentEigenvalues!;
         if (eigenvalues.Count == 0) return;
 
         // Use centralized calculation for consistency
@@ -224,5 +258,40 @@ public class EigenSpectrumView : SKCanvasView
         paint.Color = SKColors.Gray;
         var transferPrediction = firstFactorVar > 0.4 ? "Transfer viable" : "Transfer unlikely";
         canvas.DrawText(transferPrediction, x, y, SKTextAlign.Left, font, paint);
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            info.Width - textBounds.Width - padding * 2 - 8,
+            8,
+            info.Width - 8,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 }

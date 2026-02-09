@@ -1,4 +1,5 @@
 using ScalarScope.Models;
+using ScalarScope.Services;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
 using SkiaSharp.Views.Maui.Controls;
@@ -47,9 +48,26 @@ public class ComparisonAnalyticsPanel : SKCanvasView
     private static readonly SKColor NeutralColor = SKColor.Parse("#ffd93d");
     private static readonly SKColor TextColor = SKColors.White;
 
+    // Phase 1: Demo state fields
+    private GeometryRun? _currentLeftRun;
+    private GeometryRun? _currentRightRun;
+    private bool _isRenderingDemo;
+
     public ComparisonAnalyticsPanel()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (LeftRun is null || RightRun is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnPropertyChangedInvalidate(BindableObject bindable, object oldValue, object newValue)
@@ -65,7 +83,19 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
         canvas.Clear(BackgroundColor);
 
-        if (LeftRun == null || RightRun == null)
+        // Phase 1: Use demo data when no real runs available
+        _currentLeftRun = LeftRun;
+        _currentRightRun = RightRun;
+        _isRenderingDemo = false;
+        
+        if (_currentLeftRun == null || _currentRightRun == null)
+        {
+            _currentLeftRun = DemoStateService.Instance.DemoPathA;
+            _currentRightRun = DemoStateService.Instance.DemoPathB;
+            _isRenderingDemo = true;
+        }
+
+        if (_currentLeftRun == null || _currentRightRun == null)
         {
             DrawNoDataMessage(canvas, info);
             return;
@@ -79,6 +109,12 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         DrawEigenAnalysis(canvas, metrics, 0, colWidth, info.Height);
         DrawTrajectoryAnalysis(canvas, metrics, colWidth, colWidth, info.Height);
         DrawOverallVerdict(canvas, metrics, colWidth * 2, colWidth, info.Height);
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
+        }
     }
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
@@ -354,15 +390,18 @@ public class ComparisonAnalyticsPanel : SKCanvasView
 
     private ComparisonMetricsData ComputeMetrics()
     {
-        var leftSteps = LeftRun!.Trajectory.Timesteps;
-        var rightSteps = RightRun!.Trajectory.Timesteps;
-        var leftEigen = LeftRun.Geometry.Eigenvalues;
-        var rightEigen = RightRun.Geometry.Eigenvalues;
+        var leftSteps = _currentLeftRun!.Trajectory.Timesteps;
+        var rightSteps = _currentRightRun!.Trajectory.Timesteps;
+        var leftEigen = _currentLeftRun.Geometry.Eigenvalues;
+        var rightEigen = _currentRightRun.Geometry.Eigenvalues;
 
-        var leftIdx = leftSteps.Count > 0 ? (int)(CurrentTime * (leftSteps.Count - 1)) : 0;
-        var rightIdx = rightSteps.Count > 0 ? (int)(CurrentTime * (rightSteps.Count - 1)) : 0;
-        var leftEigenIdx = leftEigen.Count > 0 ? (int)(CurrentTime * (leftEigen.Count - 1)) : 0;
-        var rightEigenIdx = rightEigen.Count > 0 ? (int)(CurrentTime * (rightEigen.Count - 1)) : 0;
+        // Phase 1: Use animation time for demo, CurrentTime for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+
+        var leftIdx = leftSteps.Count > 0 ? (int)(renderTime * (leftSteps.Count - 1)) : 0;
+        var rightIdx = rightSteps.Count > 0 ? (int)(renderTime * (rightSteps.Count - 1)) : 0;
+        var leftEigenIdx = leftEigen.Count > 0 ? (int)(renderTime * (leftEigen.Count - 1)) : 0;
+        var rightEigenIdx = rightEigen.Count > 0 ? (int)(renderTime * (rightEigen.Count - 1)) : 0;
 
         leftIdx = Math.Clamp(leftIdx, 0, Math.Max(0, leftSteps.Count - 1));
         rightIdx = Math.Clamp(rightIdx, 0, Math.Max(0, rightSteps.Count - 1));
@@ -390,8 +429,8 @@ public class ComparisonAnalyticsPanel : SKCanvasView
             RightEffDim = rightCurrent?.EffectiveDim ?? 0,
             LeftCurvature = leftCurrent?.Curvature ?? 0,
             RightCurvature = rightCurrent?.Curvature ?? 0,
-            LeftFailures = LeftRun.Failures.Count,
-            RightFailures = RightRun.Failures.Count
+            LeftFailures = _currentLeftRun.Failures.Count,
+            RightFailures = _currentRightRun.Failures.Count
         };
     }
 
@@ -459,5 +498,40 @@ public class ComparisonAnalyticsPanel : SKCanvasView
         public double RightCurvature { get; init; }
         public int LeftFailures { get; init; }
         public int RightFailures { get; init; }
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            info.Width - textBounds.Width - padding * 2 - 8,
+            8,
+            info.Width - 8,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 }

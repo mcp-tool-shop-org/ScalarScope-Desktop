@@ -4,6 +4,8 @@ using Microsoft.Extensions.Logging;
 // Parse command line arguments
 var durationMinutes = 120; // Default 2 hours
 var outputPath = "soak_test_report.json";
+var runValidation = false;
+string? validationOutputPath = null;
 
 for (int i = 0; i < args.Length; i++)
 {
@@ -29,6 +31,17 @@ for (int i = 0; i < args.Length; i++)
         case "-q":
             durationMinutes = 5; // Quick 5-minute test
             break;
+        case "--validate":
+        case "-v":
+            runValidation = true;
+            break;
+        case "--validate-output":
+            if (i + 1 < args.Length)
+            {
+                validationOutputPath = args[i + 1];
+                i++;
+            }
+            break;
         case "--help":
         case "-h":
             Console.WriteLine("ScalarScope Soak Test Runner");
@@ -39,9 +52,32 @@ for (int i = 0; i < args.Length; i++)
             Console.WriteLine("  -d, --duration <minutes>  Test duration in minutes (default: 120)");
             Console.WriteLine("  -o, --output <path>       Output report path (default: soak_test_report.json)");
             Console.WriteLine("  -q, --quick               Quick 5-minute test");
+            Console.WriteLine("  -v, --validate            Run Phase 3.2 validation suite");
+            Console.WriteLine("      --validate-output     Validation report output path");
             Console.WriteLine("  -h, --help                Show this help");
             return 0;
     }
+}
+
+// Run Phase 3.2 validation if requested
+if (runValidation)
+{
+    var validationRunner = new Phase32ValidationRunner();
+    var validationReport = await validationRunner.RunValidationAsync();
+    
+    var validationOutput = validationOutputPath ?? "phase32_validation_report.md";
+    
+    await File.WriteAllTextAsync(validationOutput, validationReport.ToSummaryTable());
+    
+    Console.WriteLine("╔═══════════════════════════════════════════════════════════════╗");
+    Console.WriteLine("║         Phase 3.2 Validation Report Generated                 ║");
+    Console.WriteLine("╚═══════════════════════════════════════════════════════════════╝");
+    Console.WriteLine();
+    Console.WriteLine(validationReport.ToSummaryTable());
+    Console.WriteLine();
+    Console.WriteLine($"  Report saved to: {validationOutput}");
+    
+    return validationReport.AllGatesPassed ? 0 : 1;
 }
 
 // Set up logging

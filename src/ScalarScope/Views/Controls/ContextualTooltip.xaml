@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.ContextualTooltip"
+             x:Name="root"
+             IsVisible="False">
+
+    <!-- Floating tooltip that appears for contextual events -->
+    <Border BackgroundColor="#2a2a4e"
+            Stroke="#00d9ff"
+            StrokeThickness="1"
+            StrokeShape="RoundRectangle 8"
+            Padding="12,10"
+            Margin="20"
+            MaximumWidthRequest="320"
+            HorizontalOptions="End"
+            VerticalOptions="Start">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="6">
+            <!-- Title -->
+            <Label Grid.Row="0" Grid.Column="0"
+                   x:Name="titleLabel"
+                   FontSize="13"
+                   FontAttributes="Bold"
+                   TextColor="#00d9ff"/>
+            
+            <!-- Dismiss Button -->
+            <Button Grid.Row="0" Grid.Column="1"
+                    Text="✕"
+                    Clicked="OnDismissClicked"
+                    BackgroundColor="Transparent"
+                    TextColor="#666"
+                    FontSize="12"
+                    WidthRequest="24"
+                    HeightRequest="24"
+                    Padding="0"/>
+            
+            <!-- Message -->
+            <Label Grid.Row="1" Grid.ColumnSpan="2"
+                   x:Name="messageLabel"
+                   FontSize="12"
+                   TextColor="#ccc"
+                   LineBreakMode="WordWrap"/>
+            
+            <!-- Visual Hint -->
+            <Label Grid.Row="2" Grid.ColumnSpan="2"
+                   x:Name="hintLabel"
+                   FontSize="11"
+                   TextColor="#888"
+                   FontAttributes="Italic"
+                   LineBreakMode="WordWrap"/>
+            
+            <!-- Got it button -->
+            <Button Grid.Row="3" Grid.ColumnSpan="2"
+                    Text="Got it"
+                    Clicked="OnDismissClicked"
+                    BackgroundColor="#00d9ff"
+                    TextColor="#0f0f1a"
+                    FontSize="11"
+                    HeightRequest="28"
+                    Padding="12,0"
+                    CornerRadius="4"
+                    HorizontalOptions="End"
+                    Margin="0,4,0,0"/>
+        </Grid>
+    </Border>
+</ContentView>

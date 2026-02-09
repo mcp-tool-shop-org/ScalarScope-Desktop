@@ -75,6 +75,33 @@ public partial class ComparisonViewModel : ObservableObject
     [ObservableProperty]
     private bool _showDistanceMetrics = true;
 
+    // === Phase 3: Make Comparison the Star ===
+
+    // Temporal Alignment
+    [ObservableProperty]
+    private TemporalAlignment _selectedAlignment = TemporalAlignment.ByStep;
+
+    [ObservableProperty]
+    private string _alignmentDescription = "Aligned by training step";
+
+    // Canonical Deltas
+    [ObservableProperty]
+    private List<CanonicalDelta> _canonicalDeltas = [];
+
+    [ObservableProperty]
+    private string _autoSummary = "";
+
+    // Visual emphasis state
+    [ObservableProperty]
+    private double _highlightedAnchorTime = -1;
+
+    [ObservableProperty]
+    private string? _highlightedDeltaId;
+
+    // Compare mode state
+    [ObservableProperty]
+    private bool _isCompareMode;
+
     // Collection of runs for overlay view
     public List<GeometryRun> OverlayRuns => [.. (new[] { LeftRun, RightRun }).OfType<GeometryRun>()];
 
@@ -107,6 +134,63 @@ public partial class ComparisonViewModel : ObservableObject
         }
 
         NotifyComputedPropertiesChanged();
+        
+        // Phase 3: Update deltas with current time
+        if (HasBothRuns)
+        {
+            UpdateCanonicalDeltas();
+        }
+    }
+
+    /// <summary>
+    /// Called when SelectedAlignment property changes.
+    /// Recomputes deltas and updates alignment description.
+    /// </summary>
+    partial void OnSelectedAlignmentChanged(TemporalAlignment value)
+    {
+        // Update alignment description
+        var anchors = TemporalAlignmentService.GetAnchors(LeftRun, RightRun, value);
+        AlignmentDescription = anchors.AnchorDescription;
+
+        // Recompute deltas with new alignment
+        if (HasBothRuns)
+        {
+            UpdateCanonicalDeltas();
+        }
+    }
+
+    /// <summary>
+    /// Update canonical deltas based on current runs, alignment, and time.
+    /// </summary>
+    private void UpdateCanonicalDeltas()
+    {
+        CanonicalDeltas = CanonicalDeltaService.ComputeDeltas(
+            LeftRun, RightRun, SelectedAlignment, Player.Time);
+        
+        AutoSummary = CanonicalDeltaService.GenerateAutoSummary(CanonicalDeltas);
+    }
+
+    /// <summary>
+    /// Jump to the visual anchor time of a delta.
+    /// Phase 3: Clicking delta scrolls/focuses source region.
+    /// </summary>
+    [RelayCommand]
+    public void JumpToDeltaAnchor(CanonicalDelta delta)
+    {
+        if (delta == null) return;
+        
+        HighlightedDeltaId = delta.Id;
+        HighlightedAnchorTime = delta.VisualAnchorTime;
+        Player.JumpToTimeCommand.Execute(delta.VisualAnchorTime);
+    }
+
+    /// <summary>
+    /// Highlight a delta (for hover interaction).
+    /// </summary>
+    public void HighlightDelta(CanonicalDelta? delta)
+    {
+        HighlightedDeltaId = delta?.Id;
+        HighlightedAnchorTime = delta?.VisualAnchorTime ?? -1;
     }
 
     private void NotifyComputedPropertiesChanged()
@@ -371,11 +455,28 @@ public partial class ComparisonViewModel : ObservableObject
     private void UpdateComparisonState()
     {
         HasBothRuns = HasLeftRun && HasRightRun;
+        IsCompareMode = HasBothRuns;
 
         if (HasBothRuns)
         {
             GenerateComparisonSummary();
+            
+            // Phase 3: Compute canonical deltas
+            UpdateCanonicalDeltas();
+            
+            // Update alignment description
+            var anchors = TemporalAlignmentService.GetAnchors(LeftRun, RightRun, SelectedAlignment);
+            AlignmentDescription = anchors.AnchorDescription;
+            
             Player.JumpToTimeCommand.Execute(0.0);
+        }
+        else
+        {
+            // Clear Phase 3 state when not in compare mode
+            CanonicalDeltas = [];
+            AutoSummary = "";
+            HighlightedDeltaId = null;
+            HighlightedAnchorTime = -1;
         }
     }
 

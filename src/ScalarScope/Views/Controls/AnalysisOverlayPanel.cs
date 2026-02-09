@@ -79,9 +79,25 @@ public class AnalysisOverlayPanel : SKCanvasView
     private static readonly SKColor GridColor = SKColor.Parse("#333355");
     private static readonly SKColor TextColor = SKColor.Parse("#aaaacc");
 
+    // Phase 1: Demo state fields
+    private Models.GeometryRun? _currentRenderRun;
+    private bool _isRenderingDemo;
+
     public AnalysisOverlayPanel()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (Session?.Run is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnSessionChanged(BindableObject bindable, object oldValue, object newValue)
@@ -141,14 +157,31 @@ public class AnalysisOverlayPanel : SKCanvasView
 
         canvas.Clear(BackgroundColor);
 
-        if (Session?.Run == null || _analysis == null)
+        // Phase 1: Use demo data when no session available
+        _currentRenderRun = Session?.Run;
+        _isRenderingDemo = false;
+        
+        if (_currentRenderRun == null)
+        {
+            _currentRenderRun = DemoStateService.Instance.DemoRun;
+            _isRenderingDemo = true;
+            
+            // Generate analysis for demo run if needed
+            if (_currentRenderRun != null && _analysis == null)
+            {
+                _analysis = _analysisService.AnalyzeRun(_currentRenderRun);
+            }
+        }
+
+        if (_currentRenderRun == null || _analysis == null)
         {
             DrawNoDataMessage(canvas, info);
             return;
         }
 
-        var currentTime = Session.Player.Time;
-        var duration = Session.Player.Duration;
+        // Phase 1: Get time from demo or session
+        var currentTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : Session!.Player.Time;
+        var duration = _isRenderingDemo ? 1.0 : Session!.Player.Duration;
 
         // Layout: divide panel into sections
         var margin = 10f;
@@ -191,6 +224,12 @@ public class AnalysisOverlayPanel : SKCanvasView
 
         // Draw classification badge
         DrawClassificationBadge(canvas, info);
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
+        }
     }
 
     private void DrawNoDataMessage(SKCanvas canvas, SKImageInfo info)
@@ -547,5 +586,40 @@ public class AnalysisOverlayPanel : SKCanvasView
 
         canvas.DrawRoundRect(badgeRect, 4, 4, bgPaint);
         canvas.DrawText(text, badgeRect.Left + 7, badgeRect.MidY + 4, SKTextAlign.Left, font, textPaint);
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            8,  // Left side to avoid overlapping with classification badge
+            8,
+            8 + textBounds.Width + padding * 2,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 }

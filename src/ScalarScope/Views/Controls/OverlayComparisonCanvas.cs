@@ -109,9 +109,25 @@ public class OverlayComparisonCanvas : SKCanvasView
     private DtwResult? _cachedDtw;
     private FrechetResult? _cachedFrechet;
 
+    // Phase 1: Demo state fields
+    private IList<GeometryRun>? _currentRenderRuns;
+    private bool _isRenderingDemo;
+
     public OverlayComparisonCanvas()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (Runs is null || Runs.Count == 0)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnRunsChanged(BindableObject bindable, object oldValue, object newValue)
@@ -140,7 +156,7 @@ public class OverlayComparisonCanvas : SKCanvasView
 
     private void EnsureAnalysis()
     {
-        var runs = Runs;
+        var runs = _currentRenderRuns;
         if (runs == null || runs.Count == 0) return;
 
         // Compute alignment for all runs
@@ -173,8 +189,22 @@ public class OverlayComparisonCanvas : SKCanvasView
 
         DrawGrid(canvas, info);
 
-        var runs = Runs;
-        if (runs == null || runs.Count == 0)
+        // Phase 1: Use demo runs when no real runs available
+        _currentRenderRuns = Runs;
+        _isRenderingDemo = false;
+        
+        if (_currentRenderRuns is null || _currentRenderRuns.Count == 0)
+        {
+            var demoA = DemoStateService.Instance.DemoPathA;
+            var demoB = DemoStateService.Instance.DemoPathB;
+            if (demoA != null && demoB != null)
+            {
+                _currentRenderRuns = [demoA, demoB];
+                _isRenderingDemo = true;
+            }
+        }
+
+        if (_currentRenderRuns is null || _currentRenderRuns.Count == 0)
         {
             DrawNoDataMessage(canvas, info);
             return;
@@ -189,7 +219,7 @@ public class OverlayComparisonCanvas : SKCanvasView
         }
 
         // Draw deviation regions (behind trajectories)
-        if (ShowDeviation && runs.Count >= 2 && _cachedDeviation?.IsValid == true)
+        if (ShowDeviation && _currentRenderRuns.Count >= 2 && _cachedDeviation?.IsValid == true)
         {
             DrawDeviationRegions(canvas, info);
         }
@@ -210,6 +240,12 @@ public class OverlayComparisonCanvas : SKCanvasView
         if (ShowDistanceMetrics)
         {
             DrawDistanceMetrics(canvas, info);
+        }
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
         }
     }
 
@@ -535,6 +571,41 @@ public class OverlayComparisonCanvas : SKCanvasView
             _center.X + x * _scale,
             _center.Y - y * _scale // Flip Y
         );
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            info.Width - textBounds.Width - padding * 2 - 8,
+            8,
+            info.Width - 8,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 
     #endregion

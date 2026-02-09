@@ -21,16 +21,16 @@
         <Tab Title="Overview" Icon="home.png">
             <ShellContent ContentTemplate="{DataTemplate views:OverviewPage}" Route="overview"/>
         </Tab>
-        <Tab Title="Trajectory" Icon="trajectory.png">
+        <Tab Title="Learning Path" Icon="trajectory.png">
             <ShellContent ContentTemplate="{DataTemplate views:TrajectoryPage}" Route="trajectory"/>
         </Tab>
-        <Tab Title="Scalars" Icon="scalars.png">
+        <Tab Title="Performance" Icon="scalars.png">
             <ShellContent ContentTemplate="{DataTemplate views:ScalarsPage}" Route="scalars"/>
         </Tab>
-        <Tab Title="Geometry" Icon="geometry.png">
+        <Tab Title="Alignment" Icon="geometry.png">
             <ShellContent ContentTemplate="{DataTemplate views:GeometryPage}" Route="geometry"/>
         </Tab>
-        <Tab Title="Compare" Icon="compare.png">
+        <Tab Title="Compare Paths" Icon="compare.png">
             <ShellContent ContentTemplate="{DataTemplate views:ComparisonPage}" Route="compare"/>
         </Tab>
         <Tab Title="Failures" Icon="failures.png">

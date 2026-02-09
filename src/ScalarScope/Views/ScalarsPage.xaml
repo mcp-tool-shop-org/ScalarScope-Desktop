@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:ScalarScope.ViewModels"
              x:Class="ScalarScope.Views.ScalarsPage"
              x:DataType="vm:VortexSessionViewModel"
-             Title="Scalars"
+             Title="Performance Signals"
              BackgroundColor="#0f0f1a">
 
     <Grid RowDefinitions="*,Auto">

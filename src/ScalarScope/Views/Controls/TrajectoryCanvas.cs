@@ -159,11 +159,47 @@ public class TrajectoryCanvas : SKCanvasView
     private bool _renderPending;
     private const double ThrottleIntervalMs = 33.33; // ~30fps during scrubbing
 
+    // Phase 1: Current render state (supports demo mode)
+    private GeometryRun? _currentRenderRun;
+    private bool _isRenderingDemo;
+
     public TrajectoryCanvas()
     {
         PaintSurface += OnPaintSurface;
         EnableTouchEvents = true;
         Touch += OnTouch;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (_isRenderingDemo || Session?.Run is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
+    }
+
+    /// <summary>
+    /// Phase 1: Helper method to get trajectory points for rendering.
+    /// Works with both real session data and demo data.
+    /// </summary>
+    private List<TrajectoryTimestep> GetRenderTrajectoryPoints()
+    {
+        if (_isRenderingDemo && _currentRenderRun != null)
+        {
+            var allPoints = _currentRenderRun.Trajectory.Timesteps;
+            var animTime = DemoStateService.Instance.AnimationTime;
+            var endIdx = Math.Max(2, (int)(animTime * allPoints.Count));
+            return allPoints.Take(endIdx).ToList();
+        }
+        else if (Session != null)
+        {
+            return Session.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        }
+        return [];
     }
 
     private void OnTouch(object? sender, SKTouchEventArgs e)
@@ -293,17 +329,27 @@ public class TrajectoryCanvas : SKCanvasView
 
         DrawGrid(canvas, info);
 
-        if (Session?.Run is null)
+        // Phase 1: Show demo data when no real data is loaded (eliminate blank screens)
+        _currentRenderRun = Session?.Run ?? DemoStateService.Instance.DemoRun;
+        _isRenderingDemo = Session?.Run is null;
+
+        if (_currentRenderRun is null)
         {
             DrawNoDataMessage(canvas, info);
             return;
         }
 
         // Invariant check: trajectory must be non-empty before rendering
-        if (!InvariantGuard.AssertTrajectoryNonEmpty(Session.Run, "TrajectoryCanvas.OnPaintSurface"))
+        if (!InvariantGuard.AssertTrajectoryNonEmpty(_currentRenderRun, "TrajectoryCanvas.OnPaintSurface"))
         {
             DrawNoDataMessage(canvas, info);
             return;
+        }
+
+        // Draw demo badge if showing reference data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
         }
 
         if (ShowProfessors)
@@ -472,9 +518,67 @@ public class TrajectoryCanvas : SKCanvasView
         canvas.DrawText("Load a geometry run to visualize", _center.X, _center.Y, SKTextAlign.Center, font, paint);
     }
 
+    /// <summary>
+    /// Phase 1: Draw a subtle badge indicating this is demo/reference data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.Default, 12);
+        using var badgePaint = new SKPaint
+        {
+            Color = SKColor.Parse("#3300d9ff"),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var borderPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#5500d9ff"),
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 1,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColor.Parse("#8800d9ff"),
+            IsAntialias = true
+        };
+
+        var label = DemoStateService.Instance.DemoLabel;
+        var textWidth = font.MeasureText(label, textPaint);
+        var padding = 8f;
+        var rect = new SKRect(
+            info.Width - textWidth - padding * 3,
+            padding,
+            info.Width - padding,
+            padding * 2 + 14
+        );
+
+        canvas.DrawRoundRect(rect, 4, 4, badgePaint);
+        canvas.DrawRoundRect(rect, 4, 4, borderPaint);
+        canvas.DrawText(label, rect.Left + padding, rect.Top + 12, font, textPaint);
+    }
+
     private void DrawTrajectory(SKCanvas canvas)
     {
-        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        // Phase 1: Support both real and demo data
+        List<TrajectoryTimestep> points;
+        if (_isRenderingDemo && _currentRenderRun != null)
+        {
+            // Demo mode: use DemoStateService animation time
+            var allPoints = _currentRenderRun.Trajectory.Timesteps;
+            var animTime = DemoStateService.Instance.AnimationTime;
+            var endIdx = Math.Max(2, (int)(animTime * allPoints.Count));
+            points = allPoints.Take(endIdx).ToList();
+        }
+        else if (Session != null)
+        {
+            points = Session.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        }
+        else
+        {
+            return;
+        }
+        
         if (points.Count < 2) return;
 
         // Calculate stats for color modes
@@ -690,7 +794,7 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawHeatMap(SKCanvas canvas, SKImageInfo info)
     {
-        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        var points = GetRenderTrajectoryPoints();
         if (points.Count < 2) return;
 
         // Create density grid
@@ -779,7 +883,7 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawVectorFieldGrid(SKCanvas canvas, SKImageInfo info)
     {
-        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        var points = GetRenderTrajectoryPoints();
         if (points.Count < 2) return;
 
         // Build velocity lookup for nearby trajectory points
@@ -878,7 +982,7 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawVelocityVectors(SKCanvas canvas)
     {
-        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        var points = GetRenderTrajectoryPoints();
 
         using var paint = new SKPaint
         {
@@ -907,7 +1011,7 @@ public class TrajectoryCanvas : SKCanvasView
 
     private void DrawCurvatureMarkers(SKCanvas canvas)
     {
-        var points = Session!.GetTrajectoryUpToTime(Session.Player.Time).ToList();
+        var points = GetRenderTrajectoryPoints();
 
         // Find high-curvature points (phase transitions)
         var maxCurvature = points.Max(p => p.Curvature);

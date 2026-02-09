@@ -10,6 +10,7 @@ namespace ScalarScope.Views.Controls;
 /// <summary>
 /// Trajectory canvas for comparison view.
 /// Renders a single run with label overlay.
+/// Phase 3: Supports visual anchoring for delta highlights.
 /// </summary>
 public class ComparisonTrajectoryCanvas : SKCanvasView
 {
@@ -33,6 +34,11 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
     public static readonly BindableProperty IsDominantProperty =
         BindableProperty.Create(nameof(IsDominant), typeof(bool?), typeof(ComparisonTrajectoryCanvas), null,
             propertyChanged: OnDominantChanged);
+
+    // Phase 3: Visual anchor support
+    public static readonly BindableProperty HighlightedStepRangeProperty =
+        BindableProperty.Create(nameof(HighlightedStepRange), typeof((int Start, int End)?), typeof(ComparisonTrajectoryCanvas), null,
+            propertyChanged: OnHighlightChanged);
 
     public GeometryRun? Run
     {
@@ -73,15 +79,48 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         set => SetValue(IsDominantProperty, value);
     }
 
+    /// <summary>
+    /// Phase 3: Step range to highlight for visual anchoring.
+    /// When set, draws a glowing region around those steps.
+    /// </summary>
+    public (int Start, int End)? HighlightedStepRange
+    {
+        get => ((int Start, int End)?)GetValue(HighlightedStepRangeProperty);
+        set => SetValue(HighlightedStepRangeProperty, value);
+    }
+
+    private static void OnHighlightChanged(BindableObject bindable, object oldValue, object newValue)
+    {
+        var canvas = (ComparisonTrajectoryCanvas)bindable;
+        canvas.InvalidateSurface();
+    }
+
     private static new readonly SKColor BackgroundColor = SKColor.Parse("#1a1a2e");
     private static readonly SKColor GridColor = SKColor.Parse("#2a2a4e");
+    private static readonly SKColor HighlightColor = SKColor.Parse("#ffd93d"); // Phase 3: Delta highlight color
 
     private float _scale = 100f;
     private SKPoint _center;
 
+    // Phase 1: Demo state fields
+    private GeometryRun? _currentRenderRun;
+    private bool _isRenderingDemo;
+
     public ComparisonTrajectoryCanvas()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (Run is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnRunChanged(BindableObject bindable, object oldValue, object newValue)
@@ -112,6 +151,18 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         _center = new SKPoint(info.Width / 2f, info.Height / 2f);
         _scale = Math.Min(info.Width, info.Height) / 4f;
 
+        // Phase 1: Determine current render run (real data or demo)
+        _currentRenderRun = Run;
+        _isRenderingDemo = false;
+
+        if (_currentRenderRun is null)
+        {
+            // Use demo data: Path A for "A", Path B for "B" or anything else
+            var isPathA = Label?.ToUpperInvariant().Contains('A') == true;
+            _currentRenderRun = isPathA ? DemoStateService.Instance.DemoPathA : DemoStateService.Instance.DemoPathB;
+            _isRenderingDemo = true;
+        }
+
         // Apply dimming overlay if this run is weaker
         if (IsDominant == false)
         {
@@ -126,30 +177,39 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         DrawGrid(canvas, info);
         DrawLabel(canvas, info);
 
-        if (Run == null)
+        if (_currentRenderRun == null)
         {
             DrawNoDataMessage(canvas, info);
             return;
         }
 
         // Invariant check: trajectory must be non-empty before rendering
-        if (!InvariantGuard.AssertTrajectoryNonEmpty(Run, $"ComparisonTrajectoryCanvas.{Label}"))
+        if (!InvariantGuard.AssertTrajectoryNonEmpty(_currentRenderRun, $"ComparisonTrajectoryCanvas.{Label}"))
         {
             DrawNoDataMessage(canvas, info);
             return;
         }
 
-        // Invariant check: time must be valid
-        var clampedTime = InvariantGuard.ClampTime(CurrentTime, $"ComparisonTrajectoryCanvas.{Label}");
-        if (Math.Abs(clampedTime - CurrentTime) > 0.001)
+        // Invariant check: time must be valid (skip for demo mode)
+        if (!_isRenderingDemo)
         {
-            // Time was out of bounds - use clamped value
-            CurrentTime = clampedTime;
+            var clampedTime = InvariantGuard.ClampTime(CurrentTime, $"ComparisonTrajectoryCanvas.{Label}");
+            if (Math.Abs(clampedTime - CurrentTime) > 0.001)
+            {
+                // Time was out of bounds - use clamped value
+                CurrentTime = clampedTime;
+            }
         }
 
         DrawProfessorVectors(canvas);
         DrawTrajectory(canvas);
         DrawCurrentPosition(canvas);
+
+        // Phase 3: Draw visual anchor highlight
+        if (HighlightedStepRange.HasValue)
+        {
+            DrawStepRangeHighlight(canvas);
+        }
 
         if (ShowAnnotations)
         {
@@ -157,6 +217,13 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         }
 
         DrawMetrics(canvas, info);
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
+        }
+
         DrawDominanceIndicator(canvas, info);
     }
 
@@ -223,10 +290,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     private void DrawTrajectory(SKCanvas canvas)
     {
-        var steps = Run!.Trajectory.Timesteps;
+        var steps = _currentRenderRun!.Trajectory.Timesteps;
         if (steps.Count < 2) return;
 
-        var maxIdx = (int)(CurrentTime * (steps.Count - 1));
+        // Phase 1: Use animation time for demo, CurrentTime for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+        var maxIdx = (int)(renderTime * (steps.Count - 1));
 
         var skAccent = new SKColor(
             (byte)(AccentColor.Red * 255),
@@ -256,7 +325,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     private void DrawProfessorVectors(SKCanvas canvas)
     {
-        var professors = Run?.Evaluators.Professors;
+        var professors = _currentRenderRun?.Evaluators.Professors;
         if (professors == null || professors.Count == 0) return;
 
         using var paint = new SKPaint
@@ -286,10 +355,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     private void DrawCurrentPosition(SKCanvas canvas)
     {
-        var steps = Run!.Trajectory.Timesteps;
+        var steps = _currentRenderRun!.Trajectory.Timesteps;
         if (steps.Count == 0) return;
 
-        var idx = (int)(CurrentTime * (steps.Count - 1));
+        // Phase 1: Use animation time for demo, CurrentTime for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+        var idx = (int)(renderTime * (steps.Count - 1));
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
@@ -321,12 +392,88 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         canvas.DrawCircle(pos, 5, paint);
     }
 
-    private void DrawAnnotations(SKCanvas canvas, SKImageInfo info)
+    /// <summary>
+    /// Phase 3: Draw highlight glow on step range for visual anchoring.
+    /// </summary>
+    private void DrawStepRangeHighlight(SKCanvas canvas)
     {
-        var steps = Run!.Trajectory.Timesteps;
+        if (!HighlightedStepRange.HasValue || _currentRenderRun == null)
+            return;
+
+        var steps = _currentRenderRun.Trajectory.Timesteps;
         if (steps.Count == 0) return;
 
-        var idx = (int)(CurrentTime * (steps.Count - 1));
+        var (startStep, endStep) = HighlightedStepRange.Value;
+        startStep = Math.Clamp(startStep, 0, steps.Count - 1);
+        endStep = Math.Clamp(endStep, startStep, steps.Count - 1);
+
+        // Draw glowing highlight along the trajectory segment
+        using var highlightPaint = new SKPaint
+        {
+            Color = HighlightColor.WithAlpha(80),
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 12,
+            IsAntialias = true,
+            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6)
+        };
+
+        using var path = new SKPath();
+        bool started = false;
+
+        for (int i = startStep; i <= endStep; i++)
+        {
+            var step = steps[i];
+            if (step.State2D.Count < 2) continue;
+
+            var pos = ToScreen(step.State2D);
+            if (!started)
+            {
+                path.MoveTo(pos);
+                started = true;
+            }
+            else
+            {
+                path.LineTo(pos);
+            }
+        }
+
+        canvas.DrawPath(path, highlightPaint);
+
+        // Draw start and end markers
+        if (startStep < steps.Count && steps[startStep].State2D.Count >= 2)
+        {
+            var startPos = ToScreen(steps[startStep].State2D);
+            using var markerPaint = new SKPaint
+            {
+                Color = HighlightColor,
+                Style = SKPaintStyle.Stroke,
+                StrokeWidth = 2,
+                IsAntialias = true
+            };
+            canvas.DrawCircle(startPos, 8, markerPaint);
+        }
+
+        if (endStep < steps.Count && steps[endStep].State2D.Count >= 2)
+        {
+            var endPos = ToScreen(steps[endStep].State2D);
+            using var markerPaint = new SKPaint
+            {
+                Color = HighlightColor,
+                Style = SKPaintStyle.Fill,
+                IsAntialias = true
+            };
+            canvas.DrawCircle(endPos, 6, markerPaint);
+        }
+    }
+
+    private void DrawAnnotations(SKCanvas canvas, SKImageInfo info)
+    {
+        var steps = _currentRenderRun!.Trajectory.Timesteps;
+        if (steps.Count == 0) return;
+
+        // Phase 1: Use animation time for demo, CurrentTime for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+        var idx = (int)(renderTime * (steps.Count - 1));
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
@@ -347,10 +494,11 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         }
 
         // Effective dimensionality annotation
-        var eigenvalues = Run.Geometry.Eigenvalues;
+        var eigenvalues = _currentRenderRun.Geometry.Eigenvalues;
         if (eigenvalues.Count > 0)
         {
-            var eigenIdx = (int)(CurrentTime * (eigenvalues.Count - 1));
+            // Phase 1: Use animation time for demo, CurrentTime for real data
+            var eigenIdx = (int)(renderTime * (eigenvalues.Count - 1));
             eigenIdx = Math.Clamp(eigenIdx, 0, eigenvalues.Count - 1);
             var eigen = eigenvalues[eigenIdx];
 
@@ -373,10 +521,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     private void DrawMetrics(SKCanvas canvas, SKImageInfo info)
     {
-        var steps = Run!.Trajectory.Timesteps;
+        var steps = _currentRenderRun!.Trajectory.Timesteps;
         if (steps.Count == 0) return;
 
-        var idx = (int)(CurrentTime * (steps.Count - 1));
+        // Phase 1: Use animation time for demo, CurrentTime for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+        var idx = (int)(renderTime * (steps.Count - 1));
         idx = Math.Clamp(idx, 0, steps.Count - 1);
         var current = steps[idx];
 
@@ -451,10 +601,12 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         }
 
         // Draw evaluator alignment indicator
-        var eigenvalues = Run?.Geometry.Eigenvalues;
+        var eigenvalues = _currentRenderRun?.Geometry.Eigenvalues;
         if (eigenvalues != null && eigenvalues.Count > 0)
         {
-            var eigenIdx = (int)(CurrentTime * (eigenvalues.Count - 1));
+            // Phase 1: Use animation time for demo, CurrentTime for real data
+            var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : CurrentTime;
+            var eigenIdx = (int)(renderTime * (eigenvalues.Count - 1));
             eigenIdx = Math.Clamp(eigenIdx, 0, eigenvalues.Count - 1);
             var eigen = eigenvalues[eigenIdx];
 
@@ -483,5 +635,41 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// Subtle, non-intrusive indicator that can be dismissed.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            info.Width - textBounds.Width - padding * 2 - 8,
+            8,
+            info.Width - 8,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 }

@@ -385,32 +385,8 @@
                            HorizontalOptions="Center"/>
 
                     <Grid ColumnDefinitions="*,*" ColumnSpacing="15" RowSpacing="10" WidthRequest="500">
-                        <!-- Path B: Correlated -->
-                        <Border Grid.Column="0"
-                               BackgroundColor="#16213e"
-                               Stroke="#4ecdc4"
-                               StrokeShape="RoundRectangle 8"
-                               Padding="15">
-                            <VerticalStackLayout Spacing="8">
-                                <Label Text="Path B: Convergent"
-                                       FontAttributes="Bold"
-                                       TextColor="#4ecdc4"/>
-                                <Label Text="Correlated professors with shared evaluative structure. Watch eigenvalues collapse to dominance."
-                                       TextColor="#888"
-                                       FontSize="11"
-                                       LineBreakMode="WordWrap"/>
-                                <Button Text="Load Example"
-                                        x:Name="loadCorrelatedButton"
-                                        Clicked="OnLoadCorrelatedClicked"
-                                        BackgroundColor="#4ecdc4"
-                                        TextColor="White"
-                                        HeightRequest="35"
-                                        FontSize="12"/>
-                            </VerticalStackLayout>
-                        </Border>
-
                         <!-- Path A: Orthogonal -->
-                        <Border Grid.Column="1"
+                        <Border Grid.Column="0"
                                BackgroundColor="#16213e"
                                Stroke="#ff6b6b"
                                StrokeShape="RoundRectangle 8"
@@ -427,6 +403,30 @@
                                         x:Name="loadOrthogonalButton"
                                         Clicked="OnLoadOrthogonalClicked"
                                         BackgroundColor="#ff6b6b"
+                                        TextColor="White"
+                                        HeightRequest="35"
+                                        FontSize="12"/>
+                            </VerticalStackLayout>
+                        </Border>
+
+                        <!-- Path B: Correlated -->
+                        <Border Grid.Column="1"
+                               BackgroundColor="#16213e"
+                               Stroke="#4ecdc4"
+                               StrokeShape="RoundRectangle 8"
+                               Padding="15">
+                            <VerticalStackLayout Spacing="8">
+                                <Label Text="Path B: Convergent"
+                                       FontAttributes="Bold"
+                                       TextColor="#4ecdc4"/>
+                                <Label Text="Correlated professors with shared evaluative structure. Watch eigenvalues collapse to dominance."
+                                       TextColor="#888"
+                                       FontSize="11"
+                                       LineBreakMode="WordWrap"/>
+                                <Button Text="Load Example"
+                                        x:Name="loadCorrelatedButton"
+                                        Clicked="OnLoadCorrelatedClicked"
+                                        BackgroundColor="#4ecdc4"
                                         TextColor="White"
                                         HeightRequest="35"
                                         FontSize="12"/>

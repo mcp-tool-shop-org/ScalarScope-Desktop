@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:ScalarScope.ViewModels"
              x:Class="ScalarScope.Views.TrajectoryPage"
              x:DataType="vm:VortexSessionViewModel"
-             Title="Trajectory"
+             Title="Learning Path"
              BackgroundColor="#0f0f1a">
 
     <Grid RowDefinitions="*,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto">
@@ -26,6 +26,12 @@
                                         ShowEigenInsights="{Binding ShowEigenInsights, Source={x:Reference annotationPanel}}"
                                         ShowFailureMarkers="{Binding ShowFailureMarkers, Source={x:Reference annotationPanel}}"
                                         IsVisible="{Binding IsToggled, Source={x:Reference annotationsSwitch}}"/>
+
+            <!-- Contextual Tooltip (Phase 2: event-triggered explanations) -->
+            <controls:ContextualTooltip x:Name="contextualTooltip"
+                                        HorizontalOptions="End"
+                                        VerticalOptions="Start"
+                                        Margin="0,10,10,0"/>
 
             <!-- First-Run Hint (centered, dismissible) -->
             <controls:InlineHint x:Name="playbackHint"
@@ -72,108 +78,118 @@
                                        ShowDimensionAlerts="True"
                                        IsVisible="{Binding IsToggled, Source={x:Reference analysisSwitch}}"/>
 
-        <!-- Toggle Panel with Insight Tooltips -->
+        <!-- Toggle Panel with Intent-First Labels (Phase 2) -->
         <HorizontalStackLayout Grid.Row="2"
                                Grid.ColumnSpan="2"
-                               Spacing="25"
+                               Spacing="20"
                                Padding="15,8"
                                BackgroundColor="#1a1a2e">
-            <!-- Velocity Toggle -->
+            
+            <!-- === Core Signals (Default On) === -->
+            
+            <!-- Motion Speed Toggle -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="Velocity" TextColor="#4ecdc4" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Label Text="Motion" TextColor="#4ecdc4" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
                     <Switch x:Name="velocitySwitch" IsToggled="True" OnColor="#4ecdc4"/>
                 </HorizontalStackLayout>
-                <Label Text="Rate of internal state change" TextColor="#666" FontSize="10"/>
+                <Label Text="How fast is learning progressing?" TextColor="#777" FontSize="10"/>
             </VerticalStackLayout>
 
-            <!-- Curvature Toggle -->
+            <!-- Direction Changes Toggle -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="Curvature" TextColor="#ff9f43" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Label Text="Turns" TextColor="#ff9f43" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
                     <Switch x:Name="curvatureSwitch" IsToggled="True" OnColor="#ff9f43"/>
                 </HorizontalStackLayout>
-                <Label Text="Phase transitions &amp; revisions" TextColor="#666" FontSize="10"/>
+                <Label Text="Where does the model change its mind?" TextColor="#777" FontSize="10"/>
             </VerticalStackLayout>
 
-            <!-- Professors Toggle -->
+            <!-- Evaluator Directions Toggle -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="Professors" TextColor="#a29bfe" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Label Text="Evaluators" TextColor="#a29bfe" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
                     <Switch x:Name="professorsSwitch" IsToggled="True" OnColor="#a29bfe"/>
                 </HorizontalStackLayout>
-                <Label Text="Evaluator alignment vectors" TextColor="#666" FontSize="10"/>
+                <Label Text="Which directions pull the model?" TextColor="#777" FontSize="10"/>
             </VerticalStackLayout>
 
-            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="3,0"/>
 
+            <!-- === Optional Enhancements === -->
+            
             <!-- Annotations Toggle -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="Annotations" TextColor="#ffd93d" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Label Text="Labels" TextColor="#ffd93d" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
                     <Switch x:Name="annotationsSwitch" IsToggled="False" OnColor="#ffd93d"/>
                 </HorizontalStackLayout>
-                <Label Text="Interpretive overlays" TextColor="#666" FontSize="10"/>
+                <Label Text="Add text explanations on canvas" TextColor="#666" FontSize="10"/>
             </VerticalStackLayout>
 
-            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
-
-            <!-- Analysis Panel Toggle -->
+            <!-- Point Inspector Toggle -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="Analysis" TextColor="#00d9ff" VerticalOptions="Center" FontAttributes="Bold"/>
-                    <Switch x:Name="analysisSwitch" IsToggled="False" OnColor="#00d9ff"/>
-                </HorizontalStackLayout>
-                <Label Text="Quantitative metrics" TextColor="#666" FontSize="10"/>
-            </VerticalStackLayout>
-
-            <!-- Analysis sub-toggles (visible when analysis is on) -->
-            <VerticalStackLayout Spacing="1" IsVisible="{Binding IsToggled, Source={x:Reference analysisSwitch}}">
-                <HorizontalStackLayout Spacing="8">
-                    <HorizontalStackLayout Spacing="2">
-                        <Label Text="λ" TextColor="#00d9ff" FontSize="10"/>
-                        <Switch x:Name="eigenvaluesSwitch" IsToggled="True" OnColor="#00d9ff" Scale="0.7"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="2">
-                        <Label Text="Lyap" TextColor="#ff6b6b" FontSize="10"/>
-                        <Switch x:Name="lyapunovSwitch" IsToggled="True" OnColor="#ff6b6b" Scale="0.7"/>
-                    </HorizontalStackLayout>
-                    <HorizontalStackLayout Spacing="2">
-                        <Label Text="Bif" TextColor="#ff9500" FontSize="10"/>
-                        <Switch x:Name="bifurcationsSwitch" IsToggled="True" OnColor="#ff9500" Scale="0.7"/>
-                    </HorizontalStackLayout>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-
-            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
-
-            <!-- Probing Toggle (Phase 3.3) -->
-            <VerticalStackLayout Spacing="1">
-                <HorizontalStackLayout Spacing="5">
-                    <Label Text="Probe" TextColor="#c56cf0" VerticalOptions="Center" FontAttributes="Bold"/>
+                    <Label Text="Inspect" TextColor="#c56cf0" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
                     <Switch x:Name="probingSwitch" IsToggled="False" OnColor="#c56cf0"/>
                 </HorizontalStackLayout>
-                <Label Text="Click to inspect points" TextColor="#666" FontSize="10"/>
+                <Label Text="Click any point for details" TextColor="#666" FontSize="10"/>
             </VerticalStackLayout>
 
             <!-- Probing sub-toggles (visible when probing is on) -->
             <VerticalStackLayout Spacing="1" IsVisible="{Binding IsToggled, Source={x:Reference probingSwitch}}">
                 <HorizontalStackLayout Spacing="8">
                     <HorizontalStackLayout Spacing="2">
-                        <Label Text="Grad" TextColor="#4ecdc4" FontSize="10"/>
+                        <Label Text="Gradients" TextColor="#4ecdc4" FontSize="10"/>
                         <Switch x:Name="gradientSwitch" IsToggled="True" OnColor="#4ecdc4" Scale="0.7"/>
                     </HorizontalStackLayout>
                 </HorizontalStackLayout>
             </VerticalStackLayout>
 
-            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="5,0"/>
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="3,0"/>
+            
+            <!-- === Advanced Analysis (Collapsed by Default) === -->
+            
+            <!-- Analysis Panel Toggle -->
+            <VerticalStackLayout Spacing="1">
+                <HorizontalStackLayout Spacing="5">
+                    <Label Text="Metrics" TextColor="#00d9ff" VerticalOptions="Center" FontAttributes="Bold" FontSize="12"/>
+                    <Switch x:Name="analysisSwitch" IsToggled="False" OnColor="#00d9ff"/>
+                </HorizontalStackLayout>
+                <Label Text="Show quantitative analysis charts" TextColor="#666" FontSize="10"/>
+            </VerticalStackLayout>
+
+            <!-- Analysis sub-toggles (visible when analysis is on) -->
+            <VerticalStackLayout Spacing="2" IsVisible="{Binding IsToggled, Source={x:Reference analysisSwitch}}">
+                <HorizontalStackLayout Spacing="8">
+                    <VerticalStackLayout Spacing="0">
+                        <HorizontalStackLayout Spacing="2">
+                            <Label Text="Structure" TextColor="#00d9ff" FontSize="9"/>
+                            <Switch x:Name="eigenvaluesSwitch" IsToggled="True" OnColor="#00d9ff" Scale="0.65"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="0">
+                        <HorizontalStackLayout Spacing="2">
+                            <Label Text="Stability" TextColor="#ff6b6b" FontSize="9"/>
+                            <Switch x:Name="lyapunovSwitch" IsToggled="True" OnColor="#ff6b6b" Scale="0.65"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="0">
+                        <HorizontalStackLayout Spacing="2">
+                            <Label Text="Transitions" TextColor="#ff9500" FontSize="9"/>
+                            <Switch x:Name="bifurcationsSwitch" IsToggled="True" OnColor="#ff9500" Scale="0.65"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+            <BoxView WidthRequest="1" Color="#2a2a4e" Margin="3,0"/>
 
             <!-- Zoom Controls -->
             <VerticalStackLayout Spacing="1">
                 <HorizontalStackLayout Spacing="5">
-                    <Label Text="View" TextColor="#00d9ff" VerticalOptions="Center" FontAttributes="Bold"/>
                     <Button x:Name="resetViewButton"
-                            Text="⟲ Reset"
+                            Text="⟲ Reset View"
                             Clicked="OnResetViewClicked"
                             BackgroundColor="#2a2a4e"
                             TextColor="#00d9ff"
@@ -182,7 +198,7 @@
                             Padding="8,0"
                             CornerRadius="4"/>
                 </HorizontalStackLayout>
-                <Label Text="Scroll to zoom, hover for values" TextColor="#666" FontSize="10"/>
+                <Label Text="Scroll to zoom, drag to pan" TextColor="#555" FontSize="9"/>
             </VerticalStackLayout>
         </HorizontalStackLayout>
 

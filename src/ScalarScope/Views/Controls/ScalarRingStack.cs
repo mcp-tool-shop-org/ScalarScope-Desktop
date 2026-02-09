@@ -1,3 +1,4 @@
+using ScalarScope.Services;
 using ScalarScope.ViewModels;
 using SkiaSharp;
 using SkiaSharp.Views.Maui;
@@ -41,9 +42,25 @@ public class ScalarRingStack : SKCanvasView
     private float _maxRadius;
     private SKPoint _center;
 
+    // Phase 1: Demo state fields
+    private Models.GeometryRun? _currentRenderRun;
+    private bool _isRenderingDemo;
+
     public ScalarRingStack()
     {
         PaintSurface += OnPaintSurface;
+        
+        // Phase 1: Subscribe to demo animation for continuous repainting
+        DemoStateService.Instance.OnAnimationFrame += OnDemoAnimationFrame;
+    }
+
+    private void OnDemoAnimationFrame()
+    {
+        // Only repaint if we're showing demo data
+        if (Session?.Run is null)
+        {
+            MainThread.BeginInvokeOnMainThread(InvalidateSurface);
+        }
     }
 
     private static void OnSessionChanged(BindableObject bindable, object oldValue, object newValue)
@@ -79,7 +96,17 @@ public class ScalarRingStack : SKCanvasView
 
         DrawConcentricGuides(canvas);
 
-        if (Session?.Run is null)
+        // Phase 1: Use demo data when no session data available
+        _currentRenderRun = Session?.Run;
+        _isRenderingDemo = false;
+        
+        if (_currentRenderRun is null)
+        {
+            _currentRenderRun = DemoStateService.Instance.DemoRun;
+            _isRenderingDemo = true;
+        }
+
+        if (_currentRenderRun is null)
         {
             DrawNoDataMessage(canvas);
             return;
@@ -88,6 +115,12 @@ public class ScalarRingStack : SKCanvasView
         DrawScalarRings(canvas);
         DrawCurrentMarkers(canvas);
         DrawLegend(canvas, info);
+        
+        // Phase 1: Draw demo badge if showing demo data
+        if (_isRenderingDemo)
+        {
+            DrawDemoBadge(canvas, info);
+        }
     }
 
     private void DrawConcentricGuides(SKCanvas canvas)
@@ -132,10 +165,12 @@ public class ScalarRingStack : SKCanvasView
 
     private void DrawScalarRings(SKCanvas canvas)
     {
-        var values = Session!.Run!.Scalars.Values;
+        var values = _currentRenderRun!.Scalars.Values;
         if (values.Count < 2) return;
 
-        var currentTimeIdx = (int)(Session.Player.Time * (values.Count - 1));
+        // Phase 1: Use animation time for demo, Session.Player.Time for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : Session!.Player.Time;
+        var currentTimeIdx = (int)(renderTime * (values.Count - 1));
 
         // Draw trailing rings (history) with fading alpha
         int trailLength = Math.Min(50, currentTimeIdx);
@@ -187,14 +222,25 @@ public class ScalarRingStack : SKCanvasView
 
     private void DrawCurrentMarkers(SKCanvas canvas)
     {
-        var current = Session?.CurrentScalars;
-        if (current is null) return;
+        // Phase 1: Get current scalars from session or demo as array
+        double[]? scalarsArray;
+        if (_isRenderingDemo)
+        {
+            scalarsArray = DemoStateService.Instance.GetAnimatedScalars().ToArray();
+        }
+        else
+        {
+            scalarsArray = Session?.CurrentScalars?.ToArray();
+        }
+        if (scalarsArray is null) return;
 
-        var values = Session!.Run!.Scalars.Values;
-        var currentTimeIdx = (int)(Session.Player.Time * (values.Count - 1));
+        var values = _currentRenderRun!.Scalars.Values;
+        // Phase 1: Use animation time for demo, Session.Player.Time for real data
+        var renderTime = _isRenderingDemo ? DemoStateService.Instance.AnimationTime : Session!.Player.Time;
+        var currentTimeIdx = (int)(renderTime * (values.Count - 1));
         var currentAngle = (float)currentTimeIdx / values.Count * MathF.PI * 2 - MathF.PI / 2;
 
-        var scalars = current.ToArray();
+        var scalars = scalarsArray;
 
         using var paint = new SKPaint
         {
@@ -258,9 +304,19 @@ public class ScalarRingStack : SKCanvasView
             // Color dot
             canvas.DrawCircle(x + 5, y - 4, 5, paint);
 
-            // Label
+            // Label - Phase 1: Use demo data when no session
             paint.Color = SKColors.White.WithAlpha(200);
-            var value = Session?.CurrentScalars?.ToArray()[i] ?? 0;
+            double value = 0;
+            if (_isRenderingDemo)
+            {
+                var demoScalars = DemoStateService.Instance.GetAnimatedScalars();
+                if (i < demoScalars.Count) value = demoScalars[i];
+            }
+            else
+            {
+                var sessionScalars = Session?.CurrentScalars?.ToArray();
+                if (sessionScalars != null && i < sessionScalars.Length) value = sessionScalars[i];
+            }
             canvas.DrawText($"{DimensionNames[i]}: {value:F2}", x + 15, y, SKTextAlign.Left, font, paint);
 
             y += spacing;
@@ -268,7 +324,16 @@ public class ScalarRingStack : SKCanvasView
 
         // Phase lock indicator
         y += 10;
-        var scalars = Session?.CurrentScalars?.ToArray();
+        // Phase 1: Use demo data when no session
+        double[]? scalars;
+        if (_isRenderingDemo)
+        {
+            scalars = DemoStateService.Instance.GetAnimatedScalars().ToArray();
+        }
+        else
+        {
+            scalars = Session?.CurrentScalars?.ToArray();
+        }
         if (scalars is { Length: >= 5 })
         {
             var variance = CalculateVariance(scalars);
@@ -283,5 +348,40 @@ public class ScalarRingStack : SKCanvasView
         if (values.Length == 0) return 0;
         var mean = values.Average();
         return values.Select(v => (v - mean) * (v - mean)).Average();
+    }
+
+    /// <summary>
+    /// Phase 1: Draw "DEMO" badge in corner when showing demo data.
+    /// </summary>
+    private void DrawDemoBadge(SKCanvas canvas, SKImageInfo info)
+    {
+        using var font = new SKFont(SKTypeface.FromFamilyName("Arial", SKFontStyle.Bold), 10);
+        using var bgPaint = new SKPaint
+        {
+            Color = DemoStateService.Instance.GetDemoBadgeColor().WithAlpha(180),
+            Style = SKPaintStyle.Fill,
+            IsAntialias = true
+        };
+        using var textPaint = new SKPaint
+        {
+            Color = SKColors.White,
+            IsAntialias = true
+        };
+
+        var text = "DEMO";
+        var textBounds = new SKRect();
+        using var tempPaint = new SKPaint();
+        tempPaint.MeasureText(text, ref textBounds);
+
+        var padding = 4f;
+        var rect = new SKRect(
+            info.Width - textBounds.Width - padding * 2 - 8,
+            8,
+            info.Width - 8,
+            8 + textBounds.Height + padding * 2
+        );
+
+        canvas.DrawRoundRect(rect, 3, 3, bgPaint);
+        canvas.DrawText(text, rect.MidX, rect.MidY + textBounds.Height / 2, SKTextAlign.Center, font, textPaint);
     }
 }

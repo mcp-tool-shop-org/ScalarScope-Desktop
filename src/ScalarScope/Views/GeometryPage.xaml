@@ -5,7 +5,7 @@
              xmlns:vm="clr-namespace:ScalarScope.ViewModels"
              x:Class="ScalarScope.Views.GeometryPage"
              x:DataType="vm:VortexSessionViewModel"
-             Title="Geometry"
+             Title="Evaluator Alignment"
              BackgroundColor="#0f0f1a">
 
     <Grid RowDefinitions="*,Auto">
