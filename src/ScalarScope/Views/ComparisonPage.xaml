@@ -8,7 +8,7 @@
              Title="Compare Paths"
              BackgroundColor="#0f0f1a">
 
-    <Grid RowDefinitions="Auto,Auto,Auto,2*,Auto,Auto,Auto,*,Auto">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,2*,Auto,Auto,Auto,*,Auto">
         <!-- Demo Annotation Banner (shows during guided demo) -->
         <controls:DemoAnnotationBanner Grid.Row="0" x:Name="demoBanner"/>
         
@@ -19,8 +19,60 @@
                                    Margin="10,5"
                                    IsVisible="{Binding IsReviewMode}"/>
 
+        <!-- Context Header: What am I comparing? -->
+        <Border Grid.Row="2"
+                BackgroundColor="#12121f"
+                Padding="12,8"
+                IsVisible="{Binding HasBothRuns}">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto" ColumnSpacing="16">
+                <Label Text="COMPARING" 
+                       FontSize="10" 
+                       TextColor="#666" 
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"
+                       CharacterSpacing="1"/>
+                <Label Grid.Column="1"
+                       VerticalOptions="Center">
+                    <Label.FormattedText>
+                        <FormattedString>
+                            <Span Text="{Binding LeftRunName}" TextColor="#4ecdc4" FontSize="12"/>
+                            <Span Text="  →  " TextColor="#666" FontSize="12"/>
+                            <Span Text="{Binding RightRunName}" TextColor="#ff6b6b" FontSize="12"/>
+                        </FormattedString>
+                    </Label.FormattedText>
+                </Label>
+                <Border Grid.Column="2"
+                        BackgroundColor="#2a2a4e"
+                        Padding="8,4"
+                        StrokeShape="RoundRectangle 4"
+                        Stroke="Transparent"
+                        VerticalOptions="Center">
+                    <Label Text="{Binding FrameworkName, FallbackValue='TFRT'}" 
+                           FontSize="10" 
+                           TextColor="#00d9ff"
+                           FontAttributes="Bold"/>
+                </Border>
+                <Border Grid.Column="3"
+                        BackgroundColor="#2a2a4e"
+                        Padding="8,4"
+                        StrokeShape="RoundRectangle 4"
+                        Stroke="Transparent"
+                        VerticalOptions="Center"
+                        IsVisible="{Binding HasPreset}">
+                    <Label Text="{Binding PresetName}" 
+                           FontSize="10" 
+                           TextColor="#888"/>
+                </Border>
+                <Label Grid.Column="4"
+                       Text="{Binding DeltaCount, StringFormat='{0} deltas'}"
+                       FontSize="10"
+                       TextColor="#666"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </Border>
+
         <!-- Header with load buttons -->
-        <Grid Grid.Row="2"
+        <Grid Grid.Row="3"
               ColumnDefinitions="*,Auto,*"
               Padding="10"
               BackgroundColor="#1a1a2e">
@@ -127,7 +179,7 @@
         </Grid>
 
         <!-- Side-by-Side Canvases (normal mode) -->
-        <Grid Grid.Row="3" ColumnDefinitions="*,2,*"
+        <Grid Grid.Row="4" ColumnDefinitions="*,2,*"
               IsVisible="{Binding IsOverlayMode, Converter={StaticResource InverseBoolConverter}}">
             <!-- Left Canvas -->
             <controls:ComparisonTrajectoryCanvas Grid.Column="0"
@@ -153,7 +205,7 @@
         </Grid>
 
         <!-- Overlay Canvas (overlay mode) -->
-        <controls:OverlayComparisonCanvas Grid.Row="3"
+        <controls:OverlayComparisonCanvas Grid.Row="4"
                                           Runs="{Binding OverlayRuns}"
                                           CurrentTime="{Binding Player.Time}"
                                           ShowDeviation="{Binding ShowDeviation}"
@@ -162,7 +214,7 @@
                                           IsVisible="{Binding IsOverlayMode}"/>
 
         <!-- Toggle Bar -->
-        <HorizontalStackLayout Grid.Row="4"
+        <HorizontalStackLayout Grid.Row="5"
                                Spacing="15"
                                Padding="15,8"
                                BackgroundColor="#1a1a2e"
@@ -227,7 +279,7 @@
         </HorizontalStackLayout>
 
         <!-- Delta Zone (Phase 3: Canonical Delta Display) -->
-        <Grid Grid.Row="5" ColumnDefinitions="3*,*" Margin="10,5" IsVisible="{Binding HasBothRuns}">
+        <Grid Grid.Row="6" ColumnDefinitions="3*,*" Margin="10,5" IsVisible="{Binding HasBothRuns}">
             <VerticalStackLayout Grid.Column="0" Spacing="6">
                 <!-- First-occurrence hints (Phase 4) -->
                 <controls:DeltaHints Deltas="{Binding CanonicalDeltas}"/>
@@ -245,7 +297,7 @@
         </Grid>
 
         <!-- Interpretation Strip (Verdict) -->
-        <Border Grid.Row="6"
+        <Border Grid.Row="7"
                 BackgroundColor="#16213e"
                 StrokeThickness="0"
                 Padding="15,10"
@@ -282,7 +334,7 @@
         </Border>
 
         <!-- Analytics Panel -->
-        <controls:ComparisonAnalyticsPanel Grid.Row="7"
+        <controls:ComparisonAnalyticsPanel Grid.Row="8"
                                            LeftRun="{Binding LeftRun}"
                                            RightRun="{Binding RightRun}"
                                            CurrentTime="{Binding Player.Time}"
@@ -290,7 +342,7 @@
                                            IsVisible="{Binding IsToggled, Source={x:Reference analyticsSwitch}}"/>
 
         <!-- No runs message - Designed Empty State -->
-        <Border Grid.Row="7"
+        <Border Grid.Row="8"
                 Style="{StaticResource CardBase}"
                 HorizontalOptions="Center"
                 VerticalOptions="Center"
@@ -348,7 +400,7 @@
         </Border>
 
         <!-- Playback Control -->
-        <controls:PlaybackControl Grid.Row="8"
+        <controls:PlaybackControl Grid.Row="9"
                                   BindingContext="{Binding Player}"/>
     </Grid>
 </ContentPage>

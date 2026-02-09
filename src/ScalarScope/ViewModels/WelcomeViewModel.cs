@@ -7,7 +7,7 @@ namespace ScalarScope.ViewModels;
 
 /// <summary>
 /// ViewModel for the Welcome/Landing page.
-/// Provides the first-60-seconds experience with clear CTAs.
+/// Shows workspace state, capabilities, and actions.
 /// </summary>
 public partial class WelcomeViewModel : ObservableObject
 {
@@ -19,6 +19,15 @@ public partial class WelcomeViewModel : ObservableObject
 
     [ObservableProperty]
     private List<RecentComparisonItem> _recentComparisons = [];
+
+    [ObservableProperty]
+    private string _workspaceStatus = "No runs loaded";
+
+    [ObservableProperty]
+    private string _workspaceDetail = "Load inference traces or open a review bundle to begin comparison.";
+
+    [ObservableProperty]
+    private bool _canLoadRuns = true;
 
     public WelcomeViewModel()
     {

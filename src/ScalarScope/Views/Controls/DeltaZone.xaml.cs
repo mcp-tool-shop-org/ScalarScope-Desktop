@@ -317,11 +317,11 @@ public partial class DeltaZone : ContentView
     private View CreateDeltaItem(CanonicalDelta delta)
     {
         var accentColor = GetDeltaTypeColor(delta.DeltaType);
+        var isSuppressed = delta.Status == DeltaStatus.Suppressed;
+        var isIndeterminate = delta.Status == DeltaStatus.Indeterminate;
         
         // Phase 5.3: Modulate color saturation by confidence
         var tier = ConfidenceTokens.GetTierFromConfidence(delta.Confidence);
-        var saturation = ConfidenceTokens.GetBadgeSaturation(tier);
-        var alpha = ConfidenceTokens.GetBadgeAlpha(tier);
         
         // Desaturate accent color based on confidence
         var skColor = new SkiaSharp.SKColor(
@@ -333,7 +333,7 @@ public partial class DeltaZone : ContentView
             adjustedSkColor.Red / 255.0,
             adjustedSkColor.Green / 255.0,
             adjustedSkColor.Blue / 255.0,
-            adjustedSkColor.Alpha / 255.0);
+            isSuppressed ? 0.5 : 1.0);
 
         var container = new Border
         {
@@ -348,19 +348,20 @@ public partial class DeltaZone : ContentView
         {
             ColumnDefinitions =
             {
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Star },
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto },
-                new ColumnDefinition { Width = GridLength.Auto }
+                new ColumnDefinition { Width = GridLength.Auto },  // 0: Type indicator
+                new ColumnDefinition { Width = GridLength.Star },  // 1: Name/Explanation
+                new ColumnDefinition { Width = GridLength.Auto },  // 2: Status badge
+                new ColumnDefinition { Width = GridLength.Auto },  // 3: Confidence badge
+                new ColumnDefinition { Width = GridLength.Auto },  // 4: Info button
+                new ColumnDefinition { Width = GridLength.Auto },  // 5: Show me button
+                new ColumnDefinition { Width = GridLength.Auto }   // 6: Magnitude
             },
             RowDefinitions =
             {
                 new RowDefinition { Height = GridLength.Auto },
                 new RowDefinition { Height = GridLength.Auto }
             },
-            ColumnSpacing = 10,
+            ColumnSpacing = 8,
             RowSpacing = 3
         };
 
@@ -391,8 +392,8 @@ public partial class DeltaZone : ContentView
         // Explanation
         var explanationLabel = new Label
         {
-            Text = delta.Explanation,
-            TextColor = Color.FromArgb("#aaa"),
+            Text = isSuppressed ? $"(suppressed) {delta.Explanation}" : delta.Explanation,
+            TextColor = isSuppressed ? Color.FromArgb("#666") : Color.FromArgb("#aaa"),
             FontSize = 10,
             LineBreakMode = LineBreakMode.TailTruncation
         };
@@ -400,11 +401,35 @@ public partial class DeltaZone : ContentView
         Grid.SetRow(explanationLabel, 1);
         grid.Children.Add(explanationLabel);
         
-        // Phase 5.3: Set accessibility description with confidence context
-        var accessibilityDescription = ConfidenceTokens.GetAccessibilityDescription(tier, delta.Explanation);
+        // Status badge: FIRED / SUPPRESSED / PENDING
+        var statusBadge = new Border
+        {
+            BackgroundColor = GetStatusBadgeBackground(delta.Status),
+            StrokeThickness = 0,
+            Padding = new Thickness(4, 2),
+            StrokeShape = new RoundRectangle { CornerRadius = 3 },
+            VerticalOptions = LayoutOptions.Center,
+            Opacity = isSuppressed ? 0.6 : 1.0
+        };
+        var statusLabel = new Label
+        {
+            Text = GetStatusBadgeText(delta.Status),
+            TextColor = GetStatusBadgeTextColor(delta.Status),
+            FontSize = 8,
+            FontAttributes = FontAttributes.Bold
+        };
+        statusBadge.Content = statusLabel;
+        Grid.SetColumn(statusBadge, 2);
+        Grid.SetRowSpan(statusBadge, 2);
+        grid.Children.Add(statusBadge);
+        
+        // Phase 5.3: Set accessibility description with status and confidence context
+        var statusText = delta.Status == DeltaStatus.Present ? "fired" : delta.Status.ToString().ToLower();
+        var accessibilityDescription = $"{statusText}: {ConfidenceTokens.GetAccessibilityDescription(tier, delta.Explanation)}";
         SemanticProperties.SetDescription(container, accessibilityDescription);
         SemanticProperties.SetHeadingLevel(container, SemanticHeadingLevel.Level3);
-        AutomationProperties.SetName(container, $"{delta.Name}, {ConfidenceTokens.GetLabel(tier)}");
+        AutomationProperties.SetName(container, $"{delta.Name}, {statusText}, {ConfidenceTokens.GetLabel(tier)}");
+        
         // Phase 5.3: Confidence badge
         var confidenceBadge = new Border
         {
@@ -412,7 +437,8 @@ public partial class DeltaZone : ContentView
             StrokeThickness = 0,
             Padding = new Thickness(4, 2),
             StrokeShape = new RoundRectangle { CornerRadius = 3 },
-            VerticalOptions = LayoutOptions.Center
+            VerticalOptions = LayoutOptions.Center,
+            Opacity = isSuppressed ? 0.6 : 1.0
         };
         var confidenceLabel = new Label
         {
@@ -422,7 +448,7 @@ public partial class DeltaZone : ContentView
             FontAttributes = FontAttributes.Bold
         };
         confidenceBadge.Content = confidenceLabel;
-        Grid.SetColumn(confidenceBadge, 2);
+        Grid.SetColumn(confidenceBadge, 3);
         Grid.SetRowSpan(confidenceBadge, 2);
         grid.Children.Add(confidenceBadge);
 
@@ -443,7 +469,7 @@ public partial class DeltaZone : ContentView
             SelectedDelta = delta;
             IsWhyPanelExpanded = true;
         };
-        Grid.SetColumn(infoButton, 3);
+        Grid.SetColumn(infoButton, 4);
         Grid.SetRowSpan(infoButton, 2);
         grid.Children.Add(infoButton);
         
@@ -540,6 +566,31 @@ public partial class DeltaZone : ContentView
         ConfidenceTokens.ConfidenceTier.Medium => Color.FromArgb("#fbbf24"),    // Bright yellow
         ConfidenceTokens.ConfidenceTier.Low => Color.FromArgb("#fb923c"),       // Bright orange
         ConfidenceTokens.ConfidenceTier.Negligible => Color.FromArgb("#888"),   // Gray
+        _ => Color.FromArgb("#888")
+    };
+    
+    // Status badge helpers
+    private static Color GetStatusBadgeBackground(DeltaStatus status) => status switch
+    {
+        DeltaStatus.Present => Color.FromArgb("#1a3d1a"),        // Dark green for fired
+        DeltaStatus.Suppressed => Color.FromArgb("#2a2a2a"),     // Dark gray for suppressed
+        DeltaStatus.Indeterminate => Color.FromArgb("#3d3d1a"),  // Dark yellow for pending
+        _ => Color.FromArgb("#2a2a2a")
+    };
+    
+    private static string GetStatusBadgeText(DeltaStatus status) => status switch
+    {
+        DeltaStatus.Present => "FIRED",
+        DeltaStatus.Suppressed => "SUPPRESSED",
+        DeltaStatus.Indeterminate => "PENDING",
+        _ => "?"
+    };
+    
+    private static Color GetStatusBadgeTextColor(DeltaStatus status) => status switch
+    {
+        DeltaStatus.Present => Color.FromArgb("#4ade80"),        // Bright green for fired
+        DeltaStatus.Suppressed => Color.FromArgb("#666"),        // Gray for suppressed
+        DeltaStatus.Indeterminate => Color.FromArgb("#fbbf24"),  // Yellow for pending
         _ => Color.FromArgb("#888")
     };
 }

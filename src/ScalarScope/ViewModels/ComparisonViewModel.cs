@@ -37,6 +37,18 @@ public partial class ComparisonViewModel : ObservableObject
     private bool _hasBothRuns;
 
     [ObservableProperty]
+    private string _frameworkName = "TFRT";
+
+    [ObservableProperty]
+    private bool _hasPreset = true;
+
+    [ObservableProperty]
+    private string _presetName = "TFRT Runtime";
+
+    [ObservableProperty]
+    private int _deltaCount;
+
+    [ObservableProperty]
     private string _comparisonSummary = "";
 
     [ObservableProperty]
@@ -260,6 +272,7 @@ public partial class ComparisonViewModel : ObservableObject
                 LeftRun, RightRun, SelectedAlignment, Player.Time);
         }
         
+        DeltaCount = CanonicalDeltas.Count(d => d.Status == DeltaStatus.Present);
         AutoSummary = CanonicalDeltaService.GenerateAutoSummary(CanonicalDeltas);
     }
 
