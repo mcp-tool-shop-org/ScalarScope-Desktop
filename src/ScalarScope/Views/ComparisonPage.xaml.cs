@@ -67,19 +67,26 @@ public partial class ComparisonPage : ContentPage
         };
     }
 
-    private void OnShowMeRequested(CanonicalDelta delta)
+    private async void OnShowMeRequested(CanonicalDelta delta)
     {
-        // Highlight the delta's visual anchor
-        ViewModel.HighlightedDeltaId = delta.Id;
+        // Phase 5.2: Use choreographed navigation with smooth seek and highlight pulse
+        var startTime = ViewModel.Player.Time;
+        var targetTime = delta.VisualAnchorTime > 0 ? delta.VisualAnchorTime : startTime;
         
-        // If there's an anchor time, seek to it
-        if (delta.VisualAnchorTime > 0)
-        {
-            ViewModel.Player.Time = delta.VisualAnchorTime;
-        }
+        await TransitionService.NavigateToAnchor(
+            targetTime: targetTime,
+            highlightElementId: delta.Id,
+            onSeek: t =>
+            {
+                // Lerp from current position to target
+                var interpolated = startTime + (targetTime - startTime) * (t / targetTime);
+                ViewModel.Player.Time = Math.Min(interpolated, targetTime);
+            },
+            onHighlight: id => ViewModel.HighlightedDeltaId = id
+        );
     }
 
-    private void OnInsightShowMeRequested(Models.InsightEvent insight)
+    private async void OnInsightShowMeRequested(Models.InsightEvent insight)
     {
         // Navigate to target view if needed
         if (insight.TargetView != null && insight.TargetView != "compare")
@@ -88,17 +95,23 @@ public partial class ComparisonPage : ContentPage
             return;
         }
 
-        // If it's a delta insight, highlight it
-        if (insight.DeltaId != null)
-        {
-            ViewModel.HighlightedDeltaId = insight.DeltaId;
-        }
-
-        // Seek to anchor time
-        if (insight.AnchorTime.HasValue && insight.AnchorTime.Value > 0)
-        {
-            ViewModel.Player.Time = insight.AnchorTime.Value;
-        }
+        // Phase 5.2: Use choreographed navigation
+        var startTime = ViewModel.Player.Time;
+        var targetTime = insight.AnchorTime ?? startTime;
+        
+        await TransitionService.NavigateToAnchor(
+            targetTime: targetTime,
+            highlightElementId: insight.DeltaId,
+            onSeek: t =>
+            {
+                var interpolated = startTime + (targetTime - startTime) * (t / targetTime);
+                ViewModel.Player.Time = Math.Min(interpolated, targetTime);
+            },
+            onHighlight: id =>
+            {
+                if (id != null) ViewModel.HighlightedDeltaId = id;
+            }
+        );
     }
 
     private void PublishDeltaInsights()
