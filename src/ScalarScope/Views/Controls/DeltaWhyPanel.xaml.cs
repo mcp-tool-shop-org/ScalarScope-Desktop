@@ -50,6 +50,22 @@ public partial class DeltaWhyPanel : ContentView
     public string? Guardrail => GetGuardrail();
     public bool HasGuardrail => !string.IsNullOrEmpty(Guardrail);
     public bool HasParameters => _parameters.Count > 0;
+    
+    /// <summary>
+    /// Phase 5.3: Get confidence tier for display.
+    /// </summary>
+    public ConfidenceTokens.ConfidenceTier ConfidenceTier => 
+        ConfidenceTokens.GetTierFromConfidence(Confidence);
+    
+    /// <summary>
+    /// Phase 5.3: Get confidence tooltip prefix for user messaging.
+    /// </summary>
+    public string ConfidencePrefix => ConfidenceTokens.GetTooltipPrefix(ConfidenceTier);
+    
+    /// <summary>
+    /// Phase 5.3: Get human-readable confidence label.
+    /// </summary>
+    public string ConfidenceLabel => ConfidenceTokens.GetLabel(ConfidenceTier);
 
     private readonly Dictionary<string, string> _parameters = new();
 
@@ -88,6 +104,9 @@ public partial class DeltaWhyPanel : ContentView
         OnPropertyChanged(nameof(WhyFired));
         OnPropertyChanged(nameof(Confidence));
         OnPropertyChanged(nameof(HasConfidence));
+        OnPropertyChanged(nameof(ConfidenceTier));
+        OnPropertyChanged(nameof(ConfidencePrefix));
+        OnPropertyChanged(nameof(ConfidenceLabel));
         OnPropertyChanged(nameof(Guardrail));
         OnPropertyChanged(nameof(HasGuardrail));
         OnPropertyChanged(nameof(HasParameters));
@@ -125,8 +144,9 @@ public partial class DeltaWhyPanel : ContentView
     private string BuildWhyFired()
     {
         if (Delta == null) return "";
-
-        return Delta.Id switch
+        
+        // Phase 5.3: Prepend confidence prefix to explanation
+        var baseExplanation = Delta.Id switch
         {
             "delta_f" => BuildFailureWhy(),
             "delta_tc" => BuildConvergenceWhy(),
@@ -135,6 +155,14 @@ public partial class DeltaWhyPanel : ContentView
             "delta_o" => BuildStabilityWhy(),
             _ => Delta.Explanation
         };
+        
+        // Only add prefix if we have measurable confidence
+        if (HasConfidence && Confidence < 1.0)
+        {
+            return $"{ConfidencePrefix} {baseExplanation}";
+        }
+        
+        return baseExplanation;
     }
 
     private string BuildFailureWhy()
