@@ -145,6 +145,17 @@ public partial class DeltaZone : ContentView
         IsWhyPanelExpanded = !IsWhyPanelExpanded;
     }
 
+    private void OnExportBundleClicked(object? sender, EventArgs e)
+    {
+        // Raise event to parent to show export panel
+        ExportBundleRequested?.Invoke();
+    }
+
+    /// <summary>
+    /// Event fired when user clicks the Export Bundle button.
+    /// </summary>
+    public event Action? ExportBundleRequested;
+
     private async void OnCopySummaryClicked(object? sender, EventArgs e)
     {
         if (Deltas == null || Deltas.Count == 0) return;

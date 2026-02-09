@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.BundleExportPanel"
+             x:Name="panelRoot">
+    
+    <!-- Phase 7.2.2: Bundle Export Panel
+         Allows users to export comparison bundles with profile selection.
+         
+         Profiles:
+         - Share: Minimal (deltas + why + summary + repro)
+         - Review: Share + key assets (screenshots, cards)
+         - Audit: Review + embedded audit bundle
+    -->
+    
+    <Border BackgroundColor="#1a1a2e"
+            StrokeThickness="1"
+            Stroke="#3a3a5e"
+            Padding="16"
+            StrokeShape="RoundRectangle 8"
+            IsVisible="{Binding IsVisible, Source={x:Reference panelRoot}}">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
+            
+            <!-- Header -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto">
+                <Label Text="📦 Export Bundle"
+                       TextColor="#ffd93d"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"/>
+                <Button Grid.Column="1"
+                        Text="✕"
+                        TextColor="#888"
+                        BackgroundColor="Transparent"
+                        FontSize="14"
+                        Padding="8,4"
+                        Clicked="OnCloseClicked"/>
+            </Grid>
+            
+            <!-- Profile Selection -->
+            <VerticalStackLayout Grid.Row="1" Spacing="8">
+                <Label Text="Export Profile" TextColor="#aaa" FontSize="12"/>
+                
+                <!-- Share Profile -->
+                <Border BackgroundColor="{Binding ShareProfileBackground, Source={x:Reference panelRoot}}"
+                        StrokeThickness="1"
+                        Stroke="{Binding ShareProfileBorder, Source={x:Reference panelRoot}}"
+                        Padding="12,10"
+                        StrokeShape="RoundRectangle 6">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <RadioButton Grid.Column="0"
+                                     GroupName="profile"
+                                     IsChecked="{Binding IsShareSelected, Source={x:Reference panelRoot}}"
+                                     CheckedChanged="OnProfileChanged"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="8,0,0,0">
+                            <Label Text="Share" TextColor="#fff" FontSize="13" FontAttributes="Bold"/>
+                            <Label Text="Minimal: deltas + why + summary + repro.json" 
+                                   TextColor="#888" 
+                                   FontSize="11"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+                
+                <!-- Review Profile -->
+                <Border BackgroundColor="{Binding ReviewProfileBackground, Source={x:Reference panelRoot}}"
+                        StrokeThickness="1"
+                        Stroke="{Binding ReviewProfileBorder, Source={x:Reference panelRoot}}"
+                        Padding="12,10"
+                        StrokeShape="RoundRectangle 6">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <RadioButton Grid.Column="0"
+                                     GroupName="profile"
+                                     IsChecked="{Binding IsReviewSelected, Source={x:Reference panelRoot}}"
+                                     CheckedChanged="OnProfileChanged"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="8,0,0,0">
+                            <Label Text="Review" TextColor="#fff" FontSize="13" FontAttributes="Bold"/>
+                            <Label Text="Share + key assets (screenshots, social cards)" 
+                                   TextColor="#888" 
+                                   FontSize="11"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+                
+                <!-- Audit Profile -->
+                <Border BackgroundColor="{Binding AuditProfileBackground, Source={x:Reference panelRoot}}"
+                        StrokeThickness="1"
+                        Stroke="{Binding AuditProfileBorder, Source={x:Reference panelRoot}}"
+                        Padding="12,10"
+                        StrokeShape="RoundRectangle 6">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <RadioButton Grid.Column="0"
+                                     GroupName="profile"
+                                     IsChecked="{Binding IsAuditSelected, Source={x:Reference panelRoot}}"
+                                     CheckedChanged="OnProfileChanged"/>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" Margin="8,0,0,0">
+                            <Label Text="Audit" TextColor="#fff" FontSize="13" FontAttributes="Bold"/>
+                            <Label Text="Review + embedded audit bundle (full reproducibility)" 
+                                   TextColor="#888" 
+                                   FontSize="11"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+            
+            <!-- Contents Preview -->
+            <VerticalStackLayout Grid.Row="2" Spacing="6">
+                <Label Text="Bundle Contents" TextColor="#aaa" FontSize="12"/>
+                <Border BackgroundColor="#12121f"
+                        StrokeThickness="1"
+                        Stroke="#2a2a4e"
+                        Padding="10,8"
+                        StrokeShape="RoundRectangle 4">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="✓ manifest.json" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="✓ findings/deltas.json" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="✓ findings/why.json" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="✓ findings/summary.md" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="{Binding InsightsIncludedText, Source={x:Reference panelRoot}}" 
+                               TextColor="{Binding InsightsIncludedColor, Source={x:Reference panelRoot}}" 
+                               FontSize="11"/>
+                        <Label Text="✓ repro/repro.json" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="✓ environment/environment.json" TextColor="#10B981" FontSize="11"/>
+                        <Label Text="{Binding AssetsIncludedText, Source={x:Reference panelRoot}}"
+                               TextColor="{Binding AssetsIncludedColor, Source={x:Reference panelRoot}}"
+                               FontSize="11"/>
+                        <Label Text="{Binding AuditIncludedText, Source={x:Reference panelRoot}}"
+                               TextColor="{Binding AuditIncludedColor, Source={x:Reference panelRoot}}"
+                               FontSize="11"
+                               IsVisible="{Binding IsAuditSelected, Source={x:Reference panelRoot}}"/>
+                        <Label Text="✓ integrity.json" TextColor="#10B981" FontSize="11"/>
+                    </VerticalStackLayout>
+                </Border>
+            </VerticalStackLayout>
+            
+            <!-- Notes Input (Optional) -->
+            <VerticalStackLayout Grid.Row="3" Spacing="6">
+                <Label Text="Notes (optional)" TextColor="#aaa" FontSize="12"/>
+                <Editor x:Name="notesEditor"
+                        Placeholder="Add notes to this bundle..."
+                        PlaceholderColor="#555"
+                        TextColor="#ddd"
+                        BackgroundColor="#12121f"
+                        HeightRequest="60"
+                        FontSize="12"/>
+            </VerticalStackLayout>
+            
+            <!-- Export Button -->
+            <Button Grid.Row="4"
+                    x:Name="exportButton"
+                    Text="Export Bundle"
+                    TextColor="#000"
+                    BackgroundColor="#ffd93d"
+                    FontSize="14"
+                    FontAttributes="Bold"
+                    Padding="16,12"
+                    CornerRadius="6"
+                    Clicked="OnExportClicked"/>
+            
+            <!-- Status/Progress -->
+            <VerticalStackLayout Grid.Row="5" 
+                                 x:Name="statusPanel"
+                                 IsVisible="False"
+                                 Spacing="4">
+                <ActivityIndicator x:Name="progressIndicator"
+                                   IsRunning="True"
+                                   Color="#ffd93d"
+                                   HeightRequest="20"
+                                   WidthRequest="20"
+                                   HorizontalOptions="Center"/>
+                <Label x:Name="statusLabel"
+                       Text="Exporting bundle..."
+                       TextColor="#888"
+                       FontSize="11"
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>

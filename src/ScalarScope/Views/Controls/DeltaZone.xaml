@@ -23,8 +23,8 @@
             Padding="12,10"
             StrokeShape="RoundRectangle 8">
         <Grid RowDefinitions="Auto,Auto,*,Auto">
-            <!-- Header with Why? and Copy buttons -->
-            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+            <!-- Header with Export, Why? and Copy buttons -->
+            <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto,Auto,Auto">
                 <Label Grid.Column="0" Text="⟷" TextColor="#ffd93d" FontSize="14"/>
                 <Label Grid.Column="1" 
                        Text="Differences" 
@@ -39,6 +39,17 @@
                        VerticalOptions="Center"
                        Margin="6,0,0,0"/>
                 <Button Grid.Column="3"
+                        x:Name="exportButton"
+                        Text="📦"
+                        ToolTipProperties.Text="Export comparison bundle"
+                        FontSize="11"
+                        TextColor="#888"
+                        BackgroundColor="Transparent"
+                        Padding="6,4"
+                        CornerRadius="4"
+                        IsVisible="{Binding HasDeltas, Source={x:Reference deltaZoneRoot}}"
+                        Clicked="OnExportBundleClicked"/>
+                <Button Grid.Column="4"
                         x:Name="copyButton"
                         Text="📋"
                         ToolTipProperties.Text="Copy comparison summary"
@@ -49,7 +60,7 @@
                         CornerRadius="4"
                         IsVisible="{Binding HasDeltas, Source={x:Reference deltaZoneRoot}}"
                         Clicked="OnCopySummaryClicked"/>
-                <Button Grid.Column="4"
+                <Button Grid.Column="5"
                         x:Name="whyButton"
                         Text="Why?"
                         FontSize="10"
