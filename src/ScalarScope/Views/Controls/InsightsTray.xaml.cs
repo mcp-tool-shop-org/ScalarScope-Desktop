@@ -24,10 +24,14 @@ public partial class InsightsTray : ContentView
     }
 
     // Computed properties
-    public int InsightCount => InsightFeedService.Instance.InsightCount;
+    public int InsightCount => _bundleInsights?.Count ?? InsightFeedService.Instance.InsightCount;
     public bool HasInsights => InsightCount > 0;
 
     private InsightFilter _currentFilter = InsightFilter.All;
+    
+    // Phase 7.2: Bundle insights for review mode
+    private List<InsightEvent>? _bundleInsights;
+    private bool IsReviewMode => _bundleInsights != null;
 
     /// <summary>
     /// Fired when user clicks "Show me" on an insight.
@@ -42,6 +46,28 @@ public partial class InsightsTray : ContentView
         InsightFeedService.Instance.OnInsightsChanged += OnInsightsChanged;
         
         UpdateFilterButtons();
+        RefreshInsightsList();
+    }
+
+    /// <summary>
+    /// Phase 7.2: Set insights from a bundle (review mode).
+    /// </summary>
+    public void SetInsights(List<InsightEvent> insights)
+    {
+        _bundleInsights = insights;
+        OnPropertyChanged(nameof(InsightCount));
+        OnPropertyChanged(nameof(HasInsights));
+        RefreshInsightsList();
+    }
+
+    /// <summary>
+    /// Phase 7.2: Clear bundle insights (exit review mode).
+    /// </summary>
+    public void ClearBundleInsights()
+    {
+        _bundleInsights = null;
+        OnPropertyChanged(nameof(InsightCount));
+        OnPropertyChanged(nameof(HasInsights));
         RefreshInsightsList();
     }
 
@@ -116,12 +142,29 @@ public partial class InsightsTray : ContentView
     {
         insightsContainer.Children.Clear();
 
-        var insights = _currentFilter switch
+        IReadOnlyList<InsightEvent> insights;
+        
+        // Phase 7.2: Use bundle insights in review mode
+        if (IsReviewMode)
         {
-            InsightFilter.Deltas => InsightFeedService.Instance.GetDeltas(),
-            InsightFilter.Events => InsightFeedService.Instance.GetTrainingEvents(),
-            _ => InsightFeedService.Instance.Insights
-        };
+            insights = _currentFilter switch
+            {
+                InsightFilter.Deltas => _bundleInsights!
+                    .Where(i => i.Category != InsightCategory.TrainingEvent).ToList(),
+                InsightFilter.Events => _bundleInsights!
+                    .Where(i => i.Category == InsightCategory.TrainingEvent).ToList(),
+                _ => _bundleInsights!
+            };
+        }
+        else
+        {
+            insights = _currentFilter switch
+            {
+                InsightFilter.Deltas => InsightFeedService.Instance.GetDeltas(),
+                InsightFilter.Events => InsightFeedService.Instance.GetTrainingEvents(),
+                _ => InsightFeedService.Instance.Insights
+            };
+        }
 
         if (insights.Count == 0)
         {

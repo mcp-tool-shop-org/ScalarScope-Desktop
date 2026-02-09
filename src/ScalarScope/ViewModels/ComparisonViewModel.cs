@@ -102,6 +102,55 @@ public partial class ComparisonViewModel : ObservableObject
     [ObservableProperty]
     private bool _isCompareMode;
 
+    // Phase 7.2: Review mode state (viewing bundle, not live data)
+    [ObservableProperty]
+    private bool _isReviewMode;
+
+    [ObservableProperty]
+    private LoadedBundle? _reviewBundle;
+
+    /// <summary>
+    /// Phase 7.2: Enter review mode with a loaded bundle.
+    /// Disables compute buttons and shows review mode banner.
+    /// </summary>
+    public void EnterReviewMode(LoadedBundle bundle)
+    {
+        _reviewBundle = bundle;
+        IsReviewMode = true;
+        
+        // Set deltas from bundle
+        CanonicalDeltas = bundle.Deltas;
+        
+        // Set summary text from bundle
+        AutoSummary = bundle.SummaryMarkdown ?? "";
+        
+        // Disable playback (bundle data is static)
+        if (Player.IsPlaying)
+        {
+            Player.IsPlaying = false;
+        }
+        
+        OnPropertyChanged(nameof(ReviewBundle));
+    }
+
+    /// <summary>
+    /// Phase 7.2: Exit review mode and return to live comparisons.
+    /// </summary>
+    public void ExitReviewMode()
+    {
+        _reviewBundle = null;
+        IsReviewMode = false;
+        
+        // Clear bundled data
+        CanonicalDeltas = [];
+        AutoSummary = "";
+        
+        // Unload the bundle
+        BundleImportService.Instance.Unload();
+        
+        OnPropertyChanged(nameof(ReviewBundle));
+    }
+
     // Phase 5.2: State preservation for mode continuity
     private double _preservedTime;
     private string? _preservedHighlightedDeltaId;

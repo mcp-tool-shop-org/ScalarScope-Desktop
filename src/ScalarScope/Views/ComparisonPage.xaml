@@ -66,6 +66,20 @@
                         HeightRequest="26"
                         CornerRadius="4"
                         IsVisible="{Binding IsDemoMode}"/>
+
+                <!-- Open Bundle button (Phase 7.2: Bundle Import) -->
+                <Button x:Name="openBundleButton"
+                        Text="📦 Open Bundle..."
+                        Clicked="OnOpenBundleClicked"
+                        BackgroundColor="Transparent"
+                        BorderColor="#74b9ff"
+                        BorderWidth="1"
+                        TextColor="#74b9ff"
+                        FontSize="10"
+                        Padding="8,3"
+                        HeightRequest="26"
+                        CornerRadius="4"
+                        IsVisible="{Binding IsDemoMode, Converter={StaticResource InverseBoolConverter}}"/>
             </VerticalStackLayout>
 
             <!-- Right Run Loader -->

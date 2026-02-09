@@ -15,6 +15,106 @@ public partial class ComparisonPage : ContentPage
         
         // Wire up Phase 4 insight events
         SetupInsightHandlers();
+        
+        // Wire up Phase 7.2 bundle import events
+        SetupBundleHandlers();
+    }
+
+    /// <summary>
+    /// Phase 7.2: Open Bundle file picker and import.
+    /// </summary>
+    private async void OnOpenBundleClicked(object? sender, EventArgs e)
+    {
+        await ErrorBoundary.TrySafeAsync(async () =>
+        {
+            var customFileType = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+            {
+                { DevicePlatform.WinUI, new[] { ".scbundle" } },
+                { DevicePlatform.macOS, new[] { "scbundle" } },
+                { DevicePlatform.iOS, new[] { "public.data" } },
+                { DevicePlatform.Android, new[] { "application/octet-stream" } }
+            });
+
+            var options = new PickOptions
+            {
+                PickerTitle = "Open Comparison Bundle",
+                FileTypes = customFileType
+            };
+
+            var result = await FilePicker.PickAsync(options);
+            if (result == null) return;
+
+            // Show loading indicator
+            openBundleButton.IsEnabled = false;
+            openBundleButton.Text = "Loading...";
+
+            try
+            {
+                // Import the bundle
+                var importResult = await BundleImportService.Instance.ImportAsync(result.FullPath);
+                
+                if (importResult.Success && importResult.LoadedBundle != null)
+                {
+                    // Hydrate the UI with bundle data
+                    await HydrateBundleAsync(importResult.LoadedBundle);
+                }
+                else
+                {
+                    // Show error
+                    var errorMessage = importResult.ErrorMessage ?? "Failed to import bundle";
+                    if (importResult.ErrorExplanation != null)
+                    {
+                        errorMessage += $"\n\n{importResult.ErrorExplanation.Summary}";
+                    }
+                    
+                    await DisplayAlert("Import Failed", errorMessage, "OK");
+                }
+            }
+            finally
+            {
+                openBundleButton.IsEnabled = true;
+                openBundleButton.Text = "📦 Open Bundle...";
+            }
+        }, "Bundle open");
+    }
+
+    /// <summary>
+    /// Phase 7.2: Hydrate UI with bundle data.
+    /// </summary>
+    private async Task HydrateBundleAsync(LoadedBundle bundle)
+    {
+        // Set review mode in ViewModel
+        ViewModel.EnterReviewMode(bundle);
+        
+        // Update delta zone with bundled deltas
+        deltaZone.Deltas = bundle.Deltas;
+        
+        // Update insights tray with bundled insights
+        if (bundle.Insights != null)
+        {
+            insightsTray.SetInsights(bundle.Insights);
+        }
+        
+        // Show review mode banner
+        await DisplayAlert(
+            "Bundle Loaded",
+            $"Loaded {bundle.Manifest.Profile} bundle\n" +
+            $"Created: {bundle.Manifest.CreatedAt:g}\n" +
+            $"Deltas: {bundle.Deltas.Count}\n" +
+            $"Badge: {bundle.ReproducibilityBadge}",
+            "OK");
+    }
+
+    private void SetupBundleHandlers()
+    {
+        // Listen for bundle unload
+        BundleImportService.Instance.BundleUnloaded += (s, e) =>
+        {
+            if (ViewModel.IsReviewMode)
+            {
+                ViewModel.ExitReviewMode();
+            }
+        };
     }
 
     private void OnHighlightDeltaRequested(HelpPage sender, string deltaType)
