@@ -234,6 +234,100 @@ public static class ErrorBoundary
             // Don't throw when logging fails
         }
     }
+    
+    // ========================================================================
+    // Phase 6.2: User-facing error handling with mapped states
+    // ========================================================================
+    
+    /// <summary>
+    /// Phase 6.2: Get user-facing error state from exception.
+    /// </summary>
+    public static ErrorState GetUserFacingError(Exception ex)
+    {
+        return ErrorStateMapping.MapException(ex);
+    }
+    
+    /// <summary>
+    /// Phase 6.2: Execute with mapped error state callback.
+    /// </summary>
+    public static async Task<bool> TryWithUserErrorAsync(
+        Func<Task> action,
+        Action<ErrorState> onError,
+        string? context = null)
+    {
+        try
+        {
+            await action();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, context);
+            var errorState = ErrorStateMapping.MapException(ex);
+            onError(errorState);
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Phase 6.2: Execute with mapped error state callback and result.
+    /// </summary>
+    public static async Task<(bool success, T? result, ErrorState? error)> TryWithUserErrorAsync<T>(
+        Func<Task<T>> func,
+        string? context = null)
+    {
+        try
+        {
+            var result = await func();
+            return (true, result, null);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, context);
+            var errorState = ErrorStateMapping.MapException(ex);
+            return (false, default, errorState);
+        }
+    }
+    
+    /// <summary>
+    /// Phase 6.2: Show error to user using platform dialog.
+    /// </summary>
+    public static async Task ShowUserErrorAsync(ErrorState error)
+    {
+        await MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            var message = error.ToUserMessage();
+            var page = Application.Current?.MainPage;
+            if (page is not null)
+            {
+                await page.DisplayAlert(
+                    error.UserTitle,
+                    message,
+                    "OK");
+            }
+        });
+    }
+    
+    /// <summary>
+    /// Phase 6.2: Execute and show error dialog on failure.
+    /// </summary>
+    public static async Task<bool> TryWithUserDialogAsync(
+        Func<Task> action,
+        string? context = null)
+    {
+        try
+        {
+            await action();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, context);
+            var errorState = ErrorStateMapping.MapException(ex);
+            await ShowUserErrorAsync(errorState);
+            return false;
+        }
+    }
 }
 
 /// <summary>
