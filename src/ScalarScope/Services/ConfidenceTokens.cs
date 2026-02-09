@@ -8,36 +8,45 @@ namespace ScalarScope.Services;
 /// </summary>
 public static class ConfidenceTokens
 {
-    // Confidence tier thresholds (based on p-value)
-    public const double HighConfidenceThreshold = 0.01;   // p < 0.01 = high
-    public const double MediumConfidenceThreshold = 0.05; // p < 0.05 = medium
-    public const double LowConfidenceThreshold = 0.10;    // p < 0.10 = low
-    // p >= 0.10 = negligible (barely visible)
+    // Confidence tier thresholds (based on 0-1 confidence, higher = more confident)
+    public const double HighConfidenceThreshold = 0.99;   // conf >= 0.99 = high (p < 0.01)
+    public const double MediumConfidenceThreshold = 0.95; // conf >= 0.95 = medium (p < 0.05)
+    public const double LowConfidenceThreshold = 0.90;    // conf >= 0.90 = low (p < 0.10)
+    // conf < 0.90 = negligible (barely visible)
     
     /// <summary>
     /// Confidence tiers for visual mapping.
     /// </summary>
     public enum ConfidenceTier
     {
-        /// <summary>p >= 0.10 - Nearly invisible, very low certainty</summary>
+        /// <summary>conf < 0.90 - Nearly invisible, very low certainty</summary>
         Negligible,
-        /// <summary>p < 0.10 - Subtle emphasis, low certainty</summary>
+        /// <summary>conf >= 0.90 - Subtle emphasis, low certainty</summary>
         Low,
-        /// <summary>p < 0.05 - Moderate emphasis, reasonable certainty</summary>
+        /// <summary>conf >= 0.95 - Moderate emphasis, reasonable certainty</summary>
         Medium,
-        /// <summary>p < 0.01 - Strong emphasis, high certainty</summary>
+        /// <summary>conf >= 0.99 - Strong emphasis, high certainty</summary>
         High
     }
     
     /// <summary>
-    /// Get confidence tier from p-value.
+    /// Get confidence tier from confidence value (0-1, higher is more confident).
     /// </summary>
-    public static ConfidenceTier GetTier(double pValue)
+    public static ConfidenceTier GetTierFromConfidence(double confidence)
     {
-        if (pValue < HighConfidenceThreshold) return ConfidenceTier.High;
-        if (pValue < MediumConfidenceThreshold) return ConfidenceTier.Medium;
-        if (pValue < LowConfidenceThreshold) return ConfidenceTier.Low;
+        if (confidence >= HighConfidenceThreshold) return ConfidenceTier.High;
+        if (confidence >= MediumConfidenceThreshold) return ConfidenceTier.Medium;
+        if (confidence >= LowConfidenceThreshold) return ConfidenceTier.Low;
         return ConfidenceTier.Negligible;
+    }
+    
+    /// <summary>
+    /// Get confidence tier from p-value (lower is more confident).
+    /// </summary>
+    public static ConfidenceTier GetTierFromPValue(double pValue)
+    {
+        // Convert p-value to confidence: conf = 1 - p
+        return GetTierFromConfidence(1.0 - pValue);
     }
     
     /// <summary>
@@ -54,11 +63,11 @@ public static class ConfidenceTokens
     };
     
     /// <summary>
-    /// Get glow pulse amplitude directly from p-value.
+    /// Get glow pulse amplitude directly from confidence value.
     /// </summary>
-    public static float GetGlowPulseAmplitude(double pValue)
+    public static float GetGlowPulseAmplitude(double confidence)
     {
-        return GetGlowPulseAmplitude(GetTier(pValue));
+        return GetGlowPulseAmplitude(GetTierFromConfidence(confidence));
     }
     
     /// <summary>
@@ -135,10 +144,10 @@ public static class ConfidenceTokens
     }
     
     /// <summary>
-    /// Apply confidence-based saturation to a color from p-value.
+    /// Apply confidence-based saturation to a color from confidence value.
     /// </summary>
-    public static SKColor ApplyConfidenceSaturation(SKColor color, double pValue)
+    public static SKColor ApplyConfidenceSaturation(SKColor color, double confidence)
     {
-        return ApplyConfidenceSaturation(color, GetTier(pValue));
+        return ApplyConfidenceSaturation(color, GetTierFromConfidence(confidence));
     }
 }

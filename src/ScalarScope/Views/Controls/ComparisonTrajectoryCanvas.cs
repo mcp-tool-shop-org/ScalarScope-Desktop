@@ -39,6 +39,11 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
     public static readonly BindableProperty HighlightedStepRangeProperty =
         BindableProperty.Create(nameof(HighlightedStepRange), typeof((int Start, int End)?), typeof(ComparisonTrajectoryCanvas), null,
             propertyChanged: OnHighlightChanged);
+    
+    // Phase 5.3: Confidence modulates glow intensity
+    public static readonly BindableProperty HighlightConfidenceProperty =
+        BindableProperty.Create(nameof(HighlightConfidence), typeof(double), typeof(ComparisonTrajectoryCanvas), 1.0,
+            propertyChanged: OnHighlightChanged);
 
     public GeometryRun? Run
     {
@@ -87,6 +92,16 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
     {
         get => ((int Start, int End)?)GetValue(HighlightedStepRangeProperty);
         set => SetValue(HighlightedStepRangeProperty, value);
+    }
+    
+    /// <summary>
+    /// Phase 5.3: Confidence level for highlight glow modulation (0-1).
+    /// Higher confidence = stronger pulse/glow.
+    /// </summary>
+    public double HighlightConfidence
+    {
+        get => (double)GetValue(HighlightConfidenceProperty);
+        set => SetValue(HighlightConfidenceProperty, value);
     }
 
     private static void OnHighlightChanged(BindableObject bindable, object oldValue, object newValue)
@@ -394,6 +409,7 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
 
     /// <summary>
     /// Phase 3: Draw highlight glow on step range for visual anchoring.
+    /// Phase 5.3: Glow intensity modulated by confidence level.
     /// </summary>
     private void DrawStepRangeHighlight(SKCanvas canvas)
     {
@@ -407,14 +423,23 @@ public class ComparisonTrajectoryCanvas : SKCanvasView
         startStep = Math.Clamp(startStep, 0, steps.Count - 1);
         endStep = Math.Clamp(endStep, startStep, steps.Count - 1);
 
+        // Phase 5.3: Get pulse amplitude from confidence
+        var tier = ConfidenceTokens.GetTierFromConfidence(HighlightConfidence);
+        var pulseAmplitude = ConfidenceTokens.GetGlowPulseAmplitude(tier);
+        
+        // Modulate alpha and blur based on confidence
+        var baseAlpha = (byte)(80 * pulseAmplitude);
+        var blurRadius = 6f * pulseAmplitude;
+        var strokeWidth = 8f + 8f * pulseAmplitude; // 8-16 based on confidence
+
         // Draw glowing highlight along the trajectory segment
         using var highlightPaint = new SKPaint
         {
-            Color = HighlightColor.WithAlpha(80),
+            Color = HighlightColor.WithAlpha(baseAlpha),
             Style = SKPaintStyle.Stroke,
-            StrokeWidth = 12,
+            StrokeWidth = strokeWidth,
             IsAntialias = true,
-            MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6)
+            MaskFilter = blurRadius > 0.5f ? SKMaskFilter.CreateBlur(SKBlurStyle.Normal, blurRadius) : null
         };
 
         using var path = new SKPath();
