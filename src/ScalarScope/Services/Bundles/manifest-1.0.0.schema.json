@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scalarscope.app/schemas/comparison-bundle/manifest-1.0.0.schema.json",
+  "title": "ScalarScope ComparisonBundle Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "bundleVersion",
+    "bundleId",
+    "createdUtc",
+    "profile",
+    "app",
+    "comparison",
+    "reproducibility",
+    "contents",
+    "integrity",
+    "privacy"
+  ],
+  "properties": {
+    "bundleVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "bundleId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "createdUtc": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "profile": {
+      "type": "string",
+      "enum": ["share", "review", "audit"]
+    },
+
+    "app": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "appVersion", "deltaSpecVersion", "build"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "appVersion": { "type": "string", "minLength": 1 },
+        "deltaSpecVersion": { "type": "string", "minLength": 1 },
+        "build": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["channel", "warningsCount"],
+          "properties": {
+            "gitCommit": { "type": ["string", "null"], "minLength": 1 },
+            "channel": { "type": "string", "enum": ["stable", "dev", "ci"] },
+            "warningsCount": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["comparisonId", "labelA", "labelB", "alignmentMode", "compareLength"],
+      "properties": {
+        "comparisonId": { "type": "string", "format": "uuid" },
+        "labelA": { "type": "string", "minLength": 1 },
+        "labelB": { "type": "string", "minLength": 1 },
+        "alignmentMode": { "type": "string", "enum": ["step", "convergenceOnset", "firstInstability"] },
+        "compareLength": { "type": "integer", "minimum": 1 },
+        "notes": { "type": ["string", "null"] }
+      }
+    },
+
+    "reproducibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reasons"],
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["reproducible", "modified", "nondeterministic"]
+        },
+        "reasons": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["inputs_changed", "preset_changed", "seed_changed", "delta_spec_changed", "unknown"]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "contents": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "optional"],
+      "properties": {
+        "required": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "optional": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 0,
+          "uniqueItems": true
+        }
+      }
+    },
+
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["hashAlgorithm", "files", "bundleHash", "bundleHashDefinition"],
+      "properties": {
+        "hashAlgorithm": { "type": "string", "enum": ["SHA-256"] },
+        "files": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "bytes", "contentType"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[A-Fa-f0-9]{64}$"
+              },
+              "bytes": { "type": "integer", "minimum": 0 },
+              "contentType": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "bundleHash": {
+          "type": "string",
+          "pattern": "^[A-Fa-f0-9]{64}$"
+        },
+        "bundleHashDefinition": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["containsRawRunData", "containsPII", "redactions"],
+      "properties": {
+        "containsRawRunData": { "type": "boolean" },
+        "containsPII": { "type": "boolean" },
+        "redactions": {
+          "type": "array",
+          "items": { "type": "string", "enum": ["none", "labels_only", "paths_removed", "other"] },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "profile": { "const": "audit" }
+        }
+      },
+      "then": {
+        "properties": {
+          "contents": {
+            "properties": {
+              "optional": {
+                "contains": {
+                  "type": "string",
+                  "enum": ["audit/audit.json", "audit/audit.zip"]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}
