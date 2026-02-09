@@ -31,9 +31,17 @@ public class ParticleSystem
 
     /// <summary>
     /// Update particle system state.
+    /// Skipped entirely when reduced motion is enabled (particles are decorative).
     /// </summary>
     public void Update(float dt, Vector2? emitPosition = null, Vector2? emitVelocity = null)
     {
+        // Skip particle updates entirely in reduced motion mode
+        if (!MotionTokens.ShouldAnimate("particle.emit"))
+        {
+            _particles.Clear();
+            return;
+        }
+        
         // Spawn new particles
         if (emitPosition.HasValue)
         {
@@ -101,10 +109,13 @@ public class ParticleSystem
 
     /// <summary>
     /// Draw all particles to the canvas.
+    /// Respects reduced motion setting - particles are purely decorative.
     /// </summary>
     public void Draw(SKCanvas canvas, SKColor baseColor, Func<Vector2, SKPoint>? worldToScreen = null)
     {
+        // Skip particle rendering entirely if reduced motion or no particles
         if (_particles.Count == 0) return;
+        if (!MotionTokens.ShouldAnimate("particle.emit")) return;
 
         worldToScreen ??= (v) => new SKPoint(v.X, v.Y);
 
