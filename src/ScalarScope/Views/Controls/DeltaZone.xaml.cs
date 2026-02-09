@@ -306,6 +306,23 @@ public partial class DeltaZone : ContentView
     private View CreateDeltaItem(CanonicalDelta delta)
     {
         var accentColor = GetDeltaTypeColor(delta.DeltaType);
+        
+        // Phase 5.3: Modulate color saturation by confidence
+        var tier = ConfidenceTokens.GetTierFromConfidence(delta.Confidence);
+        var saturation = ConfidenceTokens.GetBadgeSaturation(tier);
+        var alpha = ConfidenceTokens.GetBadgeAlpha(tier);
+        
+        // Desaturate accent color based on confidence
+        var skColor = new SkiaSharp.SKColor(
+            (byte)(accentColor.Red * 255),
+            (byte)(accentColor.Green * 255),
+            (byte)(accentColor.Blue * 255));
+        var adjustedSkColor = ConfidenceTokens.ApplyConfidenceSaturation(skColor, tier);
+        var adjustedColor = Color.FromRgba(
+            adjustedSkColor.Red / 255.0,
+            adjustedSkColor.Green / 255.0,
+            adjustedSkColor.Blue / 255.0,
+            adjustedSkColor.Alpha / 255.0);
 
         var container = new Border
         {
@@ -323,6 +340,7 @@ public partial class DeltaZone : ContentView
                 new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Star },
                 new ColumnDefinition { Width = GridLength.Auto },
+                new ColumnDefinition { Width = GridLength.Auto },
                 new ColumnDefinition { Width = GridLength.Auto }
             },
             RowDefinitions =
@@ -334,23 +352,23 @@ public partial class DeltaZone : ContentView
             RowSpacing = 3
         };
 
-        // Type indicator
+        // Type indicator - saturation reflects confidence
         var typeIndicator = new BoxView
         {
             WidthRequest = 3,
             HeightRequest = 28,
-            Color = accentColor,
+            Color = adjustedColor,
             VerticalOptions = LayoutOptions.Center
         };
         Grid.SetColumn(typeIndicator, 0);
         Grid.SetRowSpan(typeIndicator, 2);
         grid.Children.Add(typeIndicator);
 
-        // Delta name
+        // Delta name - saturation reflects confidence
         var nameLabel = new Label
         {
             Text = delta.Name,
-            TextColor = accentColor,
+            TextColor = adjustedColor,
             FontSize = 11,
             FontAttributes = FontAttributes.Bold
         };
@@ -369,6 +387,27 @@ public partial class DeltaZone : ContentView
         Grid.SetColumn(explanationLabel, 1);
         Grid.SetRow(explanationLabel, 1);
         grid.Children.Add(explanationLabel);
+        
+        // Phase 5.3: Confidence badge
+        var confidenceBadge = new Border
+        {
+            BackgroundColor = GetConfidenceBadgeBackground(tier),
+            StrokeThickness = 0,
+            Padding = new Thickness(4, 2),
+            StrokeShape = new RoundRectangle { CornerRadius = 3 },
+            VerticalOptions = LayoutOptions.Center
+        };
+        var confidenceLabel = new Label
+        {
+            Text = GetConfidenceBadgeText(tier),
+            TextColor = GetConfidenceBadgeTextColor(tier),
+            FontSize = 8,
+            FontAttributes = FontAttributes.Bold
+        };
+        confidenceBadge.Content = confidenceLabel;
+        Grid.SetColumn(confidenceBadge, 2);
+        Grid.SetRowSpan(confidenceBadge, 2);
+        grid.Children.Add(confidenceBadge);
 
         // Info button (Why? for this specific delta)
         var infoButton = new Button
@@ -387,7 +426,7 @@ public partial class DeltaZone : ContentView
             SelectedDelta = delta;
             IsWhyPanelExpanded = true;
         };
-        Grid.SetColumn(infoButton, 2);
+        Grid.SetColumn(infoButton, 3);
         Grid.SetRowSpan(infoButton, 2);
         grid.Children.Add(infoButton);
 
@@ -399,7 +438,7 @@ public partial class DeltaZone : ContentView
             FontSize = 9,
             VerticalOptions = LayoutOptions.Center
         };
-        Grid.SetColumn(anchorLabel, 3);
+        Grid.SetColumn(anchorLabel, 4);
         Grid.SetRowSpan(anchorLabel, 2);
         grid.Children.Add(anchorLabel);
 
@@ -432,6 +471,34 @@ public partial class DeltaZone : ContentView
         DeltaType.Timing => Color.FromArgb("#4ecdc4"),     // Teal for timing
         DeltaType.Structure => Color.FromArgb("#a29bfe"), // Purple for structure
         DeltaType.Behavior => Color.FromArgb("#ffd93d"),  // Yellow for behavior
+        _ => Color.FromArgb("#888")
+    };
+    
+    // Phase 5.3: Confidence badge helpers
+    private static Color GetConfidenceBadgeBackground(ConfidenceTokens.ConfidenceTier tier) => tier switch
+    {
+        ConfidenceTokens.ConfidenceTier.High => Color.FromArgb("#1a4d1a"),      // Dark green
+        ConfidenceTokens.ConfidenceTier.Medium => Color.FromArgb("#3d3d1a"),    // Dark yellow
+        ConfidenceTokens.ConfidenceTier.Low => Color.FromArgb("#4d3d1a"),       // Dark orange
+        ConfidenceTokens.ConfidenceTier.Negligible => Color.FromArgb("#2a2a2a"), // Dark gray
+        _ => Color.FromArgb("#2a2a2a")
+    };
+    
+    private static string GetConfidenceBadgeText(ConfidenceTokens.ConfidenceTier tier) => tier switch
+    {
+        ConfidenceTokens.ConfidenceTier.High => "HIGH",
+        ConfidenceTokens.ConfidenceTier.Medium => "MED",
+        ConfidenceTokens.ConfidenceTier.Low => "LOW",
+        ConfidenceTokens.ConfidenceTier.Negligible => "???",
+        _ => "?"
+    };
+    
+    private static Color GetConfidenceBadgeTextColor(ConfidenceTokens.ConfidenceTier tier) => tier switch
+    {
+        ConfidenceTokens.ConfidenceTier.High => Color.FromArgb("#4ade80"),      // Bright green
+        ConfidenceTokens.ConfidenceTier.Medium => Color.FromArgb("#fbbf24"),    // Bright yellow
+        ConfidenceTokens.ConfidenceTier.Low => Color.FromArgb("#fb923c"),       // Bright orange
+        ConfidenceTokens.ConfidenceTier.Negligible => Color.FromArgb("#888"),   // Gray
         _ => Color.FromArgb("#888")
     };
 }
