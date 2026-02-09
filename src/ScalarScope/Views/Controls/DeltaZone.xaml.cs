@@ -388,6 +388,11 @@ public partial class DeltaZone : ContentView
         Grid.SetRow(explanationLabel, 1);
         grid.Children.Add(explanationLabel);
         
+        // Phase 5.3: Set accessibility description with confidence context
+        var accessibilityDescription = ConfidenceTokens.GetAccessibilityDescription(tier, delta.Explanation);
+        SemanticProperties.SetDescription(container, accessibilityDescription);
+        SemanticProperties.SetHeadingLevel(container, SemanticHeadingLevel.Level3);
+        AutomationProperties.SetName(container, $"{delta.Name}, {ConfidenceTokens.GetLabel(tier)}");
         // Phase 5.3: Confidence badge
         var confidenceBadge = new Border
         {
