@@ -1373,6 +1373,11 @@ public record ExportOptions
     public ExportFormat Format { get; init; } = ExportFormat.Png;
     public int JpegQuality { get; init; } = 95;
     public ResolutionPreset? Preset { get; init; }
+    
+    // Phase 5.4: Shareability options
+    public bool IncludeWatermark { get; init; } = true;
+    public bool IncludeLegend { get; init; } = true;
+    public bool IncludeConfidenceBadges { get; init; } = true;
 
     /// <summary>
     /// Get dimensions based on preset or explicit values.

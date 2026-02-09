@@ -111,6 +111,21 @@ public partial class ExportViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _ffmpegAvailable;
+    
+    // Phase 5.4: Shareability settings
+    [ObservableProperty]
+    private bool _includeWatermark = true;
+    
+    [ObservableProperty]
+    private bool _includeLegend = true;
+    
+    [ObservableProperty]
+    private bool _includeConfidenceBadges = true;
+    
+    /// <summary>
+    /// Phase 5.4: Check if export is screenshot-ready (all visibility options enabled).
+    /// </summary>
+    public bool IsScreenshotReady => IncludeWatermark && IncludeLegend && IncludeConfidenceBadges;
 
     partial void OnResolutionPresetIndexChanged(int value)
     {
@@ -448,7 +463,11 @@ public partial class ExportViewModel : ObservableObject
             Duration = Duration,
             ShowProfessors = ShowProfessors,
             ShowMetrics = ShowMetrics,
-            ShowEigenvalues = ShowEigenvalues
+            ShowEigenvalues = ShowEigenvalues,
+            // Phase 5.4: Shareability options
+            IncludeWatermark = IncludeWatermark,
+            IncludeLegend = IncludeLegend,
+            IncludeConfidenceBadges = IncludeConfidenceBadges
         };
     }
 
