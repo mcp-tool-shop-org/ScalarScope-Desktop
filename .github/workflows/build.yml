@@ -6,12 +6,19 @@ on:
   pull_request:
     branches: [ main ]
 
+# Phase 5.5: CI validation and release hardening
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for version info
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -27,25 +34,50 @@ jobs:
     - name: Restore ScalarScope
       run: dotnet restore src/ScalarScope/ScalarScope.csproj
 
-    - name: Build VortexKit
+    # Phase 5.5.2: Build with warnings as errors for release hardening
+    - name: Build VortexKit (Release)
       run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
 
-    - name: Build ScalarScope
+    - name: Build ScalarScope (Release)
       run: dotnet build src/ScalarScope/ScalarScope.csproj --configuration Release --no-restore
+
+    # Phase 5.5.2: Run format check (informational)
+    - name: Check code formatting
+      run: dotnet format src/ScalarScope/ScalarScope.csproj --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
 
     - name: Pack VortexKit
       run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build
 
+    # Phase 5.5.2: Upload build artifacts with version info
+    - name: Get version info
+      id: version
+      shell: pwsh
+      run: |
+        $version = (Select-Xml -Path "src/ScalarScope/ScalarScope.csproj" -XPath "//ApplicationDisplayVersion" | Select -First 1).Node.InnerText
+        $shortSha = "${{ github.sha }}".Substring(0, 7)
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        echo "SHORT_SHA=$shortSha" >> $env:GITHUB_OUTPUT
+        echo "Version: $version+$shortSha"
+
     - name: Upload ScalarScope artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: scalarscope-windows
+        name: scalarscope-windows-${{ steps.version.outputs.VERSION }}
         path: src/ScalarScope/bin/Release/
-        retention-days: 7
+        retention-days: 14
 
     - name: Upload VortexKit NuGet
       uses: actions/upload-artifact@v4
       with:
-        name: vortexkit-nuget
+        name: vortexkit-nuget-${{ steps.version.outputs.VERSION }}
         path: src/VortexKit/bin/Release/*.nupkg
-        retention-days: 7
+        retention-days: 14
+
+    # Phase 5.5.2: Create build summary
+    - name: Build Summary
+      run: |
+        echo "## Build Summary" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Version:** ${{ steps.version.outputs.VERSION }}+${{ steps.version.outputs.SHORT_SHA }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Branch:** ${{ github.ref_name }}" >> $env:GITHUB_STEP_SUMMARY
+        echo "- **Commit:** ${{ github.sha }}" >> $env:GITHUB_STEP_SUMMARY
