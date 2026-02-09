@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Phase 6.2.4: Error detail panel for expanded error information -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.ErrorDetailPanel">
+    
+    <Border x:Name="PanelContainer"
+            IsVisible="False"
+            BackgroundColor="#1A1A1A"
+            StrokeThickness="1"
+            Stroke="#3A3A3A"
+            Padding="16">
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="8" />
+        </Border.StrokeShape>
+        
+        <ScrollView MaximumHeightRequest="400">
+            <VerticalStackLayout Spacing="16">
+                <!-- Header with icon and title -->
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <Frame Grid.Column="0" 
+                           BackgroundColor="#3A2222" 
+                           BorderColor="Transparent"
+                           CornerRadius="20"
+                           Padding="8"
+                           WidthRequest="40"
+                           HeightRequest="40"
+                           VerticalOptions="Center">
+                        <Label Text="⚠" 
+                               FontSize="20" 
+                               TextColor="#FF6B6B"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center" />
+                    </Frame>
+                    
+                    <Label Grid.Column="1" 
+                           x:Name="TitleLabel"
+                           Text="Error" 
+                           FontSize="18"
+                           FontAttributes="Bold"
+                           TextColor="White"
+                           VerticalOptions="Center"
+                           Margin="12,0" />
+                    
+                    <Button Grid.Column="2"
+                            Text="✕"
+                            BackgroundColor="Transparent"
+                            TextColor="#888888"
+                            WidthRequest="32"
+                            HeightRequest="32"
+                            CornerRadius="16"
+                            Padding="0"
+                            FontSize="16"
+                            Clicked="OnCloseClicked" />
+                </Grid>
+                
+                <!-- What happened -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="What happened" 
+                           FontSize="12" 
+                           TextColor="#888888"
+                           FontAttributes="Bold" />
+                    <Label x:Name="SummaryLabel"
+                           Text="" 
+                           FontSize="14"
+                           TextColor="#CCCCCC"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+                
+                <!-- Why -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="Why" 
+                           FontSize="12" 
+                           TextColor="#888888"
+                           FontAttributes="Bold" />
+                    <Label x:Name="RootCauseLabel"
+                           Text="" 
+                           FontSize="14"
+                           TextColor="#CCCCCC"
+                           LineBreakMode="WordWrap" />
+                </VerticalStackLayout>
+                
+                <!-- What you can do -->
+                <VerticalStackLayout Spacing="4">
+                    <Label Text="What you can do" 
+                           FontSize="12" 
+                           TextColor="#888888"
+                           FontAttributes="Bold" />
+                    <VerticalStackLayout x:Name="StepsContainer" Spacing="8">
+                        <!-- Steps added dynamically -->
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+                
+                <!-- Technical note (if present) -->
+                <VerticalStackLayout x:Name="TechnicalNoteContainer" 
+                                    Spacing="4" 
+                                    IsVisible="False">
+                    <Label Text="Technical details" 
+                           FontSize="12" 
+                           TextColor="#888888"
+                           FontAttributes="Bold" />
+                    <Frame BackgroundColor="#0A0A0A" 
+                           BorderColor="#2A2A2A"
+                           Padding="8"
+                           CornerRadius="4">
+                        <Label x:Name="TechnicalNoteLabel"
+                               Text="" 
+                               FontSize="12"
+                               FontFamily="Consolas"
+                               TextColor="#999999"
+                               LineBreakMode="WordWrap" />
+                    </Frame>
+                </VerticalStackLayout>
+                
+                <!-- Error code -->
+                <HorizontalStackLayout Spacing="8">
+                    <Label Text="Error code:" 
+                           FontSize="11" 
+                           TextColor="#666666" />
+                    <Label x:Name="ErrorCodeLabel"
+                           Text="" 
+                           FontSize="11"
+                           FontFamily="Consolas"
+                           TextColor="#666666" />
+                </HorizontalStackLayout>
+                
+                <!-- Actions -->
+                <HorizontalStackLayout Spacing="12" HorizontalOptions="End">
+                    <Button x:Name="CopyButton"
+                            Text="Copy Details"
+                            BackgroundColor="Transparent"
+                            TextColor="#888888"
+                            BorderColor="#3A3A3A"
+                            BorderWidth="1"
+                            CornerRadius="4"
+                            HeightRequest="32"
+                            Padding="16,0"
+                            FontSize="12"
+                            Clicked="OnCopyClicked" />
+                    <Button x:Name="ReportButton"
+                            Text="Report Issue"
+                            BackgroundColor="#4A2222"
+                            TextColor="#FF8888"
+                            BorderWidth="0"
+                            CornerRadius="4"
+                            HeightRequest="32"
+                            Padding="16,0"
+                            FontSize="12"
+                            IsVisible="False"
+                            Clicked="OnReportClicked" />
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Border>
+</ContentView>

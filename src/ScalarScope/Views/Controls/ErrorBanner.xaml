@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Phase 6.2.4: Error visualization components -->
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ScalarScope.Views.Controls.ErrorBanner">
+    
+    <Border x:Name="ErrorContainer"
+            IsVisible="False"
+            StrokeThickness="0"
+            Margin="0">
+        <Border.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                <GradientStop Color="#B22222" Offset="0" />
+                <GradientStop Color="#8B0000" Offset="1" />
+            </LinearGradientBrush>
+        </Border.Background>
+        <Border.StrokeShape>
+            <RoundRectangle CornerRadius="4" />
+        </Border.StrokeShape>
+        
+        <Grid ColumnDefinitions="Auto,*,Auto" Padding="12,8">
+            <!-- Error icon -->
+            <Frame Grid.Column="0" 
+                   BackgroundColor="Transparent" 
+                   BorderColor="Transparent"
+                   Padding="0"
+                   VerticalOptions="Center"
+                   Margin="0,0,8,0">
+                <Label Text="⚠" 
+                       FontSize="18" 
+                       TextColor="White"
+                       VerticalOptions="Center" />
+            </Frame>
+            
+            <!-- Error message -->
+            <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                <Label x:Name="TitleLabel"
+                       Text="Error" 
+                       FontAttributes="Bold"
+                       FontSize="14"
+                       TextColor="White" />
+                <Label x:Name="MessageLabel"
+                       Text="" 
+                       FontSize="12"
+                       TextColor="#FFCCCC"
+                       MaxLines="2"
+                       LineBreakMode="TailTruncation" />
+            </VerticalStackLayout>
+            
+            <!-- Actions -->
+            <HorizontalStackLayout Grid.Column="2" Spacing="8" VerticalOptions="Center">
+                <Button x:Name="DetailsButton"
+                        Text="Details"
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        BorderColor="#FFFFFF80"
+                        BorderWidth="1"
+                        CornerRadius="4"
+                        HeightRequest="28"
+                        Padding="12,0"
+                        FontSize="12"
+                        Clicked="OnDetailsClicked" />
+                <Button x:Name="DismissButton"
+                        Text="✕"
+                        BackgroundColor="Transparent"
+                        TextColor="White"
+                        WidthRequest="28"
+                        HeightRequest="28"
+                        CornerRadius="14"
+                        Padding="0"
+                        FontSize="14"
+                        Clicked="OnDismissClicked" />
+            </HorizontalStackLayout>
+        </Grid>
+    </Border>
+</ContentView>
