@@ -1,0 +1,40 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: windows-latest
+    permissions:
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Install MAUI workload
+        run: dotnet workload install maui-windows --skip-sign-check
+
+      - name: Restore VortexKit
+        run: dotnet restore src/VortexKit/VortexKit.csproj
+
+      - name: Build VortexKit
+        run: dotnet build src/VortexKit/VortexKit.csproj --configuration Release --no-restore
+
+      - name: Pack VortexKit
+        run: dotnet pack src/VortexKit/VortexKit.csproj --configuration Release --no-build --output ./nupkg
+
+      - name: Login to NuGet (Trusted Publishing)
+        uses: nuget/login@v1
+        id: nuget-login
+        with:
+          user: mcp-tool-shop
+
+      - name: Push to NuGet
+        run: dotnet nuget push ./nupkg/*.nupkg --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

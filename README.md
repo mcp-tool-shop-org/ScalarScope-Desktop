@@ -106,6 +106,16 @@ The visualizations make this concrete:
 | Path A | Orthogonal professors | Chaotic trajectory, multiple eigen bars | Transfer fails |
 | Path B | Correlated professors | Clean spiral, dominant eigen bar | Transfer succeeds |
 
+## NuGet Packages
+
+| Package | Description |
+|---------|-------------|
+| [VortexKit](https://www.nuget.org/packages/VortexKit) | Visualization framework for training dynamics — time-synced playback, comparison views, annotation overlays, and export. Built on SkiaSharp + MAUI. |
+
+```bash
+dotnet add package VortexKit
+```
+
 ## Related
 
 - [ScalarScope (Python)](https://github.com/mcp-tool-shop-org/ScalarScope) - Core training framework
