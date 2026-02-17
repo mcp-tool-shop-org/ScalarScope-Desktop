@@ -1,5 +1,8 @@
 # ScalarScope
 
+> Part of [MCP Tool Shop](https://mcptoolshop.com)
+
+
 **Compare inference optimization runs with scientific rigor.**
 
 [![Microsoft Store](https://img.shields.io/badge/Microsoft%20Store-9P3HT1PHBKQK-0078D4?logo=microsoft)](https://apps.microsoft.com/detail/9P3HT1PHBKQK)
