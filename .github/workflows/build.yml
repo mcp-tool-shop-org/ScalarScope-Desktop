@@ -2,11 +2,27 @@ name: Build and Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "**/*.sln"
+      - "**/*.xaml"
+      - ".github/workflows/**"
   pull_request:
-    branches: [ main ]
+    branches: [main]
+    paths:
+      - "**/*.cs"
+      - "**/*.csproj"
+      - "**/*.sln"
+      - "**/*.xaml"
+      - ".github/workflows/**"
+  workflow_dispatch:
 
-# Phase 5.5: CI validation and release hardening
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   DOTNET_NOLOGO: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
