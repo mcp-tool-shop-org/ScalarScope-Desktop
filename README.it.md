@@ -8,7 +8,7 @@
 
 # ScalarScope-Desktop
 
-> Part of [MCP Tool Shop](https://mcptoolshop.com)
+> Parte di [MCP Tool Shop](https://mcptoolshop.com)
 
 <p align="center">
   <a href="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml"><img src="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml/badge.svg" alt="CI"></a>
@@ -18,28 +18,28 @@
   <a href="https://www.nuget.org/packages/VortexKit"><img src="https://img.shields.io/nuget/v/VortexKit?label=VortexKit&logo=nuget&style=flat-square" alt="NuGet: VortexKit"></a>
 </p>
 
-**ASPIRE Scalar Vortex Visualizer — a .NET MAUI desktop app for comparing ML inference runs with scientific rigor.**
+**ASPIRE Scalar Vortex Visualizer: un'applicazione desktop .NET MAUI per confrontare le esecuzioni di inferenza di modelli di machine learning con rigore scientifico.**
 
 ---
 
-## Why ScalarScope?
+## Perché ScalarScope?
 
-Most ML teams eyeball logs. ScalarScope replaces that with structured, reproducible comparison.
+La maggior parte dei team di machine learning analizza i log. ScalarScope sostituisce questo processo con un confronto strutturato e riproducibile.
 
-- **Apples-to-apples comparison** — Load two inference traces side by side and see exactly what changed
-- **Canonical delta analysis** — Five delta types (ΔTc, ΔO, ΔF, ΔĀ, ΔTd) fire only when differences are statistically meaningful
-- **Runtime presets** — The TFRT preset auto-suppresses irrelevant metrics so you focus on what matters for TensorFlow-TRT workloads
-- **Reproducible bundles** — Export `.scbundle` archives with SHA-256 integrity, frozen deltas, and full provenance metadata
-- **Review mode** — Open a bundle without recomputing; results are cryptographically verified, not re-derived
-- **Privacy first** — Zero telemetry, zero analytics, all data stays local unless you explicitly export
+- **Confronto diretto:** Carica due tracce di inferenza affiancate e osserva esattamente cosa è cambiato.
+- **Analisi delta standard:** Cinque tipi di delta (ΔTc, ΔO, ΔF, ΔĀ, ΔTd) vengono attivati solo quando le differenze sono statisticamente significative.
+- **Impostazioni predefinite per l'esecuzione:** L'impostazione predefinita TFRT sopprime automaticamente le metriche irrilevanti, consentendoti di concentrarti su ciò che è importante per i carichi di lavoro TensorFlow-TRT.
+- **Pacchetti riproducibili:** Esporta archivi `.scbundle` con integrità SHA-256, delta "congelati" e metadati completi.
+- **Modalità di revisione:** Apri un pacchetto senza doverlo ricalcolare; i risultati sono verificati crittograficamente, non ricavati.
+- **Priorità alla privacy:** Nessuna telemetria, nessuna analisi, tutti i dati rimangono locali a meno che tu non li esporti esplicitamente.
 
 ---
 
-## NuGet Packages
+## Pacchetti NuGet
 
-| Package | Version | Description |
-|---------|---------|-------------|
-| [VortexKit](https://www.nuget.org/packages/VortexKit) | [![NuGet](https://img.shields.io/nuget/v/VortexKit)](https://www.nuget.org/packages/VortexKit) | Reusable visualization framework for training dynamics — time-synced playback, animated SkiaSharp canvases, comparison views, annotation overlays, SVG/PNG export, and a semantic color system. Built on SkiaSharp + MAUI. |
+| Pacchetto | Versione | Descrizione |
+| --------- | --------- | ------------- |
+| [VortexKit](https://www.nuget.org/packages/VortexKit) | [![NuGet](https://img.shields.io/nuget/v/VortexKit)](https://www.nuget.org/packages/VortexKit) | Framework di visualizzazione riutilizzabile per l'analisi della dinamica dell'addestramento: riproduzione sincronizzata nel tempo, canvas animati SkiaSharp, viste di confronto, sovrapposizioni di annotazioni, esportazione SVG/PNG e un sistema di colori semantico. Costruito su SkiaSharp + MAUI. |
 
 ```bash
 dotnet add package VortexKit
@@ -47,18 +47,18 @@ dotnet add package VortexKit
 
 ---
 
-## Quick Start
+## Guida rapida
 
-### From the Microsoft Store
+### Dal Microsoft Store
 
-1. Install **ScalarScope** from the [Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK) (Store ID: `9P3HT1PHBKQK`)
-2. Click **Compare Two Runs**
-3. Load baseline TFRT trace (before optimization)
-4. Load optimized TFRT trace (after optimization)
-5. Review deltas in the **Compare** tab
-6. Export a `.scbundle` for reproducible sharing
+1. Installa **ScalarScope** dal [Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK) (ID Store: `9P3HT1PHBKQK`)
+2. Clicca su **Confronta due esecuzioni**
+3. Carica la traccia TFRT di base (prima dell'ottimizzazione)
+4. Carica la traccia TFRT ottimizzata (dopo l'ottimizzazione)
+5. Esamina i delta nella scheda **Confronta**
+6. Esporta un file `.scbundle` per la condivisione riproducibile
 
-### Using VortexKit in Your Own App
+### Utilizzo di VortexKit nella tua applicazione
 
 ```csharp
 using VortexKit.Core;
@@ -108,66 +108,66 @@ await svgExporter.ExportSvgAsync(svgData, "trajectory.svg",
 
 ---
 
-## Features
+## Funzionalità
 
-### Delta Analysis — Five Canonical Delta Types
+### Analisi dei delta: cinque tipi di delta standard
 
-Every comparison produces a set of canonical deltas. Each delta fires only when the difference is statistically meaningful; irrelevant deltas are suppressed automatically.
+Ogni confronto produce un insieme di delta standard. Ogni delta viene attivato solo quando la differenza è statisticamente significativa; i delta irrilevanti vengono soppressi automaticamente.
 
-| Delta | Full Name | What It Measures | Fires When |
-|-------|-----------|------------------|------------|
-| **ΔTc** | Convergence Time | Steps to reach stable latency | Steady-state reached at different steps (≥3-step separation) |
-| **ΔO** | Output Variability | Oscillation / runtime instability | Area-above-threshold score differs beyond noise floor |
-| **ΔF** | Failure Rate | Anomaly frequency | Failure frequency or kind differs between runs |
-| **ΔĀ** | Average Latency | Mean metric value | Mean differs meaningfully (suppressed in TFRT preset) |
-| **ΔTd** | Total Duration | Wall-clock time / structural emergence | Duration or dominance onset differs (suppressed in TFRT preset) |
+| Delta | Nome completo | Cosa misura | Si attiva quando |
+| ------- | ----------- | ------------------ | ------------ |
+| **ΔTc** | Tempo di convergenza | Numero di passaggi per raggiungere una latenza stabile | Stato stazionario raggiunto in un numero diverso di passaggi (separazione di almeno 3 passaggi) |
+| **ΔO** | Variabilità dell'output | Oscillazione / instabilità durante l'esecuzione | Il punteggio area-sopra-soglia differisce oltre la soglia del rumore |
+| **ΔF** | Tasso di errore | Frequenza delle anomalie | La frequenza o il tipo di errore differisce tra le esecuzioni |
+| **ΔĀ** | Latenza media | Valore medio della metrica | La media differisce in modo significativo (soppressa nell'impostazione predefinita TFRT) |
+| **ΔTd** | Durata totale | Tempo reale / emergenza strutturale | La durata o l'inizio della dominanza differiscono (soppressa nell'impostazione predefinita TFRT) |
 
-### Runtime Presets — TFRT
+### Impostazioni predefinite per l'esecuzione: TFRT
 
-The built-in **TensorFlow-TRT** preset (`tensorflowrt-runtime-v1`) maps inference-specific signals (latency, throughput, memory, CPU/GPU load) and suppresses training-only deltas (ΔĀ, ΔTd) that have no meaning for inference comparison. Guardrails warn when warmup exceeds 50% of the run or when only aggregated stats are available.
+L'impostazione predefinita integrata **TensorFlow-TRT** (`tensorflowrt-runtime-v1`) mappa i segnali specifici per l'inferenza (latenza, throughput, memoria, carico della CPU/GPU) e sopprime i delta relativi solo all'addestramento (ΔĀ, ΔTd) che non hanno significato per il confronto dell'inferenza. I meccanismi di protezione avvisano quando il riscaldamento supera il 50% dell'esecuzione o quando sono disponibili solo statistiche aggregate.
 
-### Reproducible Bundles
+### Pacchetti riproducibili
 
-Export results as `.scbundle` archives (ComparisonBundle v1.0.0):
+Esporta i risultati come archivi `.scbundle` (ComparisonBundle v1.0.0):
 
-- **`manifest.json`** — bundle metadata, app version, comparison labels, alignment mode
-- **`repro/repro.json`** — input fingerprints, preset hash, determinism seed, environment info
-- **`findings/deltas.json`** — canonical deltas with confidence scores, anchors, and trigger types
-- **`findings/why.json`** — human-readable explanations, guardrails, parameter chips
-- **`findings/summary.md`** — auto-generated Markdown summary
-- **Integrity** — every file hashed with SHA-256; bundle-level hash for tamper detection
+- **`manifest.json`** — metadati del pacchetto, versione dell'app, etichette di confronto, modalità di allineamento.
+- **`repro/repro.json`** — impronte digitali di input, hash predefinito, seme per la determinazione, informazioni sull'ambiente.
+- **`findings/deltas.json`** — delta canonici con punteggi di confidenza, ancoraggi e tipi di trigger.
+- **`findings/why.json`** — spiegazioni leggibili, linee guida, parametri.
+- **`findings/summary.md`** — riepilogo in formato Markdown generato automaticamente.
+- **Integrità** — ogni file viene sottoposto a hashing con SHA-256; hash a livello di pacchetto per la rilevazione di manomissioni.
 
-### Review Mode
+### Modalità di revisione
 
-Open any `.scbundle` without recomputing. Review mode verifies integrity, displays frozen deltas, and shows a review-mode banner so you know results are verified, not re-derived.
+Apri qualsiasi file `.scbundle` senza doverlo ricalcolare. La modalità di revisione verifica l'integrità, visualizza i delta "congelati" e mostra un banner che indica che i risultati sono verificati e non ricalcolati.
 
-### VortexKit Visualization Framework
+### Framework di visualizzazione VortexKit
 
-VortexKit is the extracted visualization engine, published as a standalone NuGet package:
+VortexKit è il motore di visualizzazione estratto, pubblicato come pacchetto NuGet autonomo:
 
-| Component | What It Does |
-|-----------|-------------|
-| `PlaybackController` | Shared 0→1 timeline with play/pause/step/loop, speed presets (0.25x—4x), ~60 fps tick |
-| `AnimatedCanvas` | Abstract `SKCanvasView` base with time-synced invalidation, grid drawing, touch/drag events, coordinate helpers |
-| `ITimeSeries<T>` / `TimeSeries<T>` | Generic time-series with index↔time mapping and trail enumeration |
-| `ExportService` | Single-frame PNG, frame sequences (with ffmpeg hints), and side-by-side comparison export |
-| `SvgExportService` | Full-vector SVG export with Inkscape layers, Catmull-Rom splines, heatmaps, vector fields, and four color palettes (Default, Light, HighContrast, Publication) |
-| `IAnnotation` | Typed annotations (Phase, Warning, Insight, Failure, Custom) with theoretical basis and priority |
-| `VortexColors` | Semantic color palette — background layers, accent semantics, severity coding, eigenvalue palette, lerp/gradient helpers |
+| Componente | Cosa fa |
+| ----------- | ------------- |
+| `PlaybackController` | Timeline condivisa 0→1 con pulsanti di riproduzione/pausa/avanzamento/loop, preset di velocità (0.25x—4x), circa 60 fotogrammi al secondo. |
+| `AnimatedCanvas` | Classe base `SKCanvasView` astratta con invalidazione sincronizzata con il tempo, disegno della griglia, gestione di eventi touch/drag, funzioni di supporto per le coordinate. |
+| `ITimeSeries<T>` / `TimeSeries<T>` | Serie temporale generica con mappatura indice↔tempo e enumerazione della sequenza. |
+| `ExportService` | Esportazione in formato PNG a singolo fotogramma, sequenze di fotogrammi (con suggerimenti per ffmpeg) e confronto affiancato. |
+| `SvgExportService` | Esportazione completa in formato SVG con livelli Inkscape, spline di Catmull-Rom, mappe di calore, campi vettoriali e quattro palette di colori (Predefinita, Chiaro, Alto Contrasto, Pubblicazione). |
+| `IAnnotation` | Annotazioni tipizzate (Fase, Avviso, Informazione, Errore, Personalizzata) con base teorica e priorità. |
+| `VortexColors` | Palette di colori semantica: livelli di sfondo, semantica degli elementi, codifica della gravità, palette degli autovalori, funzioni di supporto per lerp/gradient. |
 
 ---
 
-## Installation
+## Installazione
 
-### Microsoft Store (recommended)
+### Microsoft Store (consigliato)
 
-**Store ID:** `9P3HT1PHBKQK`
+**ID del negozio:** `9P3HT1PHBKQK`
 
-[Get it from the Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK)
+[Scaricalo dal Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK)
 
-Requires Windows 10 (build 17763) or later.
+Richiede Windows 10 (build 17763) o versione successiva.
 
-### From Source
+### Dal codice sorgente
 
 ```bash
 # Prerequisites:
@@ -184,7 +184,7 @@ dotnet build
 dotnet run --project src/ScalarScope
 ```
 
-### NuGet (library only)
+### NuGet (solo libreria)
 
 ```bash
 dotnet add package VortexKit
@@ -192,7 +192,7 @@ dotnet add package VortexKit
 
 ---
 
-## Project Structure
+## Struttura del progetto
 
 ```
 ScalarScope-Desktop/
@@ -253,7 +253,7 @@ ScalarScope-Desktop/
 
 ---
 
-## Testing
+## Test
 
 ```bash
 # Run all tests
@@ -271,16 +271,16 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ---
 
-## Related
+## Correlati
 
-- [ScalarScope (Python)](https://github.com/mcp-tool-shop-org/ScalarScope) — Core training framework
-- [RESULTS_AND_LIMITATIONS.md](docs/RESULTS_AND_LIMITATIONS.md) — Full experimental results
-- [CHANGELOG.md](CHANGELOG.md) — Release history
-- [PRIVACY.md](PRIVACY.md) — Privacy policy
-- [ROADMAP.md](ROADMAP.md) — Planned features
+- [ScalarScope (Python)](https://github.com/mcp-tool-shop-org/ScalarScope) — Framework di training principale
+- [RESULTS_AND_LIMITATIONS.md](docs/RESULTS_AND_LIMITATIONS.md) — Risultati sperimentali completi
+- [CHANGELOG.md](CHANGELOG.md) — Cronologia delle versioni
+- [PRIVACY.md](PRIVACY.md) — Informativa sulla privacy
+- [ROADMAP.md](ROADMAP.md) — Funzionalità pianificate
 
 ---
 
-## License
+## Licenza
 
 [MIT](LICENSE) — Copyright (c) 2025-2026 ScalarScope Project (mcp-tool-shop-org)

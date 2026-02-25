@@ -8,7 +8,7 @@
 
 # ScalarScope-Desktop
 
-> Part of [MCP Tool Shop](https://mcptoolshop.com)
+> [MCP Tool Shop](https://mcptoolshop.com) 的一部分
 
 <p align="center">
   <a href="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml"><img src="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml/badge.svg" alt="CI"></a>
@@ -18,28 +18,28 @@
   <a href="https://www.nuget.org/packages/VortexKit"><img src="https://img.shields.io/nuget/v/VortexKit?label=VortexKit&logo=nuget&style=flat-square" alt="NuGet: VortexKit"></a>
 </p>
 
-**ASPIRE Scalar Vortex Visualizer — a .NET MAUI desktop app for comparing ML inference runs with scientific rigor.**
+**ASPIRE Scalar Vortex Visualizer：一个 .NET MAUI 桌面应用程序，用于以科学严谨的方式比较机器学习推理运行结果。**
 
 ---
 
-## Why ScalarScope?
+## 为什么选择 ScalarScope？
 
-Most ML teams eyeball logs. ScalarScope replaces that with structured, reproducible comparison.
+大多数机器学习团队会简单地查看日志。ScalarScope 通过结构化、可重复的比较来替代这种方式。
 
-- **Apples-to-apples comparison** — Load two inference traces side by side and see exactly what changed
-- **Canonical delta analysis** — Five delta types (ΔTc, ΔO, ΔF, ΔĀ, ΔTd) fire only when differences are statistically meaningful
-- **Runtime presets** — The TFRT preset auto-suppresses irrelevant metrics so you focus on what matters for TensorFlow-TRT workloads
-- **Reproducible bundles** — Export `.scbundle` archives with SHA-256 integrity, frozen deltas, and full provenance metadata
-- **Review mode** — Open a bundle without recomputing; results are cryptographically verified, not re-derived
-- **Privacy first** — Zero telemetry, zero analytics, all data stays local unless you explicitly export
+- **同类比较**：并排加载两个推理结果，并查看具体的变化。
+- **规范的差异分析**：五种差异类型（ΔTc、ΔO、ΔF、ΔĀ、ΔTd）仅在差异在统计上具有意义时才会触发。
+- **运行时预设**：TFRT 预设会自动抑制不相关的指标，让您专注于 TensorFlow-TRT 工作负载中重要的数据。
+- **可重现的包**：导出包含 SHA-256 完整性校验、冻结的差异和完整元数据的 `.scbundle` 归档文件。
+- **审查模式**：无需重新计算即可打开一个包；结果经过密码学验证，而不是重新计算。
+- **注重隐私**：零数据收集，零分析，所有数据都保存在本地，除非您明确导出。
 
 ---
 
-## NuGet Packages
+## NuGet 包
 
-| Package | Version | Description |
-|---------|---------|-------------|
-| [VortexKit](https://www.nuget.org/packages/VortexKit) | [![NuGet](https://img.shields.io/nuget/v/VortexKit)](https://www.nuget.org/packages/VortexKit) | Reusable visualization framework for training dynamics — time-synced playback, animated SkiaSharp canvases, comparison views, annotation overlays, SVG/PNG export, and a semantic color system. Built on SkiaSharp + MAUI. |
+| 包名 | 版本 | 描述 |
+| --------- | --------- | ------------- |
+| [VortexKit](https://www.nuget.org/packages/VortexKit) | [![NuGet](https://img.shields.io/nuget/v/VortexKit)](https://www.nuget.org/packages/VortexKit) | 一个用于可视化训练动态的框架，具有时间同步的播放、动画 SkiaSharp 画布、比较视图、批注叠加、SVG/PNG 导出以及一种语义颜色系统。基于 SkiaSharp + MAUI 构建。 |
 
 ```bash
 dotnet add package VortexKit
@@ -47,18 +47,18 @@ dotnet add package VortexKit
 
 ---
 
-## Quick Start
+## 快速开始
 
-### From the Microsoft Store
+### 从 Microsoft Store
 
-1. Install **ScalarScope** from the [Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK) (Store ID: `9P3HT1PHBKQK`)
-2. Click **Compare Two Runs**
-3. Load baseline TFRT trace (before optimization)
-4. Load optimized TFRT trace (after optimization)
-5. Review deltas in the **Compare** tab
-6. Export a `.scbundle` for reproducible sharing
+1. 从 [Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK) (Store ID: `9P3HT1PHBKQK`) 安装 **ScalarScope**。
+2. 点击 **比较两个运行结果**。
+3. 加载优化前的 TFRT 跟踪数据（基准）。
+4. 加载优化后的 TFRT 跟踪数据。
+5. 在 **比较** 选项卡中查看差异。
+6. 导出 `.scbundle` 文件以进行可重复的共享。
 
-### Using VortexKit in Your Own App
+### 在您自己的应用程序中使用 VortexKit
 
 ```csharp
 using VortexKit.Core;
@@ -108,66 +108,66 @@ await svgExporter.ExportSvgAsync(svgData, "trajectory.svg",
 
 ---
 
-## Features
+## 特性
 
-### Delta Analysis — Five Canonical Delta Types
+### 差异分析 — 五种规范的差异类型
 
-Every comparison produces a set of canonical deltas. Each delta fires only when the difference is statistically meaningful; irrelevant deltas are suppressed automatically.
+每次比较都会产生一组规范的差异。 只有当差异在统计上具有意义时，才会触发每个差异；不相关的差异会自动被抑制。
 
-| Delta | Full Name | What It Measures | Fires When |
-|-------|-----------|------------------|------------|
-| **ΔTc** | Convergence Time | Steps to reach stable latency | Steady-state reached at different steps (≥3-step separation) |
-| **ΔO** | Output Variability | Oscillation / runtime instability | Area-above-threshold score differs beyond noise floor |
-| **ΔF** | Failure Rate | Anomaly frequency | Failure frequency or kind differs between runs |
-| **ΔĀ** | Average Latency | Mean metric value | Mean differs meaningfully (suppressed in TFRT preset) |
-| **ΔTd** | Total Duration | Wall-clock time / structural emergence | Duration or dominance onset differs (suppressed in TFRT preset) |
+| Delta | 全称 | 测量内容 | 触发条件 |
+| ------- | ----------- | ------------------ | ------------ |
+| **ΔTc** | 收敛时间 | 达到稳定延迟所需的步骤 | 在不同的步骤达到稳态（≥3 步分离） |
+| **ΔO** | 输出变化率 | 振荡/运行时不稳定 | 阈值以上区域得分超出噪声范围 |
+| **ΔF** | 失败率 | 异常频率 | 运行之间的失败频率或类型不同 |
+| **ΔĀ** | 平均延迟 | 平均指标值 | 平均值有显著差异（在 TFRT 预设中被抑制） |
+| **ΔTd** | 总时长 | 实时时间/结构化出现 | 时长或出现时间不同（在 TFRT 预设中被抑制） |
 
-### Runtime Presets — TFRT
+### 运行时预设 — TFRT
 
-The built-in **TensorFlow-TRT** preset (`tensorflowrt-runtime-v1`) maps inference-specific signals (latency, throughput, memory, CPU/GPU load) and suppresses training-only deltas (ΔĀ, ΔTd) that have no meaning for inference comparison. Guardrails warn when warmup exceeds 50% of the run or when only aggregated stats are available.
+内置的 **TensorFlow-TRT** 预设 (`tensorflowrt-runtime-v1`) 映射了与推理相关的信号（延迟、吞吐量、内存、CPU/GPU 负载），并抑制了仅适用于训练的差异（ΔĀ、ΔTd），这些差异对于推理比较没有意义。 警报会提示当预热时间超过运行时间的 50% 或仅有聚合统计数据可用时。
 
-### Reproducible Bundles
+### 可重现的包
 
-Export results as `.scbundle` archives (ComparisonBundle v1.0.0):
+将结果导出为 `.scbundle` 归档文件（ComparisonBundle v1.0.0）：
 
-- **`manifest.json`** — bundle metadata, app version, comparison labels, alignment mode
-- **`repro/repro.json`** — input fingerprints, preset hash, determinism seed, environment info
-- **`findings/deltas.json`** — canonical deltas with confidence scores, anchors, and trigger types
-- **`findings/why.json`** — human-readable explanations, guardrails, parameter chips
-- **`findings/summary.md`** — auto-generated Markdown summary
-- **Integrity** — every file hashed with SHA-256; bundle-level hash for tamper detection
+- **`manifest.json`** — 捆绑包的元数据，应用版本，比较标签，对齐模式
+- **`repro/repro.json`** — 输入指纹，预设哈希值，确定性种子，环境信息
+- **`findings/deltas.json`** — 带有置信度评分、锚点和触发类型的规范差异
+- **`findings/why.json`** — 人类可读的解释，安全措施，参数提示
+- **`findings/summary.md`** — 自动生成的 Markdown 摘要
+- **完整性** — 每个文件使用 SHA-256 哈希；捆绑包级别的哈希用于检测篡改
 
-### Review Mode
+### 审查模式
 
-Open any `.scbundle` without recomputing. Review mode verifies integrity, displays frozen deltas, and shows a review-mode banner so you know results are verified, not re-derived.
+无需重新计算即可打开任何 `.scbundle` 文件。审查模式验证完整性，显示冻结的差异，并显示一个审查模式横幅，以便您知道结果是经过验证的，而不是重新计算的。
 
-### VortexKit Visualization Framework
+### VortexKit 可视化框架
 
-VortexKit is the extracted visualization engine, published as a standalone NuGet package:
+VortexKit 是提取的可视化引擎，以独立的 NuGet 包形式发布：
 
-| Component | What It Does |
-|-----------|-------------|
-| `PlaybackController` | Shared 0→1 timeline with play/pause/step/loop, speed presets (0.25x—4x), ~60 fps tick |
-| `AnimatedCanvas` | Abstract `SKCanvasView` base with time-synced invalidation, grid drawing, touch/drag events, coordinate helpers |
-| `ITimeSeries<T>` / `TimeSeries<T>` | Generic time-series with index↔time mapping and trail enumeration |
-| `ExportService` | Single-frame PNG, frame sequences (with ffmpeg hints), and side-by-side comparison export |
-| `SvgExportService` | Full-vector SVG export with Inkscape layers, Catmull-Rom splines, heatmaps, vector fields, and four color palettes (Default, Light, HighContrast, Publication) |
-| `IAnnotation` | Typed annotations (Phase, Warning, Insight, Failure, Custom) with theoretical basis and priority |
-| `VortexColors` | Semantic color palette — background layers, accent semantics, severity coding, eigenvalue palette, lerp/gradient helpers |
+| 组件 | 功能 |
+| ----------- | ------------- |
+| `PlaybackController` | 共享 0→1 时间轴，带有播放/暂停/单步/循环功能，速度预设（0.25x—4x），约 60 fps 的刷新率 |
+| `AnimatedCanvas` | 抽象的 `SKCanvasView` 基础类，具有与时间同步的重绘功能，网格绘制，触摸/拖动事件，坐标辅助函数 |
+| `ITimeSeries<T>` / `TimeSeries<T>` | 泛型时间序列，具有索引↔时间映射和轨迹枚举功能 |
+| `ExportService` | 单帧 PNG，帧序列（带有 ffmpeg 提示），以及并排比较导出功能 |
+| `SvgExportService` | 完整的矢量 SVG 导出，带有 Inkscape 层，Catmull-Rom 样条线，热图，矢量场，以及四种颜色方案（默认，浅色，高对比度，出版） |
+| `IAnnotation` | 带有理论基础和优先级的类型化注释（阶段，警告，洞察，失败，自定义） |
+| `VortexColors` | 语义颜色方案 — 背景层，强调语义，严重程度编码，特征值方案，以及插值/渐变辅助函数 |
 
 ---
 
-## Installation
+## 安装
 
-### Microsoft Store (recommended)
+### Microsoft Store（推荐）
 
-**Store ID:** `9P3HT1PHBKQK`
+**商店 ID:** `9P3HT1PHBKQK`
 
-[Get it from the Microsoft Store](https://apps.microsoft.com/detail/9P3HT1PHBKQK)
+[从 Microsoft Store 获取](https://apps.microsoft.com/detail/9P3HT1PHBKQK)
 
-Requires Windows 10 (build 17763) or later.
+需要 Windows 10（版本 17763）或更高版本。
 
-### From Source
+### 从源代码
 
 ```bash
 # Prerequisites:
@@ -184,7 +184,7 @@ dotnet build
 dotnet run --project src/ScalarScope
 ```
 
-### NuGet (library only)
+### NuGet（仅限库）
 
 ```bash
 dotnet add package VortexKit
@@ -192,7 +192,7 @@ dotnet add package VortexKit
 
 ---
 
-## Project Structure
+## 项目结构
 
 ```
 ScalarScope-Desktop/
@@ -253,7 +253,7 @@ ScalarScope-Desktop/
 
 ---
 
-## Testing
+## 测试
 
 ```bash
 # Run all tests
@@ -271,16 +271,16 @@ dotnet test --collect:"XPlat Code Coverage"
 
 ---
 
-## Related
+## 相关
 
-- [ScalarScope (Python)](https://github.com/mcp-tool-shop-org/ScalarScope) — Core training framework
-- [RESULTS_AND_LIMITATIONS.md](docs/RESULTS_AND_LIMITATIONS.md) — Full experimental results
-- [CHANGELOG.md](CHANGELOG.md) — Release history
-- [PRIVACY.md](PRIVACY.md) — Privacy policy
-- [ROADMAP.md](ROADMAP.md) — Planned features
+- [ScalarScope (Python)](https://github.com/mcp-tool-shop-org/ScalarScope) — 核心训练框架
+- [RESULTS_AND_LIMITATIONS.md](docs/RESULTS_AND_LIMITATIONS.md) — 完整的实验结果
+- [CHANGELOG.md](CHANGELOG.md) — 发布历史
+- [PRIVACY.md](PRIVACY.md) — 隐私政策
+- [ROADMAP.md](ROADMAP.md) — 计划中的功能
 
 ---
 
-## License
+## 许可证
 
-[MIT](LICENSE) — Copyright (c) 2025-2026 ScalarScope Project (mcp-tool-shop-org)
+[MIT](LICENSE) — 版权所有 (c) 2025-2026 ScalarScope Project (mcp-tool-shop-org)

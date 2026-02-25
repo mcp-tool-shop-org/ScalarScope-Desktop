@@ -46,3 +46,6 @@ Thumbs.db
 *.user
 *.userosscache
 *.sln.docstates
+site/.astro/
+site/node_modules/
+site/dist/
