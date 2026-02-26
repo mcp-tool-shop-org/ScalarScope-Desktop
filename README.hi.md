@@ -3,9 +3,7 @@
 </p>
 
 <p align="center">
-  
-            <img src="https://raw.githubusercontent.com/mcp-tool-shop-org/brand/main/logos/ScalarScope-Desktop/readme.png"
-           alt="ScalarScope" width="400">
+  <img src="assets/logo.png" alt="ScalarScope" width="400">
 </p>
 
 # ScalarScope-Desktop
@@ -16,12 +14,8 @@
   <a href="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml"><img src="https://github.com/mcp-tool-shop-org/ScalarScope-Desktop/actions/workflows/build.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT"></a>
   <a href="https://mcp-tool-shop-org.github.io/ScalarScope-Desktop/"><img src="https://img.shields.io/badge/Landing_Page-live-blue?style=flat-square" alt="Landing Page"></a>
-  <a href="https://apps.microsoft.com/detail/9P3HT1PHBKQK">
-            <img src="https://raw.githubusercontent.com/mcp-tool-shop-org/brand/main/logos/ScalarScope-Desktop/readme.png"
-           alt="Microsoft Store"></a>
-  <a href="https://www.nuget.org/packages/VortexKit">
-            <img src="https://raw.githubusercontent.com/mcp-tool-shop-org/brand/main/logos/ScalarScope-Desktop/readme.png"
-           alt="NuGet: VortexKit"></a>
+  <a href="https://apps.microsoft.com/detail/9P3HT1PHBKQK"><img src="https://img.shields.io/badge/Microsoft%20Store-9P3HT1PHBKQK-0078D4?style=flat-square&logo=microsoft" alt="Microsoft Store"></a>
+  <a href="https://www.nuget.org/packages/VortexKit"><img src="https://img.shields.io/nuget/v/VortexKit?label=VortexKit&logo=nuget&style=flat-square" alt="NuGet: VortexKit"></a>
 </p>
 
 **ASPIRE Scalar Vortex Visualizer — एक .NET MAUI डेस्कटॉप एप्लिकेशन, जो वैज्ञानिक सटीकता के साथ मशीन लर्निंग (एमएल) के निष्पादन परिणामों की तुलना करने के लिए बनाया गया है।**
