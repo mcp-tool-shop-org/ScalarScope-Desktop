@@ -14,7 +14,7 @@ export const config: SiteConfig = {
     headlineAccent: 'compared with rigor.',
     description: 'Stop eyeballing logs. ScalarScope loads two TFRT traces side by side, fires canonical delta analysis only when differences are statistically meaningful, and exports cryptographically verified bundles your team can reproduce.',
     primaryCta: { href: '#quickstart', label: 'Get from Microsoft Store' },
-    secondaryCta: { href: '#features', label: 'See features' },
+    secondaryCta: { href: 'handbook/', label: 'Read the Handbook' },
     previews: [
       {
         label: 'Install',
